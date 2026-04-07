@@ -676,24 +676,6 @@ export default function ProfessionalSpiralTower() {
         // 保存渲染对象到 ref，用于点击检测
         renderObjectsRef.current = renderObjects;
 
-        // 绘制学院之间的轨道线连接（圆形轨道）
-        const departments = renderObjects.filter(o => o.type === 'department');
-        if (departments.length > 1) {
-          // 绘制主圆轨道
-          ctx.beginPath();
-          ctx.ellipse(centerX, centerY, orbitRadiusX * 0.8, orbitRadiusY * 0.8, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-
-          // 绘制发光效果
-          ctx.beginPath();
-          ctx.ellipse(centerX, centerY, orbitRadiusX * 0.8, orbitRadiusY * 0.8, 0, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.1)';
-          ctx.lineWidth = 4;
-          ctx.stroke();
-        }
-
         // 绘制学院轨道线（椭圆）
         ctx.beginPath();
         for (let angle = 0; angle <= Math.PI * 2; angle += 0.02) {
