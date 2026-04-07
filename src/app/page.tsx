@@ -100,6 +100,14 @@ interface DepartmentNode {
   college: string; // 归属学院
 }
 
+interface PathPoint {
+  x: number;
+  y: number;
+  z: number;
+  scale: number;
+  progress: number;
+}
+
 interface RenderObject {
   type: 'sun' | 'college' | 'major' | 'department';
   lx: number;
@@ -154,6 +162,22 @@ export default function ProfessionalSpiralTower() {
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
   const renderObjectsRef = useRef<RenderObject[]>([]); // 保存太阳系视图的渲染对象
+
+  // 光点队列（用于连续产生流星效果）
+  const lightParticlesRef = useRef<Array<{
+    progress: number;      // 0-2之间，0-1在螺旋线上，1-2飞出
+    color: string;         // 随机颜色
+    createdAt: number;     // 创建时间戳
+  }>>([]);
+
+  // 产生新光点的定时器
+  const lastLightCreateTimeRef = useRef(0);
+  const LIGHT_CREATE_INTERVAL = 0.8; // 每秒产生的光点数量（0.8秒产生一个）
+
+  // 获取随机颜色
+  const getRandomLightColor = (): string => {
+    return LIGHT_COLORS[Math.floor(Math.random() * LIGHT_COLORS.length)];
+  };
 
   // 基础学院数据（不带专业）
   const baseColleges: College[] = useMemo(() => [
@@ -619,7 +643,7 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
-        const pathPoints = [];
+        const pathPoints: PathPoint[] = [];
         // 从1955年开始绘制，确保起始点之前也有线
         const drawTotalYears = totalYears + 1; // 多加一年
         for (let i = 0; i <= drawTotalYears; i += 0.2) {
@@ -647,8 +671,6 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 绘制灯带效果（流动的光点）
-        const lightCount = 12; // 光点数量
-        const lightSpeed = 0.03; // 流动速度
         const time = animationTimeRef.current;
 
         // 使用外部定义的 LIGHT_COLORS 常量，避免每次渲染创建新数组
@@ -657,7 +679,7 @@ export default function ProfessionalSpiralTower() {
         const lastPointIndex = pathPoints.length - 1;
         const secondLastPointIndex = pathPoints.length - 2;
         let flyOutDirX = 0, flyOutDirY = 0;
-        
+
         if (lastPointIndex > 0 && secondLastPointIndex >= 0) {
           const lastPoint = pathPoints[lastPointIndex];
           const secondLastPoint = pathPoints[secondLastPointIndex];
@@ -672,141 +694,159 @@ export default function ProfessionalSpiralTower() {
           }
         }
 
-        for (let l = 0; l < lightCount; l++) {
-          // 每个光点循环产生，但飞出后重新从起点开始
-          const cycleTime = 2 + l / lightCount * 0.5; // 每个光点的周期稍有不同，避免同步
-          const lightProgress = (time * lightSpeed + l / lightCount) % cycleTime;
-          const segmentProgress = lightProgress % 1;
+        // 定期产生新的光点
+        if (time - lastLightCreateTimeRef.current > LIGHT_CREATE_INTERVAL) {
+          lastLightCreateTimeRef.current = time;
+          lightParticlesRef.current.push({
+            progress: 0,
+            color: getRandomLightColor(),
+            createdAt: time
+          });
+        }
 
-            let x: number | undefined, y: number | undefined, z: number | undefined, scale: number = 1, lightOpacity: number = 1;
-            let isFlyingOut = false;
+        // 更新和绘制光点
+        const lightSpeed = 0.03;
+        lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
+          // 更新进度
+          particle.progress += lightSpeed;
 
-            if (lightProgress < 1) {
-              // 在螺旋线上
-              const lightPointIndex = Math.floor(segmentProgress * pathPoints.length);
-              const nextLightPointIndex = (lightPointIndex + 1) % pathPoints.length;
+          // 如果进度超过2，移除该光点
+          if (particle.progress >= 2) {
+            return false;
+          }
 
-              if (lightPointIndex < pathPoints.length && nextLightPointIndex < pathPoints.length) {
-                const p1 = pathPoints[lightPointIndex];
-                const p2 = pathPoints[nextLightPointIndex];
+          // 计算光点位置
+          let x: number | undefined, y: number | undefined, z: number | undefined, scale: number = 1, lightOpacity: number = 1;
+          let isFlyingOut = false;
+          const colorRGB = particle.color;
 
-                // 插值计算光点位置
-                x = p1.x + (p2.x - p1.x) * segmentProgress;
-                y = p1.y + (p2.y - p1.y) * segmentProgress;
-                z = p1.z + (p2.z - p1.z) * segmentProgress;
-                scale = p1.scale + (p2.scale - p1.scale) * segmentProgress;
+          if (particle.progress < 1) {
+            // 在螺旋线上
+            const segmentProgress = particle.progress;
+            const lightPointIndex = Math.floor(segmentProgress * pathPoints.length);
+            const nextLightPointIndex = (lightPointIndex + 1) % pathPoints.length;
 
-                // 计算光点透明度（前方更亮）
-                lightOpacity = Math.max(0.6, Math.min(1, (1 - z / 600)));
-              }
+            if (lightPointIndex < pathPoints.length && nextLightPointIndex < pathPoints.length) {
+              const p1 = pathPoints[lightPointIndex];
+              const p2 = pathPoints[nextLightPointIndex];
+
+              // 插值计算光点位置
+              x = p1.x + (p2.x - p1.x) * segmentProgress;
+              y = p1.y + (p2.y - p1.y) * segmentProgress;
+              z = p1.z + (p2.z - p1.z) * segmentProgress;
+              scale = p1.scale + (p2.scale - p1.scale) * segmentProgress;
+
+              // 计算光点透明度（前方更亮）
+              lightOpacity = Math.max(0.6, Math.min(1, (1 - z / 600)));
+            }
+          } else {
+            // 飞出螺旋线
+            isFlyingOut = true;
+            const flyOutProgress = particle.progress - 1; // 0-1之间（飞出进度）
+
+            // 只在前0.5秒内飞出
+            if (flyOutProgress < 0.5) {
+              const flyOutDistance = flyOutProgress * 400; // 飞出距离
+
+              // 获取末端位置和缩放
+              const lastP = pathPoints[lastPointIndex];
+
+              x = lastP.x + flyOutDirX * flyOutDistance;
+              y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.3; // 向上飞
+              z = lastP.z + flyOutDistance * 0.5; // 向前
+              scale = lastP.scale * (1 - flyOutProgress * 0.5); // 逐渐变小
+
+              // 透明度随飞行距离降低
+              lightOpacity = Math.max(0, 1 - flyOutProgress * 2);
             } else {
-              // 飞出螺旋线（只飞出一段距离后消失，然后重新从起点开始）
-              isFlyingOut = true;
-              const flyOutProgress = lightProgress - 1; // 0-1之间（飞出进度）
-
-              // 只在前0.5秒内飞出，之后等待重新开始
-              if (flyOutProgress < 0.5) {
-                const flyOutDistance = flyOutProgress * 400; // 飞出距离
-
-                // 获取末端位置和缩放
-                const lastP = pathPoints[lastPointIndex];
-
-                x = lastP.x + flyOutDirX * flyOutDistance;
-                y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.3; // 向上飞
-                z = lastP.z + flyOutDistance * 0.5; // 向前
-                scale = lastP.scale * (1 - flyOutProgress * 0.5); // 逐渐变小
-
-                // 透明度随飞行距离降低
-                lightOpacity = Math.max(0, 1 - flyOutProgress * 2);
-              } else {
-                // 飞出结束，等待下一次循环
-                continue; // 跳过这个光点
-              }
-            }
-
-            // 如果变量未定义，跳过此光点的绘制
-            if (x === undefined || y === undefined) {
-              continue;
-            }
-
-            // 获取该光点的颜色（使用外部常量）
-            const colorRGB = LIGHT_COLORS[l % LIGHT_COLORS.length];
-
-            // 绘制光点拖尾效果（只在螺旋线上时）
-            if (!isFlyingOut && x !== undefined && y !== undefined) {
-              const tailLength = 0.15;
-              const tailSteps = 6;
-              for (let t = 0; t < tailSteps; t++) {
-                const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
-                if (tailProgress < 0) break;
-
-                const tailIndex = Math.floor(tailProgress * pathPoints.length);
-                const tailNextIndex = (tailIndex + 1) % pathPoints.length;
-
-                if (tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
-                  const tp1 = pathPoints[tailIndex];
-                  const tp2 = pathPoints[tailNextIndex];
-                  const tailX = tp1.x + (tp2.x - tp1.x) * tailProgress;
-                  const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
-                  const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
-
-                  const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.3;
-                  const tailRadius = (6 - t) * scale;
-
-                  const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                  tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.6})`);
-                  tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
-
-                  ctx.beginPath();
-                  ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
-                  ctx.fillStyle = tailGradient;
-                  ctx.fill();
-                }
-              }
-            }
-
-            // 绘制光点发光效果
-            if (x !== undefined && y !== undefined) {
-              const glowRadius = isFlyingOut ? 6 * scale : 8 * scale;
-              const midRadius = isFlyingOut ? 3 * scale : 4 * scale;
-              const coreRadius = isFlyingOut ? 1.5 * scale : 2 * scale;
-
-              const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-              lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 0.9})`);
-              lightGlowGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
-              lightGlowGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
-              lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
-
-              ctx.beginPath();
-              ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-              ctx.fillStyle = lightGlowGradient;
-              ctx.fill();
-
-              // 绘制光点中间层
-              const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
-              midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1})`);
-              midGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
-              midGlowGradient.addColorStop(0.8, `rgba(${colorRGB}, ${lightOpacity * 0.7})`);
-              midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.3})`);
-
-              ctx.beginPath();
-              ctx.arc(x, y, midRadius, 0, Math.PI * 2);
-              ctx.fillStyle = midGlowGradient;
-              ctx.fill();
-
-              // 绘制光点核心
-              const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
-              coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`);
-              coreGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
-              coreGradient.addColorStop(0.6, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
-              coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
-
-              ctx.beginPath();
-              ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
-              ctx.fillStyle = coreGradient;
-              ctx.fill();
+              // 飞出结束，移除该光点
+              return false;
             }
           }
+
+          // 如果变量未定义，跳过此光点的绘制
+          if (x === undefined || y === undefined) {
+            return true;
+          }
+
+          // 绘制光点拖尾效果（只在螺旋线上时）
+          if (!isFlyingOut) {
+            const tailLength = 0.15;
+            const tailSteps = 6;
+            const segmentProgress = particle.progress; // 当前进度
+            for (let t = 0; t < tailSteps; t++) {
+              const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
+              if (tailProgress < 0) break;
+
+              const tailIndex = Math.floor(tailProgress * pathPoints.length);
+              const tailNextIndex = (tailIndex + 1) % pathPoints.length;
+
+              if (tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
+                const tp1 = pathPoints[tailIndex];
+                const tp2 = pathPoints[tailNextIndex];
+                const tailX = tp1.x + (tp2.x - tp1.x) * tailProgress;
+                const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
+                const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
+
+                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.3;
+                const tailRadius = (6 - t) * scale;
+
+                const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.6})`);
+                tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
+                ctx.fillStyle = tailGradient;
+                ctx.fill();
+              }
+            }
+          }
+
+          // 绘制光点发光效果
+          if (x !== undefined && y !== undefined) {
+            const glowRadius = isFlyingOut ? 6 * scale : 8 * scale;
+            const midRadius = isFlyingOut ? 3 * scale : 4 * scale;
+            const coreRadius = isFlyingOut ? 1.5 * scale : 2 * scale;
+
+            const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 0.9})`);
+            lightGlowGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
+            lightGlowGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
+            lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
+
+            ctx.beginPath();
+            ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+            ctx.fillStyle = lightGlowGradient;
+            ctx.fill();
+
+            // 绘制光点中间层
+            const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
+            midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1})`);
+            midGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
+            midGlowGradient.addColorStop(0.8, `rgba(${colorRGB}, ${lightOpacity * 0.7})`);
+            midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.3})`);
+
+            ctx.beginPath();
+            ctx.arc(x, y, midRadius, 0, Math.PI * 2);
+            ctx.fillStyle = midGlowGradient;
+            ctx.fill();
+
+            // 绘制光点核心
+            const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`);
+            coreGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
+            coreGradient.addColorStop(0.6, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
+            coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
+
+            ctx.beginPath();
+            ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+          }
+
+          return true;
+        });
 
         // 绘制节点
         const sortedNodes = [...projectedNodes].sort((a, b) => b.z - a.z);
