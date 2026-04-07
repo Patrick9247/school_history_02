@@ -102,6 +102,7 @@ export default function ProfessionalSpiralTower() {
   const solarRotYRef = useRef(0);
   const solarAutoRotationRef = useRef(0); // 学院球自动旋转角度
   const isDraggingRef = useRef(false);
+  const isHoveringCollegeRef = useRef(false); // 鼠标是否悬停在学院球上
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number | undefined>(undefined);
   const zoomLevelRef = useRef(1);
@@ -619,8 +620,8 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图
 
-        // 自动旋转学院球（如果没有拖动）
-        if (!isDraggingRef.current) {
+        // 自动旋转学院球（如果没有拖动且没有悬停在学院球上）
+        if (!isDraggingRef.current && !isHoveringCollegeRef.current) {
           solarAutoRotationRef.current += 0.003;
         }
 
@@ -839,6 +840,16 @@ export default function ProfessionalSpiralTower() {
         setTooltip(prev => ({ ...prev, visible: false }));
         setYearStats(null);
       }
+    } else if (currentView === 'solar') {
+      // 检测悬停在学院球上
+      const renderObjects = renderObjectsRef.current;
+      const hoveredDept = renderObjects.find(obj => {
+        if (obj.type !== 'department') return false;
+        const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+        return distance < obj.radius * 1.5;
+      });
+
+      isHoveringCollegeRef.current = !!hoveredDept;
     }
   };
 
