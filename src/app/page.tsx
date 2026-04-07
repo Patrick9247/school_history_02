@@ -595,11 +595,6 @@ export default function ProfessionalSpiralTower() {
       ctx.globalAlpha = 1;
     };
 
-    // 优化：创建路径点的角度缓存，避免每帧重复计算 sin/cos
-    const drawTotalYears = totalYears + 1; // 多加一年
-    const pathSteps = Math.floor(drawTotalYears / 0.2);
-    const pathAngleCache = createAngleCache(pathSteps);
-
     // 优化：创建学院轨道的角度缓存
     const orbitSteps = 315; // 0.02 精度，约 315 个点
     const orbitAngleCache = createAngleCache(orbitSteps);
@@ -625,14 +620,15 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints = [];
-        // 优化：使用角度缓存，减少 sin/cos 计算
-        for (let i = 0; i <= pathSteps; i++) {
-          const progress = i / pathSteps;
-          const angleCacheItem = pathAngleCache[Math.min(i, pathSteps)];
+        // 从1955年开始绘制，确保起始点之前也有线
+        const drawTotalYears = totalYears + 1; // 多加一年
+        for (let i = 0; i <= drawTotalYears; i += 0.2) {
+          const progress = i / drawTotalYears;
+          const angle = progress * rings * Math.PI * 2;
           const proj = project3D(
-            angleCacheItem.cos * baseRadius,
+            Math.cos(angle) * baseRadius,
             (1 - progress) * spiralHeight - spiralHeight / 2,
-            angleCacheItem.sin * baseRadius, 0, rotationRef.current
+            Math.sin(angle) * baseRadius, 0, rotationRef.current
           );
           pathPoints.push({ ...proj, progress });
         }
