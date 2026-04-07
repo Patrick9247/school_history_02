@@ -490,21 +490,46 @@ export default function ProfessionalSpiralTower() {
     const spiralHeight = isMobile ? 600 : (isTablet ? 700 : 800);
     const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18));
 
-    // 生成螺旋节点
-    const spiralNodes = data.map((item, index) => {
+    // 生成螺旋节点（增加3倍，每个年度之间插入2个额外节点）
+    const nodeMultiplier = 3; // 每个年度生成3个节点
+    const spiralNodes: any[] = [];
+    for (let i = 0; i < data.length; i++) {
+      const item = data[i];
       const year = item.year;
-      const progress = index / totalYears;
-      const angle = progress * rings * Math.PI * 2;
-      return {
-        localX: Math.cos(angle) * baseRadius,
-        localY: (1 - progress) * spiralHeight - spiralHeight / 2,
-        localZ: Math.sin(angle) * baseRadius,
-        year: item.year,
-        count: item.majorCount,
-        size: 12,
-        specialColor: SPECIAL_YEAR_COLORS[year] || null
-      };
-    });
+      const baseProgress = i / totalYears;
+
+      // 每个年度生成3个节点
+      for (let j = 0; j < nodeMultiplier; j++) {
+        const progress = baseProgress + (j / nodeMultiplier) * (1 / totalYears);
+        const angle = progress * rings * Math.PI * 2;
+
+        // 只有第一个节点是真实的年度数据，其他是填充节点
+        if (j === 0) {
+          spiralNodes.push({
+            localX: Math.cos(angle) * baseRadius,
+            localY: (1 - progress) * spiralHeight - spiralHeight / 2,
+            localZ: Math.sin(angle) * baseRadius,
+            year: item.year,
+            count: item.majorCount,
+            size: 12,
+            specialColor: SPECIAL_YEAR_COLORS[year] || null,
+            isRealYear: true
+          });
+        } else {
+          // 填充节点（较小，没有年份信息）
+          spiralNodes.push({
+            localX: Math.cos(angle) * baseRadius,
+            localY: (1 - progress) * spiralHeight - spiralHeight / 2,
+            localZ: Math.sin(angle) * baseRadius,
+            year: null, // 填充节点没有年份
+            count: 0,
+            size: 6, // 填充节点更小
+            specialColor: null,
+            isRealYear: false
+          });
+        }
+      }
+    }
 
     // 3D 投影函数
     const project3D = (lx: number, ly: number, lz: number, rotX: number, rotY: number) => {
@@ -876,6 +901,15 @@ export default function ProfessionalSpiralTower() {
           const size = node.size * node.scale;
           const opacity = Math.max(0.5, Math.min(1, (1 - node.z / 600)));
           let color: string;
+
+          // 只对真实年度节点显示颜色和年份
+          if (!node.isRealYear) {
+            // 填充节点使用中性颜色
+            color = `hsl(220, 60%, 40%)`;
+            drawSphere(node.x, node.y, size, color, opacity * 0.6, false);
+            return;
+          }
+
           if (node.specialColor) {
             color = node.specialColor;
           } else {
