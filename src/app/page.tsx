@@ -676,34 +676,48 @@ export default function ProfessionalSpiralTower() {
         // 保存渲染对象到 ref，用于点击检测
         renderObjectsRef.current = renderObjects;
 
-        // 绘制学院之间的轨道线连接
+        // 绘制学院之间的轨道线连接（使用贝塞尔曲线形成弧线）
         const departments = renderObjects.filter(o => o.type === 'department');
         if (departments.length > 1) {
-          ctx.beginPath();
           // 按索引排序以确保连接顺序正确
           departments.sort((a, b) => (a.index || 0) - (b.index || 0));
 
-          departments.forEach((dept, i) => {
-            if (i === 0) {
-              ctx.moveTo(dept.x || 0, dept.y || 0);
-            } else {
-              ctx.lineTo(dept.x || 0, dept.y || 0);
-            }
-          });
+          // 绘制弧线连接
+          for (let i = 0; i < departments.length; i++) {
+            const current = departments[i];
+            const next = departments[(i + 1) % departments.length]; // 循环到第一个
 
-          // 闭合路径连接最后一个到第一个
-          ctx.lineTo(departments[0].x || 0, departments[0].y || 0);
+            if (!current.x || !current.y || !next.x || !next.y) continue;
 
-          // 设置轨道线样式
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
-          ctx.lineWidth = 2;
-          ctx.lineJoin = 'round';
-          ctx.stroke();
+            // 计算两个学院的中点
+            const midX = (current.x + next.x) / 2;
+            const midY = (current.y + next.y) / 2;
 
-          // 添加发光效果
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.1)';
-          ctx.lineWidth = 4;
-          ctx.stroke();
+            // 计算从中心到中点的方向，并向外延伸作为控制点
+            const dx = midX - centerX;
+            const dy = midY - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const controlDist = dist * 0.3; // 控制点距离系数
+            const controlX = centerX + (dx / dist) * controlDist;
+            const controlY = centerY + (dy / dist) * controlDist;
+
+            // 绘制主弧线
+            ctx.beginPath();
+            ctx.moveTo(current.x, current.y);
+            ctx.quadraticCurveTo(controlX, controlY, next.x, next.y);
+            ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // 绘制发光效果
+            ctx.beginPath();
+            ctx.moveTo(current.x, current.y);
+            ctx.quadraticCurveTo(controlX, controlY, next.x, next.y);
+            ctx.strokeStyle = 'rgba(96, 165, 250, 0.1)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+          }
         }
 
         // 绘制轨道环
