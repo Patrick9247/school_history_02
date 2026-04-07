@@ -699,7 +699,7 @@ export default function ProfessionalSpiralTower() {
             const parentDept = renderObjects.find(d =>
               d.type === 'department' && d.index === obj.parentIndex
             );
-            if (parentDept) {
+            if (parentDept && parentDept.x !== undefined && parentDept.y !== undefined && obj.x !== undefined && obj.y !== undefined) {
               ctx.beginPath();
               ctx.moveTo(parentDept.x, parentDept.y);
               ctx.lineTo(obj.x, obj.y);
@@ -748,6 +748,70 @@ export default function ProfessionalSpiralTower() {
             ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + obj.radius + 12);
           }
         });
+
+        // 当放大到合适位置时，显示最近专业球的名称
+        if (zoomLevelRef.current > 1.5) {
+          // 找到离相机最近的专业球（z值最大）
+          const majorObjects = renderObjects.filter(obj => obj.type === 'major');
+          if (majorObjects.length > 0) {
+            // 按z值排序，取最大的（离相机最近）
+            const closestMajor = majorObjects.reduce((closest, current) => {
+              return (current.z || 0) > (closest.z || 0) ? current : closest;
+            });
+
+            // 绘制专业名称
+            if (closestMajor.majorData && closestMajor.x !== undefined && closestMajor.y !== undefined) {
+              const nameOpacity = Math.min(1, (zoomLevelRef.current - 1.5) * 0.5);
+              const fontSize = Math.min(14, 9 + (zoomLevelRef.current - 1.5) * 3);
+
+              // 专业名称显示在专业球上方
+              const labelY = (closestMajor.y || 0) - closestMajor.radius - 15;
+
+              ctx.font = `${fontSize}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+
+              // 专业名称背景
+              const padding = 6;
+              const textWidth = ctx.measureText(closestMajor.majorData.name).width;
+              const textHeight = fontSize + padding * 2;
+
+              ctx.fillStyle = `rgba(0, 0, 0, ${nameOpacity * 0.8})`;
+              ctx.beginPath();
+              // 使用 roundRect 或 fallback
+              if (ctx.roundRect) {
+                ctx.roundRect(
+                  closestMajor.x - textWidth / 2 - padding,
+                  labelY - textHeight / 2,
+                  textWidth + padding * 2,
+                  textHeight,
+                  4
+                );
+              } else {
+                ctx.rect(
+                  closestMajor.x - textWidth / 2 - padding,
+                  labelY - textHeight / 2,
+                  textWidth + padding * 2,
+                  textHeight
+                );
+              }
+              ctx.fill();
+
+              // 绘制边框
+              ctx.strokeStyle = addAlpha(closestMajor.color, nameOpacity * 0.9);
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+
+              // 绘制文字
+              ctx.font = `bold ${fontSize}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(closestMajor.majorData.name, closestMajor.x, labelY);
+            }
+          }
+        }
       }
 
       animationFrameRef.current = requestAnimationFrame(animate);
