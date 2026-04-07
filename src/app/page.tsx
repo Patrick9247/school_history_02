@@ -661,6 +661,36 @@ export default function ProfessionalSpiralTower() {
 
         renderObjects.sort((a, b) => (b.z || 0) - (a.z || 0));
 
+        // 绘制学院之间的轨道线连接
+        const departments = renderObjects.filter(o => o.type === 'department');
+        if (departments.length > 1) {
+          ctx.beginPath();
+          // 按索引排序以确保连接顺序正确
+          departments.sort((a, b) => (a.index || 0) - (b.index || 0));
+
+          departments.forEach((dept, i) => {
+            if (i === 0) {
+              ctx.moveTo(dept.x || 0, dept.y || 0);
+            } else {
+              ctx.lineTo(dept.x || 0, dept.y || 0);
+            }
+          });
+
+          // 闭合路径连接最后一个到第一个
+          ctx.lineTo(departments[0].x || 0, departments[0].y || 0);
+
+          // 设置轨道线样式
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+
+          // 添加发光效果
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.1)';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+
         // 绘制轨道环
         ctx.beginPath();
         ctx.ellipse(centerX, centerY, orbitRadiusX * 0.8, orbitRadiusY * 0.8, 0, 0, Math.PI * 2);
