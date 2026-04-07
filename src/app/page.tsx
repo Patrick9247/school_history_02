@@ -693,23 +693,6 @@ export default function ProfessionalSpiralTower() {
         ctx.lineWidth = 4;
         ctx.stroke();
 
-        // 绘制专业球与学院球的连接线
-        renderObjects.forEach(obj => {
-          if (obj.type === 'major' && obj.parentIndex !== undefined) {
-            const parentDept = renderObjects.find(d =>
-              d.type === 'department' && d.index === obj.parentIndex
-            );
-            if (parentDept && parentDept.x !== undefined && parentDept.y !== undefined && obj.x !== undefined && obj.y !== undefined) {
-              ctx.beginPath();
-              ctx.moveTo(parentDept.x, parentDept.y);
-              ctx.lineTo(obj.x, obj.y);
-              ctx.strokeStyle = addAlpha(obj.color, 0.4);
-              ctx.lineWidth = 2;
-              ctx.stroke();
-            }
-          }
-        });
-
         // 绘制球体
         renderObjects.forEach(obj => {
           const opacity = Math.max(0.6, Math.min(1, (1 - (obj.z || 0) / 600)));
