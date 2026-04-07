@@ -93,6 +93,7 @@ export default function ProfessionalSpiralTower() {
   }>({ year: 0, count: 0, event: '', x: 0, y: 0, visible: false });
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
+  const [showCollegeHistory, setShowCollegeHistory] = useState(false); // 是否显示学院历史
   const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
   const [yearStats, setYearStats] = useState<{ year: number; deptCount: number; majorCount: number } | null>(null);
   const [hoveredYear, setHoveredYear] = useState<number | null>(null); // 记录当前悬停的年份
@@ -1154,34 +1155,88 @@ export default function ProfessionalSpiralTower() {
       {selectedMajor && (
         <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-5 z-40 w-[calc(100%-40px)] max-w-[320px] shadow-2xl shadow-black/50">
           <div className="flex justify-between items-center mb-3.5 pb-3 border-b border-white/20">
-            <div className="text-[15px] font-bold flex-1 text-white drop-shadow-md">{selectedMajor.name}</div>
+            <div
+              className="text-[15px] font-bold flex-1 text-white drop-shadow-md cursor-pointer hover:text-blue-300 transition-colors"
+              onDoubleClick={() => setShowCollegeHistory(!showCollegeHistory)}
+              title="双击查看学院发展历史"
+            >
+              {selectedMajor.name}
+            </div>
             <button
-              onClick={() => setSelectedMajor(null)}
+              onClick={() => {
+                setSelectedMajor(null);
+                setShowCollegeHistory(false);
+              }}
               className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2.5 transition-colors"
             >
               ×
             </button>
           </div>
-          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-            <span className="text-blue-300/90 text-[12px] font-medium">专业代码</span>
-            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.code || '-'}</span>
-          </div>
-          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-            <span className="text-blue-300/90 text-[12px] font-medium">学制</span>
-            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.degree || '-'}</span>
-          </div>
-          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-            <span className="text-blue-300/90 text-[12px] font-medium">所属学院</span>
-            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
-          </div>
-          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-            <span className="text-blue-300/90 text-[12px] font-medium">原所属部门</span>
-            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
-          </div>
-          {selectedMajor.year && (
-            <div className="flex justify-between items-center py-2.5 border-t border-white/15">
-              <span className="text-blue-300/90 text-[12px] font-medium">设立年份</span>
-              <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.year}</span>
+
+          {!showCollegeHistory ? (
+            <>
+              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[12px] font-medium">专业代码</span>
+                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.code || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[12px] font-medium">学制</span>
+                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.degree || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[12px] font-medium">所属学院</span>
+                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[12px] font-medium">原所属部门</span>
+                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
+              </div>
+              {selectedMajor.year && (
+                <div className="flex justify-between items-center py-2.5 border-t border-white/15">
+                  <span className="text-blue-300/90 text-[12px] font-medium">设立年份</span>
+                  <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.year}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            // 显示学院发展历史（箭头状时间线）
+            <div className="space-y-0">
+              <div className="text-[11px] text-blue-300/80 mb-3 text-center">双击标题返回专业详情</div>
+              {(() => {
+                const collegeName = selectedMajor.college || '';
+                // 获取该学院的所有历史记录（按年份排序）
+                const collegeHistory = rawApiData
+                  .filter(item => item.category === collegeName)
+                  .sort((a, b) => a.year - b.year);
+
+                return collegeHistory.length > 0 ? (
+                  collegeHistory.map((item, index) => (
+                    <div key={item.id} className="relative flex items-start">
+                      {/* 箭头线 */}
+                      {index < collegeHistory.length - 1 && (
+                        <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
+                      )}
+                      {/* 节点圆点 */}
+                      <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/30 border-2 border-blue-400 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      </div>
+                      {/* 内容卡片 */}
+                      <div className="ml-3 mb-4 flex-1 bg-white/5 rounded-lg p-2.5 border border-white/10 hover:border-blue-400/30 transition-colors">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[13px] font-bold text-blue-300">{item.year}年</span>
+                          <span className="text-[10px] text-blue-200/70">{item.department}</span>
+                        </div>
+                        <div className="text-[11px] text-white/90 font-medium mb-1">{item.major}</div>
+                        {item.description && (
+                          <div className="text-[10px] text-white/60">{item.description}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-[12px] text-white/60 py-4">暂无历史数据</div>
+                );
+              })()}
             </div>
           )}
         </div>
