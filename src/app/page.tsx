@@ -168,6 +168,15 @@ export default function ProfessionalSpiralTower() {
     progress: number;      // 0-2之间，0-1在螺旋线上，1-2飞出
     color: string;         // 随机颜色
     createdAt: number;     // 创建时间戳
+    flyOutStart?: {        // 飞出时的起始位置和方向
+      x: number;
+      y: number;
+      z: number;
+      scale: number;
+      dirX: number;
+      dirY: number;
+      opacity: number;
+    };
   }>>([]);
 
   // 产生新光点的定时器
