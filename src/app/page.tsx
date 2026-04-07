@@ -1026,18 +1026,6 @@ export default function ProfessionalSpiralTower() {
         </p>
       </div>
 
-      {/* Tooltip */}
-      {tooltip.visible && (
-        <div
-          className="fixed z-20 bg-[rgba(10,15,30,0.92)] border border-blue-400/40 rounded-lg p-2.5 pointer-events-none max-w-[180px]"
-          style={{ left: tooltip.x, top: tooltip.y }}
-        >
-          <div className="text-[16px] font-bold text-blue-400 mb-1">{tooltip.year}</div>
-          <div className="text-[11px] text-pink-400 font-medium">{tooltip.count} 个专业</div>
-          <div className="text-[9px] text-white/60 mt-1.5 leading-relaxed">{tooltip.event}</div>
-        </div>
-      )}
-
       {/* 缩放控制 */}
       {currentView === 'solar' && (
         <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-2">
