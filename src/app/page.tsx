@@ -82,6 +82,7 @@ export default function ProfessionalSpiralTower() {
   }>({ year: 0, count: 0, event: '', x: 0, y: 0, visible: false });
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
+  const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -94,8 +95,8 @@ export default function ProfessionalSpiralTower() {
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
 
-  // 学院数据
-  const colleges: College[] = useMemo(() => [
+  // 基础学院数据（不带专业）
+  const baseColleges: College[] = useMemo(() => [
     { name: "地球与行星科学学院", color: "#3b82f6", majors: [] },
     { name: "地球物理学院", color: "#10b981", majors: [] },
     { name: "能源学院（页岩气现代产业学院）", color: "#f59e0b", majors: [] },
@@ -120,6 +121,9 @@ export default function ProfessionalSpiralTower() {
     { name: "继续教育学院", color: "#9333ea", majors: [] }
   ], []);
 
+  // 学院数据（使用带专业的版本）
+  const colleges: College[] = collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
+
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
     { year: 1956, label: "建校", desc: "成都地质勘探学院" },
@@ -140,13 +144,58 @@ export default function ProfessionalSpiralTower() {
       if (result.success && result.data) {
         const transformedData = transformData(result.data);
         setData(transformedData);
+
+        // 按学院分组专业
+        const collegeMap = new Map<string, Major[]>();
+        result.data.forEach((item: ApiDataItem) => {
+          const collegeName = item.category || '其他学院';
+          if (!collegeMap.has(collegeName)) {
+            collegeMap.set(collegeName, []);
+          }
+          collegeMap.get(collegeName)?.push({
+            name: item.major,
+            code: '',
+            degree: item.level || '本科',
+            college: item.category || '',
+            original_college: item.category || '',
+            original_dept: item.department || '',
+          });
+        });
+
+        // 更新学院数据的专业列表
+        const updatedColleges: College[] = baseColleges.map(college => {
+          const collegeShortName = college.name.split('（')[0];
+          const matchingMajors: Major[] = Array.from(collegeMap.entries())
+            .filter(([collegeName]) => collegeName.includes(collegeShortName) || collegeShortName.includes(collegeName))
+            .flatMap(([, majors]) => majors);
+          return {
+            ...college,
+            majors: matchingMajors.length > 0 ? matchingMajors : []
+          };
+        });
+
+        // 为没有匹配专业的学院添加示例数据
+        const collegesWithMajors = updatedColleges.map(college => {
+          if (college.majors.length === 0) {
+            // 添加示例专业数据
+            const sampleMajors: Major[] = [
+              { name: `${college.name.split('（')[0]}专业1`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name },
+              { name: `${college.name.split('（')[0]}专业2`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name },
+              { name: `${college.name.split('（')[0]}专业3`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name }
+            ];
+            return { ...college, majors: sampleMajors };
+          }
+          return college;
+        });
+
+        setCollegesWithMajors(collegesWithMajors);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [baseColleges]);
 
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
@@ -411,7 +460,7 @@ export default function ProfessionalSpiralTower() {
         });
 
         // 学院
-        colleges.forEach((college, i) => {
+        colleges.forEach((college: College, i: number) => {
           const angle = (i / colleges.length) * Math.PI * 2 - Math.PI / 2;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
@@ -435,7 +484,7 @@ export default function ProfessionalSpiralTower() {
             majorRotationAnglesRef.current[i] += 0.008 + i * 0.001;
 
             const majorOrbitRadius = 50 * zoomLevelRef.current;
-            college.majors.forEach((major, j) => {
+            college.majors.forEach((major: Major, j: number) => {
               const majorAngle = majorRotationAnglesRef.current[i] + (j / college.majors.length) * Math.PI * 2;
 
               const mlx = lx + Math.cos(majorAngle) * majorOrbitRadius;
@@ -525,7 +574,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, colleges, keyEvents]);
+  }, [data, currentView, collegesWithMajors, keyEvents]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
