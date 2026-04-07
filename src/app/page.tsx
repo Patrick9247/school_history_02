@@ -888,7 +888,8 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          const shouldGlow = node.specialColor && [1956, 2001, 2017, 2025].includes(node.year);
+          // 所有年度球都发光
+          const shouldGlow = true;
           drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
