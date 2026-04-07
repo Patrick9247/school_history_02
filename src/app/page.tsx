@@ -585,9 +585,25 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 绘制灯带效果（流动的光点）
-        const lightCount = 12; // 光点数量（增加到12个）
-        const lightSpeed = 0.03; // 流动速度（再快10倍）
+        const lightCount = 12; // 光点数量
+        const lightSpeed = 0.03; // 流动速度
         const time = animationTimeRef.current;
+
+        // 为每个光点生成随机颜色
+        const lightColors = [
+          '147, 197, 253', // 蓝色
+          '167, 139, 250', // 紫色
+          '236, 72, 153', // 粉色
+          '34, 211, 238', // 青色
+          '251, 146, 60', // 橙色
+          '74, 222, 128', // 绿色
+          '250, 204, 21', // 黄色
+          '248, 113, 113', // 红色
+          '192, 132, 252', // 浅紫
+          '96, 165, 250', // 深蓝
+          '167, 243, 208', // 青绿
+          '254, 202, 202', // 浅红
+        ];
 
         for (let l = 0; l < lightCount; l++) {
           const lightProgress = ((time * lightSpeed + l / lightCount) % 1);
@@ -605,12 +621,21 @@ export default function ProfessionalSpiralTower() {
             const z = p1.z + (p2.z - p1.z) * segmentProgress;
             const scale = p1.scale + (p2.scale - p1.scale) * segmentProgress;
 
+            // 添加随机偏移，让光点不完全在螺旋线上
+            const randomOffsetX = (Math.sin(time * 10 + l * 100) * 5 + Math.cos(time * 7 + l * 50) * 3) * scale;
+            const randomOffsetY = (Math.cos(time * 8 + l * 80) * 5 + Math.sin(time * 6 + l * 40) * 3) * scale;
+            const finalX = x + randomOffsetX;
+            const finalY = y + randomOffsetY;
+
             // 计算光点透明度（前方更亮）
-            const lightOpacity = Math.max(0.5, Math.min(1, (1 - z / 600)));
+            const lightOpacity = Math.max(0.6, Math.min(1, (1 - z / 600)));
+
+            // 获取该光点的颜色
+            const colorRGB = lightColors[l % lightColors.length];
 
             // 绘制光点拖尾效果（向流动方向延伸）
-            const tailLength = 0.15; // 拖尾长度
-            const tailSteps = 8; // 拖尾分段数
+            const tailLength = 0.15;
+            const tailSteps = 6; // 减少拖尾分段数
             for (let t = 0; t < tailSteps; t++) {
               const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
               if (tailProgress < 0) break;
@@ -625,53 +650,57 @@ export default function ProfessionalSpiralTower() {
                 const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
                 const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
 
-                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.4;
-                const tailRadius = (12 - t) * scale;
+                // 拖尾也添加随机偏移
+                const tailOffsetX = (Math.sin(time * 10 + l * 100 + t * 5) * 3) * scale;
+                const tailOffsetY = (Math.cos(time * 8 + l * 80 + t * 5) * 3) * scale;
 
-                const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                tailGradient.addColorStop(0, `rgba(147, 197, 253, ${tailOpacity * 0.6})`);
-                tailGradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.3;
+                const tailRadius = (6 - t) * scale; // 减小拖尾半径
+
+                const tailGradient = ctx.createRadialGradient(tailX + tailOffsetX, tailY + tailOffsetY, 0, tailX + tailOffsetX, tailY + tailOffsetY, tailRadius);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.6})`);
+                tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
                 ctx.beginPath();
-                ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
+                ctx.arc(tailX + tailOffsetX, tailY + tailOffsetY, tailRadius, 0, Math.PI * 2);
                 ctx.fillStyle = tailGradient;
                 ctx.fill();
               }
             }
 
-            // 绘制光点发光效果（增强版）
-            const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, 20 * scale);
-            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 0.9})`); // 中心更亮
-            lightGlowGradient.addColorStop(0.2, `rgba(191, 219, 254, ${lightOpacity * 0.8})`);
-            lightGlowGradient.addColorStop(0.5, `rgba(96, 165, 250, ${lightOpacity * 0.5})`);
-            lightGlowGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            // 绘制光点发光效果（减小尺寸）
+            const lightGlowGradient = ctx.createRadialGradient(finalX, finalY, 0, finalX, finalY, 8 * scale);
+            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 0.9})`);
+            lightGlowGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
+            lightGlowGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
+            lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
             ctx.beginPath();
-            ctx.arc(x, y, 20 * scale, 0, Math.PI * 2);
+            ctx.arc(finalX, finalY, 8 * scale, 0, Math.PI * 2);
             ctx.fillStyle = lightGlowGradient;
             ctx.fill();
 
-            // 绘制光点中间层（光晕）
-            const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, 10 * scale);
+            // 绘制光点中间层（减小尺寸）
+            const midGlowGradient = ctx.createRadialGradient(finalX, finalY, 0, finalX, finalY, 4 * scale);
             midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1})`);
-            midGlowGradient.addColorStop(0.4, `rgba(147, 197, 253, ${lightOpacity * 0.9})`);
-            midGlowGradient.addColorStop(0.8, `rgba(96, 165, 250, ${lightOpacity * 0.7})`);
-            midGlowGradient.addColorStop(1, `rgba(59, 130, 246, ${lightOpacity * 0.3})`);
+            midGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
+            midGlowGradient.addColorStop(0.8, `rgba(${colorRGB}, ${lightOpacity * 0.7})`);
+            midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.3})`);
 
             ctx.beginPath();
-            ctx.arc(x, y, 10 * scale, 0, Math.PI * 2);
+            ctx.arc(finalX, finalY, 4 * scale, 0, Math.PI * 2);
             ctx.fillStyle = midGlowGradient;
             ctx.fill();
 
-            // 绘制光点核心（高亮LED灯珠效果）
-            const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, 5 * scale);
-            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`); // 纯白核心
-            coreGradient.addColorStop(0.3, `rgba(219, 234, 254, ${lightOpacity * 0.95})`);
-            coreGradient.addColorStop(0.6, `rgba(191, 219, 254, ${lightOpacity * 0.9})`);
-            coreGradient.addColorStop(1, `rgba(147, 197, 253, ${lightOpacity * 0.8})`);
+            // 绘制光点核心（减小尺寸）
+            const coreGradient = ctx.createRadialGradient(finalX, finalY, 0, finalX, finalY, 2 * scale);
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`);
+            coreGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
+            coreGradient.addColorStop(0.6, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
+            coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
 
             ctx.beginPath();
-            ctx.arc(x, y, 5 * scale, 0, Math.PI * 2);
+            ctx.arc(finalX, finalY, 2 * scale, 0, Math.PI * 2);
             ctx.fillStyle = coreGradient;
             ctx.fill();
           }
