@@ -108,6 +108,12 @@ export default function ProfessionalSpiralTower() {
   const majorRotationAnglesRef = useRef<number[]>([]);
   const renderObjectsRef = useRef<RenderObject[]>([]); // 保存太阳系视图的渲染对象
 
+  // 动画过渡相关状态
+  const targetZoomRef = useRef(1);
+  const targetRotXRef = useRef(0.5);
+  const targetRotYRef = useRef(0);
+  const viewTransitionRef = useRef(0); // 0-1，用于视图切换动画
+
   // 基础学院数据（不带专业）
   const baseColleges: College[] = useMemo(() => [
     { name: "地球与行星科学学院", color: "#3b82f6", majors: [] },
@@ -374,17 +380,38 @@ export default function ProfessionalSpiralTower() {
     if (!canvasRef.current || data.length === 0) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
     const rect = canvas.parentElement?.getBoundingClientRect();
     if (rect) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      // 高 DPI 支持
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      ctx.scale(dpr, dpr);
     }
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = rect ? rect.width / 2 : canvas.width / 2;
+    const centerY = rect ? rect.height / 2 : canvas.height / 2;
+
+    // 缓动函数 - 使用 easeOutCubic 实现平滑过渡
+    const easeOutCubic = (t: number): number => {
+      return 1 - Math.pow(1 - t, 3);
+    };
+
+    // 缓动函数 - easeInOutQuad
+    const easeInOutQuad = (t: number): number => {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    };
+
+    // 平滑插值函数
+    const lerp = (start: number, end: number, factor: number): number => {
+      return start + (end - start) * factor;
+    };
+
     const startYear = 1956;
     const endYear = Math.max(...data.map(d => d.year));
     const totalYears = endYear - startYear + 1;
@@ -522,7 +549,24 @@ export default function ProfessionalSpiralTower() {
     };
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 清除画布（使用逻辑尺寸）
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      // 平滑过渡动画
+      const smoothing = 0.1; // 平滑系数，越小越平滑
+      zoomLevelRef.current = lerp(zoomLevelRef.current, targetZoomRef.current, smoothing);
+      if (!isDraggingRef.current) {
+        solarRotXRef.current = lerp(solarRotXRef.current, targetRotXRef.current, smoothing);
+        solarRotYRef.current = lerp(solarRotYRef.current, targetRotYRef.current, smoothing);
+      }
+
+      // 视图切换过渡
+      if (viewTransitionRef.current < 1) {
+        viewTransitionRef.current = Math.min(1, viewTransitionRef.current + 0.02);
+      }
+
+      const transitionProgress = easeInOutQuad(viewTransitionRef.current);
 
       if (currentView === 'spiral') {
         // 更新旋转
@@ -747,6 +791,11 @@ export default function ProfessionalSpiralTower() {
     };
   }, [data, currentView, currentDepartments, keyEvents]);
 
+  // 视图切换动画
+  useEffect(() => {
+    viewTransitionRef.current = 0;
+  }, [currentView]);
+
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
@@ -770,9 +819,9 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图：支持多轴旋转
         // 水平拖拽 → 绕 Y 轴旋转
-        solarRotYRef.current += deltaX * 0.005;
+        targetRotYRef.current += deltaX * 0.005;
         // 垂直拖拽 → 绕 X 轴旋转
-        solarRotXRef.current += deltaY * 0.005;
+        targetRotXRef.current += deltaY * 0.005;
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
@@ -946,17 +995,17 @@ export default function ProfessionalSpiralTower() {
   };
 
   const zoomIn = () => {
-    zoomLevelRef.current = Math.min(zoomLevelRef.current * 1.2, 2);
+    targetZoomRef.current = Math.min(targetZoomRef.current * 1.2, 2);
   };
 
   const zoomOut = () => {
-    zoomLevelRef.current = Math.max(zoomLevelRef.current / 1.2, 0.5);
+    targetZoomRef.current = Math.max(targetZoomRef.current / 1.2, 0.5);
   };
 
   const resetView = () => {
-    solarRotXRef.current = 0.5;
-    solarRotYRef.current = 0;
-    zoomLevelRef.current = 1;
+    targetRotXRef.current = 0.5;
+    targetRotYRef.current = 0;
+    targetZoomRef.current = 1;
   };
 
   // 鼠标滚轮缩放
@@ -964,7 +1013,7 @@ export default function ProfessionalSpiralTower() {
     if (currentView === 'solar') {
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      zoomLevelRef.current = Math.max(0.5, Math.min(2, zoomLevelRef.current * delta));
+      targetZoomRef.current = Math.max(0.5, Math.min(2, targetZoomRef.current * delta));
     }
   };
 
@@ -995,7 +1044,7 @@ export default function ProfessionalSpiralTower() {
         touch2.clientY - touch1.clientY
       );
       const ratio = distance / initialTouchDistanceRef.current;
-      zoomLevelRef.current = Math.max(0.5, Math.min(2, initialZoomRef.current * ratio));
+      targetZoomRef.current = Math.max(0.5, Math.min(2, initialZoomRef.current * ratio));
     }
   };
 
