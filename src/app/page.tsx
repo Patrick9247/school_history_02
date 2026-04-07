@@ -1158,7 +1158,7 @@ export default function ProfessionalSpiralTower() {
             <div
               className="text-[15px] font-bold flex-1 text-white drop-shadow-md cursor-pointer hover:text-blue-300 transition-colors"
               onDoubleClick={() => setShowCollegeHistory(!showCollegeHistory)}
-              title="双击查看学院发展历史"
+              title="双击查看专业沿革历史"
             >
               {selectedMajor.name}
             </div>
@@ -1199,21 +1199,21 @@ export default function ProfessionalSpiralTower() {
               )}
             </>
           ) : (
-            // 显示学院发展历史（箭头状时间线）
+            // 显示专业沿革历史（箭头状时间线）
             <div className="space-y-0">
               <div className="text-[11px] text-blue-300/80 mb-3 text-center">双击标题返回专业详情</div>
               {(() => {
-                const collegeName = selectedMajor.college || '';
-                // 获取该学院的所有历史记录（按年份排序）
-                const collegeHistory = rawApiData
-                  .filter(item => item.category === collegeName)
+                const majorName = selectedMajor.name;
+                // 获取该专业的所有历史记录（按年份排序）
+                const majorHistory = rawApiData
+                  .filter(item => item.major === majorName)
                   .sort((a, b) => a.year - b.year);
 
-                return collegeHistory.length > 0 ? (
-                  collegeHistory.map((item, index) => (
+                return majorHistory.length > 0 ? (
+                  majorHistory.map((item, index) => (
                     <div key={item.id} className="relative flex items-start">
                       {/* 箭头线 */}
-                      {index < collegeHistory.length - 1 && (
+                      {index < majorHistory.length - 1 && (
                         <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
                       )}
                       {/* 节点圆点 */}
