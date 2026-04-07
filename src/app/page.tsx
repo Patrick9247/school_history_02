@@ -107,8 +107,6 @@ export default function ProfessionalSpiralTower() {
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
   const renderObjectsRef = useRef<RenderObject[]>([]); // 保存太阳系视图的渲染对象
-  const targetSolarRotXRef = useRef(0.5); // 目标旋转角度 X
-  const targetSolarRotYRef = useRef(0); // 目标旋转角度 Y
 
   // 基础学院数据（不带专业）
   const baseColleges: College[] = useMemo(() => [
@@ -379,117 +377,20 @@ export default function ProfessionalSpiralTower() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 智能分辨率适配：检测屏幕像素密度
     const rect = canvas.parentElement?.getBoundingClientRect();
     if (rect) {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      ctx.scale(dpr, dpr);
+      canvas.width = rect.width;
+      canvas.height = rect.height;
     }
 
-    const centerX = rect ? rect.width / 2 : canvas.width / 2;
-    const centerY = rect ? rect.height / 2 : canvas.height / 2;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
     const startYear = 1956;
     const endYear = Math.max(...data.map(d => d.year));
     const totalYears = endYear - startYear + 1;
     const rings = 6;
     const spiralHeight = 800;
-    const baseRadius = Math.min(centerX * 2, centerY * 2) * 0.18;
-
-    // 线性插值函数（物理级平滑）
-    const lerp = (start: number, end: number, factor: number): number => {
-      return start + (end - start) * factor;
-    };
-
-    // 缓动函数（更平滑的物理运动）
-    const easeOutCubic = (t: number): number => {
-      return 1 - Math.pow(1 - t, 3);
-    };
-
-    // 粒子系统
-    const particles: Array<{
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      life: number;
-      maxLife: number;
-      color: string;
-      size: number;
-    }> = [];
-
-    const createParticle = (x: number, y: number, color: string, size: number = 2) => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 0.5 + Math.random() * 1;
-      particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 0,
-        maxLife: 30 + Math.random() * 20,
-        color,
-        size: size * (0.5 + Math.random() * 0.5)
-      });
-    };
-
-    const updateParticles = () => {
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx *= 0.95;
-        p.vy *= 0.95;
-        p.life++;
-        if (p.life >= p.maxLife) {
-          particles.splice(i, 1);
-        }
-      }
-    };
-
-    const drawParticles = () => {
-      particles.forEach(p => {
-        const alpha = 1 - (p.life / p.maxLife);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('hsl', 'hsla');
-        if (!ctx.fillStyle.includes('rgba')) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
-        }
-        ctx.globalAlpha = alpha;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
-    };
-
-    // 背景星星粒子
-    const stars: Array<{ x: number; y: number; size: number; alpha: number; twinkleSpeed: number }> = [];
-    const starCount = 150;
-
-    for (let i = 0; i < starCount; i++) {
-      stars.push({
-        x: Math.random() * (rect ? rect.width : canvas.width),
-        y: Math.random() * (rect ? rect.height : canvas.height),
-        size: 0.5 + Math.random() * 1.5,
-        alpha: 0.3 + Math.random() * 0.7,
-        twinkleSpeed: 0.01 + Math.random() * 0.03
-      });
-    }
-
-    const drawStars = (time: number) => {
-      stars.forEach(star => {
-        const twinkle = 0.5 + Math.sin(time * star.twinkleSpeed) * 0.5;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * twinkle * 0.5})`;
-        ctx.globalAlpha = star.alpha * twinkle * 0.5;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
-    };
+    const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
 
     // 生成螺旋节点
     const spiralNodes = data.map((item, index) => {
@@ -621,28 +522,18 @@ export default function ProfessionalSpiralTower() {
     };
 
     const animate = () => {
-      const dpr = window.devicePixelRatio || 1;
-      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-
-      // 绘制背景星星
-      drawStars(animationTimeRef.current);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (currentView === 'spiral') {
-        // 物理级平滑：使用线性插值更新旋转
-        const targetRotation = isDraggingRef.current ? rotationRef.current : rotationRef.current + 0.002;
-        rotationRef.current = lerp(rotationRef.current, targetRotation, 0.1);
+        // 更新旋转
+        if (!isDraggingRef.current) {
+          rotationRef.current += 0.002;
+        }
 
         // 投影节点
         const projectedNodes = spiralNodes.map(node => {
           const proj = project3D(node.localX, node.localY, node.localZ, 0, rotationRef.current);
           return { ...node, x: proj.x, y: proj.y, scale: proj.scale, z: proj.z };
-        });
-
-        // 虚拟化渲染：只渲染视口内的节点
-        const visibleNodes = projectedNodes.filter(node => {
-          const margin = 100;
-          return node.x > -margin && node.x < (rect ? rect.width : canvas.width / dpr) + margin &&
-                 node.y > -margin && node.y < (rect ? rect.height : canvas.height / dpr) + margin;
         });
 
         // 绘制连接线
@@ -671,8 +562,8 @@ export default function ProfessionalSpiralTower() {
           ctx.stroke();
         }
 
-        // 绘制节点（按 z 值排序）
-        const sortedNodes = [...visibleNodes].sort((a, b) => b.z - a.z);
+        // 绘制节点
+        const sortedNodes = [...projectedNodes].sort((a, b) => b.z - a.z);
 
         sortedNodes.forEach(node => {
           const size = node.size * node.scale;
@@ -687,11 +578,6 @@ export default function ProfessionalSpiralTower() {
 
           const shouldGlow = node.specialColor && [1956, 2001, 2017, 2025].includes(node.year);
           drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined);
-
-          // 为特殊节点添加粒子效果
-          if (shouldGlow && Math.random() < 0.3) {
-            createParticle(node.x, node.y, color, size * 0.5);
-          }
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           if (keyEvent) {
@@ -719,12 +605,8 @@ export default function ProfessionalSpiralTower() {
         // 太阳系视图
         animationTimeRef.current += 0.016;
 
-        // 物理级平滑：使用线性插值更新旋转
-        solarRotXRef.current = lerp(solarRotXRef.current, targetSolarRotXRef.current, 0.08);
-        solarRotYRef.current = lerp(solarRotYRef.current, targetSolarRotYRef.current, 0.08);
-
-        const orbitRadiusY = Math.min(canvas.width / dpr, canvas.height / dpr) * 0.35 * zoomLevelRef.current;
-        const orbitRadiusX = Math.min(canvas.width / dpr, canvas.height / dpr) * 0.22 * zoomLevelRef.current;
+        const orbitRadiusY = Math.min(canvas.width, canvas.height) * 0.35 * zoomLevelRef.current;
+        const orbitRadiusX = Math.min(canvas.width, canvas.height) * 0.22 * zoomLevelRef.current;
 
         const renderObjects: RenderObject[] = [];
 
@@ -853,10 +735,6 @@ export default function ProfessionalSpiralTower() {
 
       }
 
-      // 更新和绘制粒子
-      updateParticles();
-      drawParticles();
-
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -892,9 +770,9 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图：支持多轴旋转
         // 水平拖拽 → 绕 Y 轴旋转
-        targetSolarRotYRef.current += deltaX * 0.005;
+        solarRotYRef.current += deltaX * 0.005;
         // 垂直拖拽 → 绕 X 轴旋转
-        targetSolarRotXRef.current += deltaY * 0.005;
+        solarRotXRef.current += deltaY * 0.005;
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
@@ -1078,8 +956,6 @@ export default function ProfessionalSpiralTower() {
   const resetView = () => {
     solarRotXRef.current = 0.5;
     solarRotYRef.current = 0;
-    targetSolarRotXRef.current = 0.5;
-    targetSolarRotYRef.current = 0;
     zoomLevelRef.current = 1;
   };
 
