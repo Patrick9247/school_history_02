@@ -738,62 +738,65 @@ export default function ProfessionalSpiralTower() {
           // 找到离相机最近的专业球（z值最大）
           const majorObjects = renderObjects.filter(obj => obj.type === 'major');
           if (majorObjects.length > 0) {
-            // 按z值排序，取最大的（离相机最近）
-            const closestMajor = majorObjects.reduce((closest, current) => {
-              return (current.z || 0) > (closest.z || 0) ? current : closest;
-            });
+            // 显示所有靠近相机的专业球名称
+            const zThreshold = 200; // z 值大于此值的专业球显示名字
 
-            // 绘制专业名称
-            if (closestMajor.majorData && closestMajor.x !== undefined && closestMajor.y !== undefined) {
-              const nameOpacity = Math.min(1, (zoomLevelRef.current - 1.5) * 0.5);
-              const fontSize = Math.min(14, 9 + (zoomLevelRef.current - 1.5) * 3);
+            majorObjects.forEach((majorObj) => {
+              const zValue = majorObj.z || 0;
 
-              // 专业名称显示在专业球上方
-              const labelY = (closestMajor.y || 0) - closestMajor.radius - 15;
+              // 只显示靠近相机的专业球
+              if (zValue > zThreshold && majorObj.majorData && majorObj.x !== undefined && majorObj.y !== undefined) {
+                // 根据 z 值计算透明度和字体大小（越靠近相机越清晰）
+                const normalizedZ = Math.min(1, (zValue - zThreshold) / 300);
+                const nameOpacity = Math.min(1, normalizedZ * 0.8 + 0.2); // 最小透明度 0.2
+                const fontSize = Math.min(12, 8 + normalizedZ * 4);
 
-              ctx.font = `${fontSize}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
+                // 专业名称显示在专业球上方
+                const labelY = majorObj.y - majorObj.radius - 12;
 
-              // 专业名称背景
-              const padding = 6;
-              const textWidth = ctx.measureText(closestMajor.majorData.name).width;
-              const textHeight = fontSize + padding * 2;
+                ctx.font = `${fontSize}px sans-serif`;
+                ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
 
-              ctx.fillStyle = `rgba(0, 0, 0, ${nameOpacity * 0.8})`;
-              ctx.beginPath();
-              // 使用 roundRect 或 fallback
-              if (ctx.roundRect) {
-                ctx.roundRect(
-                  closestMajor.x - textWidth / 2 - padding,
-                  labelY - textHeight / 2,
-                  textWidth + padding * 2,
-                  textHeight,
-                  4
-                );
-              } else {
-                ctx.rect(
-                  closestMajor.x - textWidth / 2 - padding,
-                  labelY - textHeight / 2,
-                  textWidth + padding * 2,
-                  textHeight
-                );
+                // 专业名称背景
+                const padding = 5;
+                const textWidth = ctx.measureText(majorObj.majorData.name).width;
+                const textHeight = fontSize + padding * 2;
+
+                ctx.fillStyle = `rgba(0, 0, 0, ${nameOpacity * 0.75})`;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                  ctx.roundRect(
+                    majorObj.x - textWidth / 2 - padding,
+                    labelY - textHeight / 2,
+                    textWidth + padding * 2,
+                    textHeight,
+                    4
+                  );
+                } else {
+                  ctx.rect(
+                    majorObj.x - textWidth / 2 - padding,
+                    labelY - textHeight / 2,
+                    textWidth + padding * 2,
+                    textHeight
+                  );
+                }
+                ctx.fill();
+
+                // 绘制边框
+                ctx.strokeStyle = addAlpha(majorObj.color, nameOpacity * 0.85);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // 绘制文字
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(majorObj.majorData.name, majorObj.x, labelY);
               }
-              ctx.fill();
-
-              // 绘制边框
-              ctx.strokeStyle = addAlpha(closestMajor.color, nameOpacity * 0.9);
-              ctx.lineWidth = 1.5;
-              ctx.stroke();
-
-              // 绘制文字
-              ctx.font = `bold ${fontSize}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${nameOpacity})`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(closestMajor.majorData.name, closestMajor.x, labelY);
-            }
+            });
           }
         }
       }
