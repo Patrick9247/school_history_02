@@ -726,7 +726,7 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 更新和绘制光点
-        const lightSpeed = 0.005; // 光点移动速度（减慢三倍，从0.015降至0.005）
+        const lightSpeed = 0.0025; // 光点移动速度（减少两倍，从0.005降至0.0025）
         lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
           // 更新进度
           particle.progress += lightSpeed;
@@ -779,6 +779,27 @@ export default function ProfessionalSpiralTower() {
 
               // 透明度随飞行距离降低（减慢消失速度）
               lightOpacity = Math.max(0, 1 - flyOutProgress * 1.25);
+
+              // 绘制飞出时的彗星拖尾效果
+              const flyTailSteps = 8;
+              const flyTailLength = 80; // 飞出时的拖尾长度
+              for (let t = 0; t < flyTailSteps; t++) {
+                const tailProgress = t / flyTailSteps;
+                const tailX = x - flyOutDirX * tailProgress * flyTailLength;
+                const tailY = y - flyOutDirY * tailProgress * flyTailLength + tailProgress * flyTailLength * 0.4; // 向后拖尾
+                const tailZ = z - tailProgress * flyTailLength * 0.6;
+                const tailOpacity = lightOpacity * (1 - tailProgress) * 0.6;
+                const tailRadius = (10 - tailProgress * 7) * scale; // 从10逐渐减小到3
+
+                const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
+                tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
+                ctx.fillStyle = tailGradient;
+                ctx.fill();
+              }
             } else {
               // 飞出结束，移除该光点
               return false;
@@ -790,10 +811,10 @@ export default function ProfessionalSpiralTower() {
             return true;
           }
 
-          // 绘制光点拖尾效果（只在螺旋线上时）
+          // 绘制光点拖尾效果（彗星拖尾）
           if (!isFlyingOut) {
-            const tailLength = 0.2; // 增加拖尾长度
-            const tailSteps = 8; // 增加拖尾分段数
+            const tailLength = 0.35; // 大幅增加拖尾长度，更像彗星
+            const tailSteps = 12; // 增加拖尾分段数，更平滑
             const segmentProgress = particle.progress; // 当前进度
             for (let t = 0; t < tailSteps; t++) {
               const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
@@ -809,11 +830,15 @@ export default function ProfessionalSpiralTower() {
                 const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
                 const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
 
-                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.5; // 增加拖尾亮度
-                const tailRadius = (8 - t) * scale; // 增加拖尾半径
+                // 彗星拖尾：从粗到细，从亮到暗
+                const tailFade = 1 - t / tailSteps; // 越往后越暗
+                const tailOpacity = lightOpacity * tailFade * 0.7; // 增加拖尾亮度
+                // 彗星拖尾逐渐变细：从头部到尾部半径逐渐减小
+                const tailRadius = (12 - t * 0.8) * scale; // 头部12，尾部约5
 
                 const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.9})`); // 核心更亮
+                tailGradient.addColorStop(0.5, `rgba(${colorRGB}, ${tailOpacity * 0.6})`); // 中间层
                 tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
                 ctx.beginPath();
