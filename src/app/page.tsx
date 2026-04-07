@@ -697,13 +697,13 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线
         const majors = renderObjects.filter(o => o.type === 'major');
         majors.forEach(major => {
-          const parent = renderObjects.find(o => o.type === 'college' && o.index === major.parentIndex);
+          const parent = renderObjects.find(o => o.type === 'department' && o.index === major.parentIndex);
           if (parent) {
             const opacity = Math.max(0.2, Math.min(0.6, (1 - (major.z || 0) / 600) * 0.6));
 
             const gradient = ctx.createLinearGradient(parent.x || 0, parent.y || 0, major.x || 0, major.y || 0);
-            gradient.addColorStop(0, major.color + Math.round(opacity * 255 * 0.8).toString(16).padStart(2, '0'));
-            gradient.addColorStop(1, major.color + Math.round(opacity * 255 * 0.3).toString(16).padStart(2, '0'));
+            gradient.addColorStop(0, addAlpha(major.color, opacity * 0.8));
+            gradient.addColorStop(1, addAlpha(major.color, opacity * 0.3));
 
             ctx.beginPath();
             ctx.moveTo(parent.x || 0, parent.y || 0);
