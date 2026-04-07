@@ -1047,6 +1047,24 @@ export default function ProfessionalSpiralTower() {
     initialTouchDistanceRef.current = null;
   };
 
+  // 自定义滚动条样式
+  const scrollbarStyles = `
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(96, 165, 250, 0.4);
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(96, 165, 250, 0.6);
+    }
+  `;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -1058,9 +1076,11 @@ export default function ProfessionalSpiralTower() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
-      {/* 半透明遮罩层，确保内容清晰可见 */}
-      <div className="absolute inset-0 bg-black/60"></div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
+      <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
+        {/* 半透明遮罩层，确保内容清晰可见 */}
+        <div className="absolute inset-0 bg-black/60"></div>
       <canvas
         ref={canvasRef}
         className="absolute inset-0"
@@ -1199,61 +1219,63 @@ export default function ProfessionalSpiralTower() {
               )}
             </>
           ) : (
-            // 显示专业沿革历史（箭头状时间线）
-            <div className="space-y-0">
+            <>
+              {/* 显示专业沿革历史（箭头状时间线） */}
               <div className="text-[11px] text-blue-300/80 mb-3 text-center">双击标题返回专业详情</div>
-              {(() => {
-                const majorName = selectedMajor.name;
-                // 获取该专业的所有历史记录（按年份排序）
-                const majorHistory = rawApiData
-                  .filter(item => item.major === majorName)
-                  .sort((a, b) => a.year - b.year);
+              <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-0 custom-scrollbar">
+                {(() => {
+                  const majorName = selectedMajor.name;
+                  // 获取该专业的所有历史记录（按年份排序）
+                  const majorHistory = rawApiData
+                    .filter(item => item.major === majorName)
+                    .sort((a, b) => a.year - b.year);
 
-                // 过滤出有变化的年份
-                const changedHistory = majorHistory.filter((item, index) => {
-                  // 第一条记录总是显示（初始设立）
-                  if (index === 0) return true;
+                  // 过滤出有变化的年份
+                  const changedHistory = majorHistory.filter((item, index) => {
+                    // 第一条记录总是显示（初始设立）
+                    if (index === 0) return true;
 
-                  // 比较与前一条记录是否有变化
-                  const prevItem = majorHistory[index - 1];
-                  const hasChanges =
-                    item.department !== prevItem.department ||
-                    item.description !== prevItem.description ||
-                    item.category !== prevItem.category ||
-                    item.level !== prevItem.level;
+                    // 比较与前一条记录是否有变化
+                    const prevItem = majorHistory[index - 1];
+                    const hasChanges =
+                      item.department !== prevItem.department ||
+                      item.description !== prevItem.description ||
+                      item.category !== prevItem.category ||
+                      item.level !== prevItem.level;
 
-                  return hasChanges;
-                });
+                    return hasChanges;
+                  });
 
-                return changedHistory.length > 0 ? (
-                  changedHistory.map((item, index) => (
-                    <div key={item.id} className="relative flex items-start">
-                      {/* 箭头线 */}
-                      {index < changedHistory.length - 1 && (
-                        <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
-                      )}
-                      {/* 节点圆点 */}
-                      <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/30 border-2 border-blue-400 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                      </div>
-                      {/* 内容卡片 */}
-                      <div className="ml-3 mb-4 flex-1 bg-white/5 rounded-lg p-2.5 border border-white/10 hover:border-blue-400/30 transition-colors">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[13px] font-bold text-blue-300">{item.year}年</span>
-                          <span className="text-[10px] text-blue-200/70">{item.department}</span>
-                        </div>
-                        <div className="text-[11px] text-white/90 font-medium mb-1">{item.major}</div>
-                        {item.description && (
-                          <div className="text-[10px] text-white/60">{item.description}</div>
+                  return changedHistory.length > 0 ? (
+                    changedHistory.map((item, index) => (
+                      <div key={item.id} className="relative flex items-start">
+                        {/* 箭头线 */}
+                        {index < changedHistory.length - 1 && (
+                          <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
                         )}
+                        {/* 节点圆点 */}
+                        <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/30 border-2 border-blue-400 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                        </div>
+                        {/* 内容卡片 */}
+                        <div className="ml-3 mb-3 flex-1 bg-white/5 rounded-lg p-2 border border-white/10 hover:border-blue-400/30 transition-colors">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-[13px] font-bold text-blue-300">{item.year}年</span>
+                            <span className="text-[10px] text-blue-200/70">{item.department}</span>
+                          </div>
+                          <div className="text-[11px] text-white/90 font-medium mb-1">{item.major}</div>
+                          {item.description && (
+                            <div className="text-[10px] text-white/60">{item.description}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center text-[12px] text-white/60 py-4">暂无历史数据</div>
-                );
-              })()}
-            </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-[12px] text-white/60 py-4">暂无历史数据</div>
+                  );
+                })()}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -1271,6 +1293,7 @@ export default function ProfessionalSpiralTower() {
           返回螺旋塔
         </button>
       )}
-    </div>
+      </div>
+    </>
   );
 }
