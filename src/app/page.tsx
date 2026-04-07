@@ -878,7 +878,9 @@ export default function ProfessionalSpiralTower() {
   }
 
   return (
-    <div className="relative w-full h-screen bg-black overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
+      {/* 半透明遮罩层，确保内容清晰可见 */}
+      <div className="absolute inset-0 bg-black/60"></div>
       <canvas
         ref={canvasRef}
         className="absolute inset-0"
