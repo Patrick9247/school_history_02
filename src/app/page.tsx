@@ -172,7 +172,7 @@ export default function ProfessionalSpiralTower() {
 
   // 产生新光点的定时器
   const lastLightCreateTimeRef = useRef(0);
-  const LIGHT_CREATE_INTERVAL = 1.6; // 每秒产生的光点数量（1.6秒产生一个）
+  const LIGHT_CREATE_INTERVAL = 0.53; // 每秒产生的光点数量（0.53秒产生一个，增加3倍）
 
   // 标记是否已初始化光点队列
   const lightParticlesInitializedRef = useRef(false);
@@ -765,20 +765,20 @@ export default function ProfessionalSpiralTower() {
             isFlyingOut = true;
             const flyOutProgress = particle.progress - 1; // 0-1之间（飞出进度）
 
-            // 只在前0.5秒内飞出
-            if (flyOutProgress < 0.5) {
-              const flyOutDistance = flyOutProgress * 400; // 飞出距离
+            // 增加飞出时间，让飞出效果更明显（从0.5秒增加到0.8秒）
+            if (flyOutProgress < 0.8) {
+              const flyOutDistance = flyOutProgress * 600; // 增加飞出距离（从400增加到600）
 
               // 获取末端位置和缩放
               const lastP = pathPoints[lastPointIndex];
 
               x = lastP.x + flyOutDirX * flyOutDistance;
-              y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.3; // 向上飞
-              z = lastP.z + flyOutDistance * 0.5; // 向前
-              scale = lastP.scale * (1 - flyOutProgress * 0.5); // 逐渐变小
+              y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.4; // 增加向上飞的角度
+              z = lastP.z + flyOutDistance * 0.6; // 增加向前的距离
+              scale = lastP.scale * (1 - flyOutProgress * 0.4); // 减慢变小的速度
 
-              // 透明度随飞行距离降低
-              lightOpacity = Math.max(0, 1 - flyOutProgress * 2);
+              // 透明度随飞行距离降低（减慢消失速度）
+              lightOpacity = Math.max(0, 1 - flyOutProgress * 1.25);
             } else {
               // 飞出结束，移除该光点
               return false;
@@ -792,8 +792,8 @@ export default function ProfessionalSpiralTower() {
 
           // 绘制光点拖尾效果（只在螺旋线上时）
           if (!isFlyingOut) {
-            const tailLength = 0.15;
-            const tailSteps = 6;
+            const tailLength = 0.2; // 增加拖尾长度
+            const tailSteps = 8; // 增加拖尾分段数
             const segmentProgress = particle.progress; // 当前进度
             for (let t = 0; t < tailSteps; t++) {
               const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
@@ -809,11 +809,11 @@ export default function ProfessionalSpiralTower() {
                 const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
                 const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
 
-                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.3;
-                const tailRadius = (6 - t) * scale;
+                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.5; // 增加拖尾亮度
+                const tailRadius = (8 - t) * scale; // 增加拖尾半径
 
                 const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.6})`);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
                 tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
                 ctx.beginPath();
@@ -824,16 +824,16 @@ export default function ProfessionalSpiralTower() {
             }
           }
 
-          // 绘制光点发光效果
+          // 绘制光点发光效果（增加大小和亮度，让光点更醒目）
           if (x !== undefined && y !== undefined) {
-            const glowRadius = isFlyingOut ? 6 * scale : 8 * scale;
-            const midRadius = isFlyingOut ? 3 * scale : 4 * scale;
-            const coreRadius = isFlyingOut ? 1.5 * scale : 2 * scale;
+            const glowRadius = isFlyingOut ? 9 * scale : 12 * scale; // 增加外圈半径
+            const midRadius = isFlyingOut ? 4.5 * scale : 6 * scale; // 增加中圈半径
+            const coreRadius = isFlyingOut ? 2 * scale : 3 * scale; // 增加核心半径
 
             const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 0.9})`);
-            lightGlowGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
-            lightGlowGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
+            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`); // 增加核心亮度
+            lightGlowGradient.addColorStop(0.15, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
+            lightGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.6})`);
             lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
             ctx.beginPath();
@@ -841,24 +841,24 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = lightGlowGradient;
             ctx.fill();
 
-            // 绘制光点中间层
+            // 绘制光点中间层（增加亮度）
             const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
-            midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1})`);
-            midGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
-            midGlowGradient.addColorStop(0.8, `rgba(${colorRGB}, ${lightOpacity * 0.7})`);
-            midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.3})`);
+            midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
+            midGlowGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 1.0})`); // 增加亮度
+            midGlowGradient.addColorStop(0.7, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
+            midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
 
             ctx.beginPath();
             ctx.arc(x, y, midRadius, 0, Math.PI * 2);
             ctx.fillStyle = midGlowGradient;
             ctx.fill();
 
-            // 绘制光点核心
+            // 绘制光点核心（增加亮度）
             const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
-            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`);
-            coreGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
-            coreGradient.addColorStop(0.6, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
-            coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`); // 核心最亮
+            coreGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 1.0})`);
+            coreGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
+            coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
 
             ctx.beginPath();
             ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
