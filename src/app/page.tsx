@@ -222,7 +222,8 @@ export default function ProfessionalSpiralTower() {
       const deptMap = new Map<string, Major[]>();
 
       items.forEach(item => {
-        const deptName = item.department || '其他';
+        // 使用 category（学院）而不是 department 来统计院系
+        const deptName = item.category || '其他';
         if (!deptMap.has(deptName)) {
           deptMap.set(deptName, []);
         }
@@ -232,7 +233,7 @@ export default function ProfessionalSpiralTower() {
           degree: item.level || '本科',
           college: item.category || '',
           original_college: item.category || '',
-          original_dept: deptName,
+          original_dept: item.department || '',
         });
       });
 
@@ -240,7 +241,7 @@ export default function ProfessionalSpiralTower() {
       deptMap.forEach((majors, deptName) => {
         departments.push({
           name: deptName,
-          college: items[0].category || '',
+          college: deptName, // 学院名称
           majorCount: majors.length,
           majors,
         });
