@@ -122,7 +122,9 @@ export default function ProfessionalSpiralTower() {
   ], []);
 
   // 学院数据（使用带专业的版本）
-  const colleges: College[] = collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
+  const colleges = useMemo((): College[] => {
+    return collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
+  }, [collegesWithMajors, baseColleges]);
 
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
@@ -574,7 +576,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, collegesWithMajors, keyEvents]);
+  }, [data, currentView, colleges, keyEvents]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
