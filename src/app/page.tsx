@@ -586,7 +586,7 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制灯带效果（流动的光点）
         const lightCount = 12; // 光点数量（增加到12个）
-        const lightSpeed = 0.0003; // 流动速度（稍微慢一点，更明显）
+        const lightSpeed = 0.003; // 流动速度（快10倍）
         const time = animationTimeRef.current;
 
         for (let l = 0; l < lightCount; l++) {
