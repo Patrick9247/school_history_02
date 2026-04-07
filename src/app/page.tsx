@@ -1143,6 +1143,23 @@ export default function ProfessionalSpiralTower() {
         </div>
       </div>
 
+      {/* 螺旋视图年份提示框 */}
+      {currentView === 'spiral' && tooltip.visible && (
+        <div
+          className="fixed bg-[rgba(10,15,30,0.92)] border border-blue-400/40 rounded-lg p-3 pointer-events-none z-30 shadow-xl"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+            minWidth: '140px',
+            maxWidth: '180px'
+          }}
+        >
+          <div className="text-[16px] font-bold text-blue-400 mb-1">{tooltip.year}年</div>
+          <div className="text-[11px] text-pink-300 font-medium mb-1">{tooltip.count}个专业</div>
+          {tooltip.event && <div className="text-[9px] text-white/60 leading-relaxed">{tooltip.event}</div>}
+        </div>
+      )}
+
       {/* 学院模态框 */}
       {selectedCollege && (
         <div className="fixed left-1/2 -translate-x-1/2 bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-3.5 z-30 w-[calc(100%-32px)] max-w-[360px] max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
