@@ -998,6 +998,50 @@ export default function ProfessionalSpiralTower() {
     zoomLevelRef.current = 1;
   };
 
+  // 鼠标滚轮缩放
+  const handleWheel = (e: React.WheelEvent) => {
+    if (currentView === 'solar') {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      zoomLevelRef.current = Math.max(0.5, Math.min(2, zoomLevelRef.current * delta));
+    }
+  };
+
+  // 触摸事件处理（用于双指缩放）
+  const initialTouchDistanceRef = useRef<number | null>(null);
+  const initialZoomRef = useRef<number>(1);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (currentView === 'solar' && e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      initialTouchDistanceRef.current = distance;
+      initialZoomRef.current = zoomLevelRef.current;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (currentView === 'solar' && e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      const ratio = distance / initialTouchDistanceRef.current;
+      zoomLevelRef.current = Math.max(0.5, Math.min(2, initialZoomRef.current * ratio));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    initialTouchDistanceRef.current = null;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -1019,6 +1063,10 @@ export default function ProfessionalSpiralTower() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       />
@@ -1072,7 +1120,7 @@ export default function ProfessionalSpiralTower() {
       {/* 提示文字 */}
       <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
         <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
-          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 双指缩放 · 双击院系查看专业 · 双击空白返回'}
+          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 滚轮/双指缩放 · 双击院系查看专业 · 双击空白返回'}
         </div>
       </div>
 
