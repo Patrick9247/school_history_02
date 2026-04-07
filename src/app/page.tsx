@@ -1036,7 +1036,7 @@ export default function ProfessionalSpiralTower() {
       {/* 标题栏 */}
       <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black to-transparent z-10">
         <h1 className="text-center text-[15px] font-semibold text-blue-400 tracking-wider">
-          成都理工大学专业沿革螺旋塔
+          成都理工大学专业沿革星系图
         </h1>
         <p className="text-center text-[10px] text-white/50 mt-1">
           1956 - {Math.max(...data.map(d => d.year))} {Math.max(...data.map(d => d.year)) - 1956 + 1}年岁月长河
