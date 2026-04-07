@@ -420,14 +420,20 @@ export default function ProfessionalSpiralTower() {
 
     // 3D 投影函数
     const project3D = (lx: number, ly: number, lz: number, rotX: number, rotY: number) => {
-      const x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
-      const z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
-      const y = ly;
-      const y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
-      const z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
+      // 绕 Y 轴旋转
+      let x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
+      let z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
+      let y = ly;
+
+      // 绕 X 轴旋转
+      let y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
+      let z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
+
       const perspective = 1200;
-      const scale = perspective / (perspective + z2);
-      return { x: centerX + x * scale, y: centerY + y2 * scale * 0.6, scale, z: z2 };
+      // 防止除以零或负数
+      const z2Clamped = Math.max(-perspective + 10, z2);
+      const scale = perspective / (perspective + z2Clamped);
+      return { x: centerX + x * scale, y: centerY + y2 * scale * 0.6, scale: Math.max(0.1, scale), z: z2 };
     };
 
     // 调整颜色亮度（支持 hex 和 hsl 格式）
@@ -472,6 +478,11 @@ export default function ProfessionalSpiralTower() {
 
     // 绘制球体
     const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean) => {
+      // 防止无效值
+      if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
+        return;
+      }
+
       if (glow) {
         const glowGradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
         glowGradient.addColorStop(0, addAlpha(color, 0.25));
@@ -790,10 +801,16 @@ export default function ProfessionalSpiralTower() {
 
     if (isDraggingRef.current) {
       const deltaX = e.clientX - lastMousePosRef.current.x;
+      const deltaY = e.clientY - lastMousePosRef.current.y;
+
       if (currentView === 'spiral') {
         rotationRef.current += deltaX * 0.005;
       } else {
+        // 太阳系视图：支持多轴旋转
+        // 水平拖拽 → 绕 Y 轴旋转
         solarRotYRef.current += deltaX * 0.005;
+        // 垂直拖拽 → 绕 X 轴旋转
+        solarRotXRef.current += deltaY * 0.005;
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
@@ -960,6 +977,13 @@ export default function ProfessionalSpiralTower() {
     zoomLevelRef.current = Math.max(zoomLevelRef.current / 1.2, 0.5);
   };
 
+  const resetView = () => {
+    solarRotXRef.current = 0.5;
+    solarRotYRef.current = 0;
+    solarRotZRef.current = 0;
+    zoomLevelRef.current = 1;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -1012,15 +1036,21 @@ export default function ProfessionalSpiralTower() {
         <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-2">
           <button
             onClick={zoomIn}
-            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
           >
             +
           </button>
           <button
             onClick={zoomOut}
-            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center"
+            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
           >
             −
+          </button>
+          <button
+            onClick={resetView}
+            className="w-10 h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
+          >
+            ↻
           </button>
         </div>
       )}
