@@ -72,7 +72,7 @@ export default function ProfessionalSpiralTower() {
   const [data, setData] = useState<YearData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
-  const [tooltip] = useState<{
+  const [tooltip, setTooltip] = useState<{
     year: number;
     count: number;
     event: string;
@@ -536,6 +536,11 @@ export default function ProfessionalSpiralTower() {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!canvasRef.current || data.length === 0) return;
 
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     if (isDraggingRef.current) {
       const deltaX = e.clientX - lastMousePosRef.current.x;
       if (currentView === 'spiral') {
@@ -544,6 +549,38 @@ export default function ProfessionalSpiralTower() {
         solarRotYRef.current += deltaX * 0.005;
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+    } else if (currentView === 'spiral') {
+      // 检测悬停节点
+      const hoveredNode = data.find(item => {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const rings = 6;
+        const spiralHeight = 800;
+        const progress = data.indexOf(item) / totalYears;
+        const angle = progress * rings * Math.PI * 2 + rotationRef.current;
+        const proj = {
+          x: centerX + (Math.cos(angle) * baseRadius),
+          y: centerY + ((1 - progress) * spiralHeight - spiralHeight / 2) * 0.6
+        };
+        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
+        return distance < 20;
+      });
+
+      if (hoveredNode) {
+        const keyEvent = keyEvents.find(e => e.year === hoveredNode.year);
+        setTooltip({
+          year: hoveredNode.year,
+          count: hoveredNode.majorCount,
+          event: keyEvent ? `${keyEvent.label} · ${keyEvent.desc}` : `${hoveredNode.departmentCount} 个院系 · ${hoveredNode.majorCount} 个专业`,
+          x: e.clientX + 15,
+          y: e.clientY + 15,
+          visible: true
+        });
+      } else {
+        setTooltip(prev => ({ ...prev, visible: false }));
+      }
     }
   };
 
@@ -559,8 +596,42 @@ export default function ProfessionalSpiralTower() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 检测点击节点
+    // 检测点击节点 - 仅用于显示 tooltip
     if (currentView === 'spiral') {
+      const clickedNode = data.find(item => {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const rings = 6;
+        const spiralHeight = 800;
+        const progress = data.indexOf(item) / totalYears;
+        const angle = progress * rings * Math.PI * 2 + rotationRef.current;
+        const proj = {
+          x: centerX + (Math.cos(angle) * baseRadius),
+          y: centerY + ((1 - progress) * spiralHeight - spiralHeight / 2) * 0.6
+        };
+        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
+        return distance < 20;
+      });
+
+      if (clickedNode) {
+        // 显示 tooltip（暂时不实现，参考文件中是悬停显示）
+        // 这里可以添加点击显示 tooltip 的逻辑
+      }
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!canvasRef.current || data.length === 0) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (currentView === 'spiral') {
+      // 双击年份节点进入太阳系视图
       const clickedNode = data.find(item => {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
@@ -581,11 +652,8 @@ export default function ProfessionalSpiralTower() {
       if (clickedNode) {
         setCurrentView('solar');
       }
-    }
-  };
-
-  const handleDoubleClick = () => {
-    if (currentView === 'solar') {
+    } else if (currentView === 'solar') {
+      // 双击返回螺旋塔视图
       setCurrentView('spiral');
     }
   };
