@@ -93,7 +93,6 @@ export default function ProfessionalSpiralTower() {
   }>({ year: 0, count: 0, event: '', x: 0, y: 0, visible: false });
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
-  const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -106,38 +105,9 @@ export default function ProfessionalSpiralTower() {
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
   const solarRenderObjectsRef = useRef<RenderObject[]>([]);
-
-  // 基础学院数据（不带专业）
-  const baseColleges: College[] = useMemo(() => [
-    { name: "地球与行星科学学院", color: "#3b82f6", majors: [] },
-    { name: "地球物理学院", color: "#10b981", majors: [] },
-    { name: "能源学院（页岩气现代产业学院）", color: "#f59e0b", majors: [] },
-    { name: "能源学院", color: "#f97316", majors: [] },
-    { name: "核技术与自动化工程学院", color: "#ef4444", majors: [] },
-    { name: "环境与土木工程学院", color: "#06b6d4", majors: [] },
-    { name: "材料与化学化工学院（锂资源与锂电产业学院）", color: "#8b5cf6", majors: [] },
-    { name: "管理科学学院", color: "#ec4899", majors: [] },
-    { name: "沉积地质研究院", color: "#14b8a6", majors: [] },
-    { name: "生态环境学院", color: "#22c55e", majors: [] },
-    { name: "物理学院", color: "#0ea5e9", majors: [] },
-    { name: "数学科学学院", color: "#6366f1", majors: [] },
-    { name: "外国语学院", color: "#f472b6", majors: [] },
-    { name: "文法学院（纪检监察学院）", color: "#84cc16", majors: [] },
-    { name: "马克思主义学院", color: "#dc2626", majors: [] },
-    { name: "商学院", color: "#f97316", majors: [] },
-    { name: "地理与规划学院", color: "#eab308", majors: [] },
-    { name: "信息科学与技术学院", color: "#7c3aed", majors: [] },
-    { name: "机电工程学院", color: "#db2777", majors: [] },
-    { name: "体育学院", color: "#14b8a6", majors: [] },
-    { name: "计算机与网络安全学院（示范性软件学院）", color: "#9333ea", majors: [] },
-    { name: "传播科学与艺术学院", color: "#a855f7", majors: [] },
-    { name: "国际教育学院（成都理工大学牛津布鲁克斯学院）", color: "#f472b6", majors: [] }
-  ], []);
-
-  // 学院数据（使用带专业的版本）
-  const colleges = useMemo((): College[] => {
-    return collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
-  }, [collegesWithMajors, baseColleges]);
+  const dataRef = useRef<YearData[]>([]);
+  const currentDepartmentsRef = useRef<DepartmentNode[]>([]);
+  const currentViewRef = useRef<'spiral' | 'solar'>('spiral');
 
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
@@ -180,76 +150,13 @@ export default function ProfessionalSpiralTower() {
             year: item.year, // 添加年份信息
           });
         });
-
-        // 更新学院数据的专业列表（精确匹配）
-        const updatedColleges: College[] = baseColleges.map(college => {
-          // 优先精确匹配学院名称
-          let matchingMajors: Major[] = collegeMap.get(college.name) || [];
-
-          // 如果精确匹配失败，尝试使用学院名称的部分匹配
-          if (matchingMajors.length === 0) {
-            const collegeShortName = college.name.split('（')[0];
-            matchingMajors = Array.from(collegeMap.entries())
-              .filter(([collegeName]) => collegeName === collegeShortName || collegeName.startsWith(collegeShortName + '（'))
-              .flatMap(([, majors]) => majors);
-          }
-
-          return {
-            ...college,
-            majors: matchingMajors.length > 0 ? matchingMajors : []
-          };
-        });
-
-        setCollegesWithMajors(updatedColleges);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [baseColleges]);
-
-  // 根据选中年份过滤学院专业
-  const getCollegesByYear = useCallback((year: number): College[] => {
-    if (!rawApiData || rawApiData.length === 0) return collegesWithMajors;
-
-    // 过滤该年份的数据
-    const yearData = rawApiData.filter(item => item.year === year);
-
-    // 按学院分组
-    const collegeMap = new Map<string, Major[]>();
-    yearData.forEach(item => {
-      const collegeName = item.category || '其他学院';
-      if (!collegeMap.has(collegeName)) {
-        collegeMap.set(collegeName, []);
-      }
-      collegeMap.get(collegeName)?.push({
-        name: item.major,
-        code: '',
-        degree: item.level || '本科',
-        college: item.category || '',
-        original_college: item.category || '',
-        original_dept: item.department || '',
-      });
-    });
-
-    // 更新学院数据的专业列表
-    return baseColleges.map(college => {
-      let matchingMajors: Major[] = collegeMap.get(college.name) || [];
-
-      if (matchingMajors.length === 0) {
-        const collegeShortName = college.name.split('（')[0];
-        matchingMajors = Array.from(collegeMap.entries())
-          .filter(([collegeName]) => collegeName === collegeShortName || collegeName.startsWith(collegeShortName + '（'))
-          .flatMap(([, majors]) => majors);
-      }
-
-      return {
-        ...college,
-        majors: matchingMajors.length > 0 ? matchingMajors : []
-      };
-    });
-  }, [rawApiData, collegesWithMajors, baseColleges]);
+  }, []);
 
   // 根据选中年份获取院系数据（使用 department 字段）
   const getDepartmentsByYear = useCallback((year: number): DepartmentNode[] => {
@@ -297,14 +204,6 @@ export default function ProfessionalSpiralTower() {
     return departments;
   }, [rawApiData, departmentsByYear]);
 
-  // 获取当前视图使用的学院数据
-  const currentColleges = useMemo(() => {
-    if (currentView === 'solar' && selectedYear !== null) {
-      return getCollegesByYear(selectedYear);
-    }
-    return colleges;
-  }, [currentView, selectedYear, getCollegesByYear, colleges]);
-
   // 获取当前视图使用的院系数据
   const currentDepartments = useMemo(() => {
     if (currentView === 'solar' && selectedYear !== null) {
@@ -312,6 +211,19 @@ export default function ProfessionalSpiralTower() {
     }
     return [];
   }, [currentView, selectedYear, getDepartmentsByYear]);
+
+  // 保存数据到 ref
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
+    currentDepartmentsRef.current = currentDepartments;
+  }, [currentDepartments]);
+
+  useEffect(() => {
+    currentViewRef.current = currentView;
+  }, [currentView]);
 
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
@@ -370,7 +282,7 @@ export default function ProfessionalSpiralTower() {
 
   // Canvas 绘制
   useEffect(() => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current || dataRef.current.length === 0) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -385,14 +297,14 @@ export default function ProfessionalSpiralTower() {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const startYear = 1956;
-    const endYear = Math.max(...data.map(d => d.year));
+    const endYear = Math.max(...dataRef.current.map(d => d.year));
     const totalYears = endYear - startYear + 1;
     const rings = 6;
     const spiralHeight = 800;
     const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
 
     // 生成螺旋节点
-    const spiralNodes = data.map((item, index) => {
+    const spiralNodes = dataRef.current.map((item, index) => {
       const year = item.year;
       const progress = index / totalYears;
       const angle = progress * rings * Math.PI * 2;
@@ -608,8 +520,8 @@ export default function ProfessionalSpiralTower() {
         });
 
         // 院系（原所在院系）
-        currentDepartments.forEach((dept: DepartmentNode, i: number) => {
-          const angle = (i / currentDepartments.length) * Math.PI * 2 - Math.PI / 2;
+        currentDepartmentsRef.current.forEach((dept: DepartmentNode, i: number) => {
+          const angle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
           const lz = 0;
@@ -690,19 +602,13 @@ export default function ProfessionalSpiralTower() {
           }
         });
 
-        // 2. 学院之间的连接线（连接相邻学院）
-        const departments = renderObjects.filter(o => o.type === 'college' || o.type === 'department');
-        departments.forEach((dept, i) => {
-          const nextDept = departments[(i + 1) % departments.length];
-          const opacity = Math.max(0.1, Math.min(0.3, (1 - (dept.z || 0) / 600) * 0.3));
-
-          ctx.beginPath();
-          ctx.moveTo(dept.x || 0, dept.y || 0);
-          ctx.lineTo(nextDept.x || 0, nextDept.y || 0);
-          ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        });
+        // 2. 学院之间的连接线（沿着椭圆轨道绘制）
+        // 绘制完整的椭圆轨道线
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, orbitRadiusX * 0.8, orbitRadiusY * 0.8, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
         // 绘制球体
         renderObjects.forEach(obj => {
@@ -717,6 +623,15 @@ export default function ProfessionalSpiralTower() {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false);
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+
+            // 在太阳球上显示年份
+            if (selectedYear !== null) {
+              ctx.font = `bold ${14 * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
+            }
           } else if (obj.type === 'college' || obj.type === 'department') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
@@ -740,7 +655,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, currentDepartments, keyEvents]);
+  }, [currentView, keyEvents, selectedYear]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -749,7 +664,7 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current || dataRef.current.length === 0) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -766,14 +681,14 @@ export default function ProfessionalSpiralTower() {
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
       // 检测悬停节点
-      const hoveredNode = data.find(item => {
+      const hoveredNode = dataRef.current.find(item => {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = Math.max(...dataRef.current.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
-        const progress = data.indexOf(item) / totalYears;
+        const progress = dataRef.current.indexOf(item) / totalYears;
         const angle = progress * rings * Math.PI * 2 + rotationRef.current;
         const proj = {
           x: centerX + (Math.cos(angle) * baseRadius),
@@ -812,7 +727,7 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current || dataRef.current.length === 0) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -821,14 +736,14 @@ export default function ProfessionalSpiralTower() {
 
     // 检测点击节点 - 仅用于显示 tooltip
     if (currentView === 'spiral') {
-      const clickedNode = data.find(item => {
+      const clickedNode = dataRef.current.find(item => {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = Math.max(...dataRef.current.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
-        const progress = data.indexOf(item) / totalYears;
+        const progress = dataRef.current.indexOf(item) / totalYears;
         const angle = progress * rings * Math.PI * 2 + rotationRef.current;
         const proj = {
           x: centerX + (Math.cos(angle) * baseRadius),
@@ -846,7 +761,7 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current || dataRef.current.length === 0) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -855,14 +770,14 @@ export default function ProfessionalSpiralTower() {
 
     if (currentView === 'spiral') {
       // 双击年份节点进入太阳系视图
-      const clickedNode = data.find(item => {
+      const clickedNode = dataRef.current.find(item => {
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = Math.max(...dataRef.current.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
-        const progress = data.indexOf(item) / totalYears;
+        const progress = dataRef.current.indexOf(item) / totalYears;
         const angle = progress * rings * Math.PI * 2 + rotationRef.current;
         const proj = {
           x: centerX + (Math.cos(angle) * baseRadius),
@@ -903,7 +818,7 @@ export default function ProfessionalSpiralTower() {
 
       if (clickedDept && clickedDept.name) {
         // 显示学院的专业列表
-        const deptData = currentDepartments.find(d => d.name === clickedDept.name);
+        const deptData = currentDepartmentsRef.current.find(d => d.name === clickedDept.name);
         if (deptData) {
           setSelectedCollege({
             name: deptData.name,
@@ -963,7 +878,7 @@ export default function ProfessionalSpiralTower() {
           成都理工大学专业沿革螺旋塔
         </h1>
         <p className="text-center text-[10px] text-white/50 mt-1">
-          1956 - {Math.max(...data.map(d => d.year))} {Math.max(...data.map(d => d.year)) - 1956 + 1}年岁月长河
+          1956 - {Math.max(...dataRef.current.map(d => d.year))} {Math.max(...dataRef.current.map(d => d.year)) - 1956 + 1}年岁月长河
         </p>
       </div>
 
