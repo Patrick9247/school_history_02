@@ -932,12 +932,6 @@ export default function ProfessionalSpiralTower() {
 
       {/* 提示文字 */}
       <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
-        {currentView === 'solar' && selectedYear && (
-          <div className="bg-[rgba(8,12,25,0.95)] border border-blue-400/50 rounded-full px-4 py-2 mb-2">
-            <span className="text-[16px] font-bold text-blue-400">{selectedYear} 年</span>
-            <span className="text-[11px] text-white/60 ml-2">院系分布</span>
-          </div>
-        )}
         <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
           {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 双指缩放 · 双击院系查看专业'}
         </div>
