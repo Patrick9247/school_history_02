@@ -789,9 +789,9 @@ export default function ProfessionalSpiralTower() {
     } else if (currentView === 'spiral') {
       // 检测悬停节点
       const hoveredNode = data.find(item => {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const baseRadius = Math.min(rect.width, rect.height) * 0.18;
         const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
@@ -843,9 +843,9 @@ export default function ProfessionalSpiralTower() {
     // 检测点击节点 - 仅用于显示 tooltip
     if (currentView === 'spiral') {
       const clickedNode = data.find(item => {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const baseRadius = Math.min(rect.width, rect.height) * 0.18;
         const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
@@ -877,9 +877,9 @@ export default function ProfessionalSpiralTower() {
     if (currentView === 'spiral') {
       // 双击年份节点进入太阳系视图
       const clickedNode = data.find(item => {
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const baseRadius = Math.min(rect.width, rect.height) * 0.18;
         const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
