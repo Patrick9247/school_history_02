@@ -644,11 +644,16 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints: PathPoint[] = [];
-        // 在1956年之前增加半圈（约4.3年，半圈 = 0.5圈/6圈 = 8.33%）
-        const extraStartYears = totalYears * 0.5 / rings;
-        const drawTotalYears = totalYears + extraStartYears;
-        for (let i = 0; i <= drawTotalYears; i += 0.2) {
-          const progress = i / drawTotalYears;
+        // 在1956年之前增加半圈：从进度 -0.5/rings 开始到 1 结束
+        // -0.5/rings = -0.083，对应角度 -π（半圈）
+        // 正常进度是 0-1（1956-2025），现在从 -0.083 开始
+        const startProgress = -0.5 / rings;
+        const endProgress = 1;
+        const totalProgress = endProgress - startProgress;
+        // 计算需要绘制的点数（每0.2年一个点）
+        const totalDrawYears = totalYears * totalProgress;
+        for (let i = 0; i <= totalDrawYears; i += 0.2) {
+          const progress = startProgress + (i / totalDrawYears) * totalProgress;
           const angle = progress * rings * Math.PI * 2;
           const proj = project3D(
             Math.cos(angle) * baseRadius,
