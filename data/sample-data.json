@@ -1,0 +1,82 @@
+[
+  {
+    "year": 1956,
+    "major": "金属与非金属矿产地质及勘探",
+    "category": "地球与行星科学学院",
+    "description": "矿产地质",
+    "level": "四年",
+    "department": "矿产地质及勘探系"
+  },
+  {
+    "year": 1956,
+    "major": "地质测量及找矿",
+    "category": "地球与行星科学学院",
+    "description": "地质测量",
+    "level": "四年",
+    "department": "地质测量及找矿系"
+  },
+  {
+    "year": 1956,
+    "major": "水文地质及工程地质",
+    "category": "环境与土木工程学院",
+    "description": "水文地质",
+    "level": "四年",
+    "department": "水文地质及工程地质系"
+  },
+  {
+    "year": 1956,
+    "major": "石油与天然气地质及勘探",
+    "category": "能源学院",
+    "description": "石油相关专业",
+    "level": "四年",
+    "department": "石油与天然气地质及勘探系"
+  },
+  {
+    "year": 1958,
+    "major": "地球物理勘探",
+    "category": "地球物理学院",
+    "description": "地球物理",
+    "level": "四年",
+    "department": "地球物理勘探系"
+  },
+  {
+    "year": 1958,
+    "major": "稀有元素地质勘探",
+    "category": "地球与行星科学学院",
+    "description": "稀有元素",
+    "level": "四年",
+    "department": "稀有元素地质勘探系"
+  },
+  {
+    "year": 1958,
+    "major": "探矿工程",
+    "category": "地球与行星科学学院",
+    "description": "探矿工程",
+    "level": "四年",
+    "department": "探矿工程系"
+  },
+  {
+    "year": 1960,
+    "major": "数学",
+    "category": "数学科学学院",
+    "description": "基础数学",
+    "level": "四年",
+    "department": "数学物理化学系"
+  },
+  {
+    "year": 1960,
+    "major": "放射性地球物理勘探",
+    "category": "核技术与自动化工程学院",
+    "description": "核技术",
+    "level": "四年",
+    "department": "三系"
+  },
+  {
+    "year": 1960,
+    "major": "放射性矿产地质勘探",
+    "category": "核技术与自动化工程学院",
+    "description": "核技术",
+    "level": "四年",
+    "department": "三系"
+  }
+]

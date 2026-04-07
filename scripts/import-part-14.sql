@@ -1,0 +1,152 @@
+BEGIN;
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (651, 2003, '财务管理', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (652, 2003, '经济学', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (653, 2003, '市场营销', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (654, 2003, '信息工程', '机电工程学院', '成都理工大学（成都校区） · 信息工程学院', '四年', '信息工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (655, 2003, '国际经济与贸易', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (656, 2003, '会计学', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (657, 2003, '电子信息科学与技术', '计算机与网络安全学院（示范性软件学院）', '成都理工大学（成都校区） · 信息工程学院', '四年', '信息工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (658, 2003, '电子商务', '管理科学学院', '成都理工大学（成都校区） · 信息管理学院', '四年', '信息管理学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (659, 2003, '数学与应用数学', '数学科学学院', '成都理工大学（成都校区） · 信息管理学院', '四年', '信息管理学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (660, 2003, '工商管理', '管理科学学院', '成都理工大学（成都校区） · 信息管理学院', '四年', '信息管理学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (661, 2003, '信息管理与信息系统', '管理科学学院', '成都理工大学（成都校区） · 信息管理学院', '四年', '信息管理学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (662, 2003, '计算机科学与技术', '计算机与网络安全学院（示范性软件学院）', '成都理工大学（成都校区） · 信息工程学院', '四年', '信息工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (663, 2003, '信息与计算科学', '数学科学学院', '成都理工大学（成都校区） · 信息管理学院', '四年', '信息管理学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (664, 2003, '地球物理学', '地球物理学院', '成都理工大学（成都校区） · 信息工程学院', '四年', '信息工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (665, 2003, '表演', '传播科学与艺术学院', '成都理工大学（成都校区） · 传播科学与艺术学院', '四年', '传播科学与艺术学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (666, 2003, '广播电视编导', '传播科学与艺术学院', '成都理工大学（成都校区） · 传播科学与艺术学院', '四年', '传播科学与艺术学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (667, 2003, '广告学', '传播科学与艺术学院', '成都理工大学（成都校区） · 传播科学与艺术学院', '四年', '传播科学与艺术学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (668, 2003, '工业设计', '传播科学与艺术学院', '成都理工大学（成都校区） · 传播科学与艺术学院', '四年', '传播科学与艺术学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (669, 2004, '财务管理', '商学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (670, 2004, '测控技术与仪器', '核技术与自动化工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (671, 2004, '石油工程', '能源学院（页岩气现代产业学院）', '成都理工大学（成都校区） · 能源学院', '四年', '能源学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (672, 2004, '资源勘查工程', '能源学院（页岩气现代产业学院）', '成都理工大学（成都校区） · 能源学院', '四年', '能源学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (673, 2004, '电气工程及其自动化', '核技术与自动化工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (674, 2004, '工程管理', '环境与土木工程学院', '成都理工大学（成都校区） · 环境与土木工程学院', '四年', '环境与土木工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (675, 2004, '环境工程', '生态环境学院', '成都理工大学（成都校区） · 环境与土木工程学院', '四年', '环境与土木工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (676, 2004, '核工程与核技术', '核技术与自动化工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (677, 2004, '土木工程', '环境与土木工程学院', '成都理工大学（成都校区） · 环境与土木工程学院', '四年', '环境与土木工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (678, 2004, '旅游管理', '地理与规划学院', '成都理工大学（成都校区） · 商学院', '四年', '商学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (679, 2004, '勘查技术与工程', '环境与土木工程学院', '成都理工大学（成都校区） · 环境与土木工程学院', '四年', '环境与土木工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (680, 2004, '工业设计', '机电工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (681, 2004, '机械工程及自动化', '机电工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (682, 2004, '广播电视编导', '传播科学与艺术学院', '成都理工大学（成都校区） · 传播科学与艺术学院', '四年', '传播科学与艺术学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (683, 2004, '地球化学', '核技术与自动化工程学院', '成都理工大学（成都校区） · 应用核技术与自动化工程学院', '四年', '应用核技术与自动化工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (684, 2004, '生物工程', '生态环境学院', '成都理工大学（成都校区） · 材料与生物工程学院', '四年', '材料与生物工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (685, 2004, '材料科学与工程', '材料与化学化工学院（锂资源与锂电产业学院）', '成都理工大学（成都校区） · 材料与生物工程学院', '四年', '材料与生物工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (686, 2004, '应用化学', '材料与化学化工学院（锂资源与锂电产业学院）', '成都理工大学（成都校区） · 材料与生物工程学院', '四年', '材料与生物工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (687, 2004, '化工与制药', '材料与化学化工学院（锂资源与锂电产业学院）', '成都理工大学（成都校区） · 材料与生物工程学院', '四年', '材料与生物工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (688, 2004, '化学', '材料与化学化工学院（锂资源与锂电产业学院）', '成都理工大学（成都校区） · 材料与生物工程学院', '四年', '材料与生物工程学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (689, 2004, '社会学', '文法学院（纪检监察学院）', '成都理工大学（成都校区） · 文法学院', '四年', '文法学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (690, 2004, '法学', '文法学院（纪检监察学院）', '成都理工大学（成都校区） · 文法学院', '四年', '文法学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (691, 2004, '政治学与行政学', '文法学院（纪检监察学院）', '成都理工大学（成都校区） · 文法学院', '四年', '文法学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (692, 2004, '公共事业管理', '文法学院（纪检监察学院）', '成都理工大学（成都校区） · 文法学院', '四年', '文法学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (693, 2004, '英语', '外国语学院', '成都理工大学（成都校区） · 外国语学院', '四年', '外国语学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (694, 2004, '日语', '外国语学院', '成都理工大学（成都校区） · 外国语学院', '四年', '外国语学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (695, 2004, '资源环境与城乡规划管理', '地理与规划学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (696, 2004, '资源勘查工程', '地球与行星科学学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (697, 2004, '测绘工程', '地球与行星科学学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (698, 2004, '地质学', '地球与行星科学学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (699, 2004, '旅游管理', '地理与规划学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+INSERT INTO professional_history (id, year, major, category, description, level, department, created_at, updated_at)
+VALUES (700, 2004, '地理科学', '地球与行星科学学院', '成都理工大学（成都校区） · 地球科学学院', '四年', '地球科学学院', NOW(), NOW())
+ON CONFLICT (id) DO UPDATE SET year = EXCLUDED.year, major = EXCLUDED.major, category = EXCLUDED.category, description = EXCLUDED.description, level = EXCLUDED.level, department = EXCLUDED.department, updated_at = NOW();
+COMMIT;
