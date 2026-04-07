@@ -735,6 +735,20 @@ export default function ProfessionalSpiralTower() {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false);
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+
+            // 在太阳球上绘制年份
+            if (selectedYear) {
+              ctx.font = `bold ${14 * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
+
+              ctx.font = `${10 * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.8})`;
+              ctx.textBaseline = 'middle';
+              ctx.fillText('年', obj.x || 0, (obj.y || 0) + 15 * (obj.scale || 1));
+            }
           } else if (obj.type === 'college' || obj.type === 'department') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
