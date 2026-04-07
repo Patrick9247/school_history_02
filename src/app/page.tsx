@@ -1020,13 +1020,13 @@ export default function ProfessionalSpiralTower() {
 
       {/* 学院模态框 */}
       {selectedCollege && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 bg-[rgba(8,12,25,0.95)] border border-blue-400/50 rounded-xl p-3.5 z-30 w-[calc(100%-32px)] max-w-[360px] max-h-[50vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-2.5 pb-2.5 border-b border-white/10">
-            <div className="text-[14px] font-bold flex-1 pr-2.5">{selectedCollege.name}</div>
-            <div className="text-[11px] text-white/50">{selectedCollege.majors.length} 个专业</div>
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-3.5 z-30 w-[calc(100%-32px)] max-w-[360px] max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
+          <div className="flex justify-between items-center mb-2.5 pb-2.5 border-b border-white/20">
+            <div className="text-[14px] font-bold flex-1 pr-2.5 text-white drop-shadow-md">{selectedCollege.name}</div>
+            <div className="text-[11px] text-blue-300 font-medium">{selectedCollege.majors.length} 个专业</div>
             <button
               onClick={() => setSelectedCollege(null)}
-              className="w-6 h-6 rounded-full bg-white/10 border-none text-white text-base cursor-pointer flex items-center justify-center ml-2.5"
+              className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2.5 transition-colors"
             >
               ×
             </button>
@@ -1036,10 +1036,10 @@ export default function ProfessionalSpiralTower() {
               <div
                 key={index}
                 onClick={() => setSelectedMajor(major)}
-                className="p-2.5 bg-white/6 rounded-lg cursor-pointer transition-all border border-transparent hover:bg-white/12 hover:border-blue-400/30"
+                className="p-2.5 bg-white/10 rounded-lg cursor-pointer transition-all border border-white/10 hover:bg-white/20 hover:border-blue-400/50"
               >
-                <div className="text-[12px] font-medium leading-1.3">{major.name}</div>
-                <div className="text-[9px] text-white/35 mt-0.75">{major.degree}</div>
+                <div className="text-[12px] font-medium leading-tight text-white drop-shadow-sm">{major.name}</div>
+                <div className="text-[9px] text-blue-200/80 mt-1 font-medium">{major.degree}</div>
               </div>
             ))}
           </div>
@@ -1048,40 +1048,40 @@ export default function ProfessionalSpiralTower() {
 
       {/* 专业详情弹窗 */}
       {selectedMajor && (
-        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(8,12,25,0.95)] border border-blue-400/50 rounded-xl p-5 z-40 w-[calc(100%-40px)] max-w-[320px]">
-          <div className="flex justify-between items-center mb-3.5 pb-3 border-b border-white/10">
-            <div className="text-[15px] font-bold flex-1">{selectedMajor.name}</div>
+        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-5 z-40 w-[calc(100%-40px)] max-w-[320px] shadow-2xl shadow-black/50">
+          <div className="flex justify-between items-center mb-3.5 pb-3 border-b border-white/20">
+            <div className="text-[15px] font-bold flex-1 text-white drop-shadow-md">{selectedMajor.name}</div>
             <button
               onClick={() => setSelectedMajor(null)}
-              className="w-6 h-6 rounded-full bg-white/10 border-none text-white text-base cursor-pointer flex items-center justify-center ml-2.5"
+              className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2.5 transition-colors"
             >
               ×
             </button>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-white/6">
-            <span className="text-white/50 text-[12px]">专业代码</span>
-            <span className="text-[12px] font-medium">{selectedMajor.code || '-'}</span>
+          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+            <span className="text-blue-300/90 text-[12px] font-medium">专业代码</span>
+            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.code || '-'}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-white/6">
-            <span className="text-white/50 text-[12px]">学制</span>
-            <span className="text-[12px] font-medium">{selectedMajor.degree || '-'}</span>
+          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+            <span className="text-blue-300/90 text-[12px] font-medium">学制</span>
+            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.degree || '-'}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-white/6">
-            <span className="text-white/50 text-[12px]">所属学院</span>
-            <span className="text-[12px] font-medium">{selectedMajor.college || '-'}</span>
+          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+            <span className="text-blue-300/90 text-[12px] font-medium">所属学院</span>
+            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
           </div>
-          <div className="flex justify-between items-center py-2 border-b border-white/6">
-            <span className="text-white/50 text-[12px]">原所属学院</span>
-            <span className="text-[12px] font-medium">{selectedMajor.original_college || '-'}</span>
+          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+            <span className="text-blue-300/90 text-[12px] font-medium">原所属学院</span>
+            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_college || '-'}</span>
           </div>
-          <div className="flex justify-between items-center py-2">
-            <span className="text-white/50 text-[12px]">原所属部门</span>
-            <span className="text-[12px] font-medium">{selectedMajor.original_dept || '-'}</span>
+          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
+            <span className="text-blue-300/90 text-[12px] font-medium">原所属部门</span>
+            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
           </div>
           {selectedMajor.year && (
-            <div className="flex justify-between items-center py-2 border-t border-white/6">
-              <span className="text-white/50 text-[12px]">设立年份</span>
-              <span className="text-[12px] font-medium">{selectedMajor.year}</span>
+            <div className="flex justify-between items-center py-2.5 border-t border-white/15">
+              <span className="text-blue-300/90 text-[12px] font-medium">设立年份</span>
+              <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.year}</span>
             </div>
           )}
         </div>
