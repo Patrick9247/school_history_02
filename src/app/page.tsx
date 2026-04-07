@@ -772,10 +772,25 @@ export default function ProfessionalSpiralTower() {
               // 获取末端位置和缩放
               const lastP = pathPoints[lastPointIndex];
 
-              x = lastP.x + flyOutDirX * flyOutDistance;
-              y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.4; // 增加向上飞的角度
-              z = lastP.z + flyOutDistance * 0.6; // 增加向前的距离
-              scale = lastP.scale * (1 - flyOutProgress * 0.4); // 减慢变小的速度
+              // 如果是飞出的第一帧，记录固定的起始位置和方向
+              if (!particle.flyOutStart) {
+                particle.flyOutStart = {
+                  x: lastP.x,
+                  y: lastP.y,
+                  z: lastP.z,
+                  scale: lastP.scale,
+                  dirX: flyOutDirX,
+                  dirY: flyOutDirY,
+                  opacity: 1.0
+                };
+              }
+
+              // 使用固定的起始位置计算当前位置，不随螺旋旋转变化
+              const startPos = particle.flyOutStart;
+              x = startPos.x + startPos.dirX * flyOutDistance;
+              y = startPos.y + startPos.dirY * flyOutDistance - flyOutDistance * 0.4; // 增加向上飞的角度
+              z = startPos.z + flyOutDistance * 0.6; // 增加向前的距离
+              scale = startPos.scale * (1 - flyOutProgress * 0.4); // 减慢变小的速度
 
               // 透明度随飞行距离降低（减慢消失速度）
               lightOpacity = Math.max(0, 1 - flyOutProgress * 1.25);
@@ -783,14 +798,16 @@ export default function ProfessionalSpiralTower() {
               // 绘制飞出时的彗星拖尾效果
               const flyTailSteps = 8;
               const flyTailLength = 80; // 飞出时的拖尾长度
+              // 使用固定的初始缩放和透明度，不随螺旋旋转变化
               for (let t = 0; t < flyTailSteps; t++) {
                 const tailProgress = t / flyTailSteps;
-                // 拖尾应该沿着飞出方向的逆方向
-                const tailX = x - flyOutDirX * tailProgress * flyTailLength;
-                const tailY = y - (flyOutDirY - 0.4) * tailProgress * flyTailLength; // 沿飞出方向反向
+                // 拖尾应该沿着飞出方向的逆方向（使用固定的方向）
+                const tailX = x - startPos.dirX * tailProgress * flyTailLength;
+                const tailY = y - (startPos.dirY - 0.4) * tailProgress * flyTailLength; // 沿飞出方向反向
                 const tailZ = z - 0.6 * tailProgress * flyTailLength; // 沿飞出方向反向
-                const tailOpacity = lightOpacity * (1 - tailProgress) * 0.6;
-                const tailRadius = (10 - tailProgress * 7) * scale; // 从10逐渐减小到3
+                // 使用固定值，不随位置变化
+                const tailOpacity = startPos.opacity * (1 - tailProgress) * 0.6;
+                const tailRadius = (10 - tailProgress * 7) * startPos.scale; // 从10逐渐减小到3，使用初始缩放
 
                 const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
                 tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
