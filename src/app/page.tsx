@@ -95,6 +95,7 @@ export default function ProfessionalSpiralTower() {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
   const [yearStats, setYearStats] = useState<{ year: number; deptCount: number; majorCount: number } | null>(null);
+  const [hoveredYear, setHoveredYear] = useState<number | null>(null); // 记录当前悬停的年份
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -596,6 +597,7 @@ export default function ProfessionalSpiralTower() {
           drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
+          // 当是关键事件或鼠标悬停在该年份时，显示详细信息
           if (keyEvent) {
             ctx.font = `bold ${9 * node.scale}px sans-serif`;
             ctx.fillStyle = '#fff';
@@ -610,7 +612,8 @@ export default function ProfessionalSpiralTower() {
             ctx.font = `${7 * node.scale}px sans-serif`;
             ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
             ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 6);
-          } else if (node.year % 10 === 0) {
+          } else if (node.year % 10 === 0 || hoveredYear === node.year) {
+            // 每10年或鼠标悬停时显示年份
             ctx.font = `${9 * node.scale}px sans-serif`;
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.85})`;
             ctx.textAlign = 'center';
@@ -822,6 +825,7 @@ export default function ProfessionalSpiralTower() {
 
       if (hoveredNode) {
         const keyEvent = keyEvents.find(e => e.year === hoveredNode.year);
+        setHoveredYear(hoveredNode.year);
         setTooltip({
           year: hoveredNode.year,
           count: hoveredNode.majorCount,
@@ -837,6 +841,7 @@ export default function ProfessionalSpiralTower() {
           majorCount: hoveredNode.majorCount
         });
       } else {
+        setHoveredYear(null);
         setTooltip(prev => ({ ...prev, visible: false }));
         setYearStats(null);
       }
