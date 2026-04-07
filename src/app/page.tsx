@@ -785,9 +785,10 @@ export default function ProfessionalSpiralTower() {
               const flyTailLength = 80; // 飞出时的拖尾长度
               for (let t = 0; t < flyTailSteps; t++) {
                 const tailProgress = t / flyTailSteps;
+                // 拖尾应该沿着飞出方向的逆方向
                 const tailX = x - flyOutDirX * tailProgress * flyTailLength;
-                const tailY = y - flyOutDirY * tailProgress * flyTailLength + tailProgress * flyTailLength * 0.4; // 向后拖尾
-                const tailZ = z - tailProgress * flyTailLength * 0.6;
+                const tailY = y - (flyOutDirY - 0.4) * tailProgress * flyTailLength; // 沿飞出方向反向
+                const tailZ = z - 0.6 * tailProgress * flyTailLength; // 沿飞出方向反向
                 const tailOpacity = lightOpacity * (1 - tailProgress) * 0.6;
                 const tailRadius = (10 - tailProgress * 7) * scale; // 从10逐渐减小到3
 
