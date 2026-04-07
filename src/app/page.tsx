@@ -608,6 +608,8 @@ export default function ProfessionalSpiralTower() {
         // 计算螺旋线末端的飞出方向（切线方向）
         const lastPointIndex = pathPoints.length - 1;
         const secondLastPointIndex = pathPoints.length - 2;
+        let flyOutDirX = 0, flyOutDirY = 0;
+        
         if (lastPointIndex > 0 && secondLastPointIndex >= 0) {
           const lastPoint = pathPoints[lastPointIndex];
           const secondLastPoint = pathPoints[secondLastPointIndex];
@@ -616,12 +618,17 @@ export default function ProfessionalSpiralTower() {
           const flyOutY = lastPoint.y - secondLastPoint.y;
           // 归一化
           const flyOutLength = Math.sqrt(flyOutX * flyOutX + flyOutY * flyOutY);
-          const flyOutDirX = flyOutX / flyOutLength;
-          const flyOutDirY = flyOutY / flyOutLength;
+          if (flyOutLength > 0) {
+            flyOutDirX = flyOutX / flyOutLength;
+            flyOutDirY = flyOutY / flyOutLength;
+          }
+        }
 
-          for (let l = 0; l < lightCount; l++) {
-            const lightProgress = time * lightSpeed + l / lightCount;
-            const segmentProgress = lightProgress - Math.floor(lightProgress);
+        for (let l = 0; l < lightCount; l++) {
+          // 每个光点循环产生，但飞出后重新从起点开始
+          const cycleTime = 2 + l / lightCount * 0.5; // 每个光点的周期稍有不同，避免同步
+          const lightProgress = (time * lightSpeed + l / lightCount) % cycleTime;
+          const segmentProgress = lightProgress % 1;
 
             let x, y, z, scale, lightOpacity;
             let isFlyingOut = false;
@@ -645,25 +652,26 @@ export default function ProfessionalSpiralTower() {
                 lightOpacity = Math.max(0.6, Math.min(1, (1 - z / 600)));
               }
             } else {
-              // 飞出螺旋线
+              // 飞出螺旋线（只飞出一段距离后消失，然后重新从起点开始）
               isFlyingOut = true;
-              const flyOutDistance = (lightProgress - 1) * 300; // 飞出距离
-              const flyOutProgress = (lightProgress - 1) * 2; // 飞出进度
+              const flyOutProgress = lightProgress - 1; // 0-1之间（飞出进度）
 
-              // 获取末端位置和缩放
-              const lastP = pathPoints[lastPointIndex];
-              const prevP = pathPoints[secondLastPointIndex];
+              // 只在前0.5秒内飞出，之后等待重新开始
+              if (flyOutProgress < 0.5) {
+                const flyOutDistance = flyOutProgress * 400; // 飞出距离
 
-              x = lastP.x + flyOutDirX * flyOutDistance;
-              y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.3; // 向上飞
-              z = lastP.z + flyOutDistance * 0.5; // 向前
-              scale = lastP.scale * (1 - flyOutProgress * 0.5); // 逐渐变小
+                // 获取末端位置和缩放
+                const lastP = pathPoints[lastPointIndex];
 
-              // 透明度随飞行距离降低
-              lightOpacity = Math.max(0, 1 - flyOutProgress);
+                x = lastP.x + flyOutDirX * flyOutDistance;
+                y = lastP.y + flyOutDirY * flyOutDistance - flyOutDistance * 0.3; // 向上飞
+                z = lastP.z + flyOutDistance * 0.5; // 向前
+                scale = lastP.scale * (1 - flyOutProgress * 0.5); // 逐渐变小
 
-              // 如果飞得太远或透明度太低，重置
-              if (lightOpacity <= 0 || flyOutDistance > 400) {
+                // 透明度随飞行距离降低
+                lightOpacity = Math.max(0, 1 - flyOutProgress * 2);
+              } else {
+                // 飞出结束，等待下一次循环
                 continue; // 跳过这个光点
               }
             }
@@ -746,7 +754,6 @@ export default function ProfessionalSpiralTower() {
               ctx.fill();
             }
           }
-        }
 
         // 绘制节点
         const sortedNodes = [...projectedNodes].sort((a, b) => b.z - a.z);
