@@ -174,6 +174,9 @@ export default function ProfessionalSpiralTower() {
   const lastLightCreateTimeRef = useRef(0);
   const LIGHT_CREATE_INTERVAL = 1.6; // 每秒产生的光点数量（1.6秒产生一个）
 
+  // 标记是否已初始化光点队列
+  const lightParticlesInitializedRef = useRef(false);
+
   // 获取随机颜色
   const getRandomLightColor = (): string => {
     return LIGHT_COLORS[Math.floor(Math.random() * LIGHT_COLORS.length)];
@@ -622,6 +625,18 @@ export default function ProfessionalSpiralTower() {
     // 优化：创建学院轨道的角度缓存
     const orbitSteps = 315; // 0.02 精度，约 315 个点
     const orbitAngleCache = createAngleCache(orbitSteps);
+
+    // 初始化光点队列（只执行一次）
+    if (!lightParticlesInitializedRef.current) {
+      lightParticlesInitializedRef.current = true;
+      // 创建第一个光点，初始位置在第一圈结束处（progress = 1/6）
+      lightParticlesRef.current.push({
+        progress: 1 / rings, // 第一圈结束，第二圈开始
+        color: getRandomLightColor(),
+        createdAt: animationTimeRef.current
+      });
+      lastLightCreateTimeRef.current = animationTimeRef.current;
+    }
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
