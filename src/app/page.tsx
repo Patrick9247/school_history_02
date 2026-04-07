@@ -811,44 +811,6 @@ export default function ProfessionalSpiralTower() {
             return true;
           }
 
-          // 绘制光点拖尾效果（彗星拖尾）
-          if (!isFlyingOut) {
-            const tailLength = 0.5; // 大幅增加拖尾长度，更明显
-            const tailSteps = 16; // 增加拖尾分段数，更平滑
-            const segmentProgress = particle.progress; // 当前进度
-            for (let t = 0; t < tailSteps; t++) {
-              const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
-              if (tailProgress < 0) break;
-
-              const tailIndex = Math.floor(tailProgress * pathPoints.length);
-              const tailNextIndex = (tailIndex + 1) % pathPoints.length;
-
-              if (tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
-                const tp1 = pathPoints[tailIndex];
-                const tp2 = pathPoints[tailNextIndex];
-                const tailX = tp1.x + (tp2.x - tp1.x) * tailProgress;
-                const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
-                const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
-
-                // 彗星拖尾：从粗到细，从亮到暗
-                const tailFade = 1 - t / tailSteps; // 越往后越暗
-                const tailOpacity = lightOpacity * tailFade * 0.85; // 增加拖尾亮度
-                // 彗星拖尾逐渐变细：从头部到尾部半径逐渐减小
-                const tailRadius = (18 - t * 1.0) * scale; // 头部18，尾部约2，更大更明显
-
-                const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.95})`); // 核心更亮
-                tailGradient.addColorStop(0.3, `rgba(${colorRGB}, ${tailOpacity * 0.7})`); // 中间层
-                tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
-
-                ctx.beginPath();
-                ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
-                ctx.fillStyle = tailGradient;
-                ctx.fill();
-              }
-            }
-          }
-
           // 绘制光点发光效果（增加大小和亮度，让光点更醒目）
           if (x !== undefined && y !== undefined) {
             const glowRadius = isFlyingOut ? 9 * scale : 12 * scale; // 增加外圈半径
