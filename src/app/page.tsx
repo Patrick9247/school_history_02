@@ -378,19 +378,30 @@ export default function ProfessionalSpiralTower() {
     if (!ctx) return;
 
     const rect = canvas.parentElement?.getBoundingClientRect();
-    if (rect) {
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-    }
+    if (!rect) return;
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    // 获取设备像素比，支持高 DPI 屏幕
+    const dpr = window.devicePixelRatio || 1;
+
+    // 设置 Canvas 的物理尺寸
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    // 设置 Canvas 的 CSS 尺寸
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    // 缩放绘图上下文，使绘图逻辑使用逻辑坐标
+    ctx.scale(dpr, dpr);
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
     const startYear = 1956;
     const endYear = Math.max(...data.map(d => d.year));
     const totalYears = endYear - startYear + 1;
     const rings = 6;
     const spiralHeight = 800;
-    const baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+    const baseRadius = Math.min(rect.width, rect.height) * 0.18;
 
     // 生成螺旋节点
     const spiralNodes = data.map((item, index) => {
