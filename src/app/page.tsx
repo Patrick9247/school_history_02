@@ -554,7 +554,7 @@ export default function ProfessionalSpiralTower() {
           return { ...node, x: proj.x, y: proj.y, scale: proj.scale, z: proj.z };
         });
 
-        // 绘制连接线
+        // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints = [];
         for (let i = 0; i <= totalYears; i += 0.2) {
@@ -565,9 +565,10 @@ export default function ProfessionalSpiralTower() {
             (1 - progress) * spiralHeight - spiralHeight / 2,
             Math.sin(angle) * baseRadius, 0, rotationRef.current
           );
-          pathPoints.push(proj);
+          pathPoints.push({ ...proj, progress });
         }
 
+        // 绘制基础线条
         for (let i = 1; i < pathPoints.length; i++) {
           const avgZ = (pathPoints[i - 1].z + pathPoints[i].z) / 2;
           const opacity = Math.max(0.15, Math.min(0.5, (1 - avgZ / 600) * 0.5));
@@ -578,6 +579,54 @@ export default function ProfessionalSpiralTower() {
           ctx.moveTo(pathPoints[i - 1].x, pathPoints[i - 1].y);
           ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
           ctx.stroke();
+        }
+
+        // 绘制灯带效果（流动的光点）
+        const lightCount = 6; // 光点数量
+        const lightSpeed = 0.0005; // 流动速度
+        const time = animationTimeRef.current;
+
+        for (let l = 0; l < lightCount; l++) {
+          const lightProgress = ((time * lightSpeed + l / lightCount) % 1);
+          const lightPointIndex = Math.floor(lightProgress * pathPoints.length);
+          const nextLightPointIndex = (lightPointIndex + 1) % pathPoints.length;
+          const segmentProgress = (lightProgress * pathPoints.length) % 1;
+
+          if (lightPointIndex < pathPoints.length && nextLightPointIndex < pathPoints.length) {
+            const p1 = pathPoints[lightPointIndex];
+            const p2 = pathPoints[nextLightPointIndex];
+
+            // 插值计算光点位置
+            const x = p1.x + (p2.x - p1.x) * segmentProgress;
+            const y = p1.y + (p2.y - p1.y) * segmentProgress;
+            const z = p1.z + (p2.z - p1.z) * segmentProgress;
+            const scale = p1.scale + (p2.scale - p1.scale) * segmentProgress;
+
+            // 计算光点透明度（前方更亮）
+            const lightOpacity = Math.max(0.3, Math.min(0.9, (1 - z / 600)));
+
+            // 绘制光点发光效果
+            const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, 15 * scale);
+            lightGlowGradient.addColorStop(0, `rgba(147, 197, 253, ${lightOpacity * 0.8})`);
+            lightGlowGradient.addColorStop(0.3, `rgba(96, 165, 250, ${lightOpacity * 0.4})`);
+            lightGlowGradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+
+            ctx.beginPath();
+            ctx.arc(x, y, 15 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = lightGlowGradient;
+            ctx.fill();
+
+            // 绘制光点核心
+            const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, 4 * scale);
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity})`);
+            coreGradient.addColorStop(0.5, `rgba(191, 219, 254, ${lightOpacity * 0.8})`);
+            coreGradient.addColorStop(1, `rgba(96, 165, 250, ${lightOpacity * 0.6})`);
+
+            ctx.beginPath();
+            ctx.arc(x, y, 4 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+          }
         }
 
         // 绘制节点
