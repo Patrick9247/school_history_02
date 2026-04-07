@@ -689,9 +689,26 @@ export default function ProfessionalSpiralTower() {
           }
         }
         ctx.closePath();
-        ctx.strokeStyle = 'rgba(96, 165, 250, 0.2)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+        ctx.lineWidth = 4;
         ctx.stroke();
+
+        // 绘制专业球与学院球的连接线
+        renderObjects.forEach(obj => {
+          if (obj.type === 'major' && obj.parentIndex !== undefined) {
+            const parentDept = renderObjects.find(d =>
+              d.type === 'department' && d.index === obj.parentIndex
+            );
+            if (parentDept) {
+              ctx.beginPath();
+              ctx.moveTo(parentDept.x, parentDept.y);
+              ctx.lineTo(obj.x, obj.y);
+              ctx.strokeStyle = addAlpha(obj.color, 0.4);
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            }
+          }
+        });
 
         // 绘制球体
         renderObjects.forEach(obj => {
