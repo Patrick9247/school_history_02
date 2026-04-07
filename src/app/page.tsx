@@ -790,130 +790,37 @@ export default function ProfessionalSpiralTower() {
             return true;
           }
 
-          // 绘制彗星拖尾效果（只在螺旋线上时）
+          // 绘制光点拖尾效果（只在螺旋线上时）
           if (!isFlyingOut) {
-            // 获取光点移动方向（用于计算垂直方向）
-            const currentPointIndex = Math.floor(particle.progress * pathPoints.length);
-            const nextPointIndex = (currentPointIndex + 1) % pathPoints.length;
-            const prevPointIndex = (currentPointIndex - 1 + pathPoints.length) % pathPoints.length;
-
-            let dirX = 0, dirY = 0;
-            if (currentPointIndex >= 0 && nextPointIndex < pathPoints.length && prevPointIndex >= 0) {
-              const current = pathPoints[currentPointIndex];
-              const next = pathPoints[nextPointIndex];
-              const prev = pathPoints[prevPointIndex];
-              dirX = (next.x - prev.x) / 2;
-              dirY = (next.y - prev.y) / 2;
-            }
-
-            const length = Math.sqrt(dirX * dirX + dirY * dirY);
-            if (length > 0) {
-              dirX /= length;
-              dirY /= length;
-            }
-
-            // 垂直方向（用于计算拖尾宽度）
-            const perpX = -dirY;
-            const perpY = dirX;
-
-            const tailLength = 0.35; // 增加拖尾长度到0.35
-            const tailSteps = 12; // 增加拖尾分段数到12
-            const segmentProgress = particle.progress;
-
-            // 绘制离子尾（蓝色，细长）
-            const ionTailSteps = 10;
-            for (let t = 0; t < ionTailSteps; t++) {
-              const tailProgress = segmentProgress - (t + 1) / ionTailSteps * tailLength * 1.2;
+            const tailLength = 0.2; // 增加拖尾长度
+            const tailSteps = 8; // 增加拖尾分段数
+            const segmentProgress = particle.progress; // 当前进度
+            for (let t = 0; t < tailSteps; t++) {
+              const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
               if (tailProgress < 0) break;
 
               const tailIndex = Math.floor(tailProgress * pathPoints.length);
               const tailNextIndex = (tailIndex + 1) % pathPoints.length;
 
-              if (tailIndex >= 0 && tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
+              if (tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
                 const tp1 = pathPoints[tailIndex];
                 const tp2 = pathPoints[tailNextIndex];
                 const tailX = tp1.x + (tp2.x - tp1.x) * tailProgress;
                 const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
                 const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
 
-                const tailOpacity = lightOpacity * (1 - t / ionTailSteps) * 0.4;
-                const tailRadius = (4 - t * 0.3) * scale; // 渐变半径
+                const tailOpacity = lightOpacity * (1 - t / tailSteps) * 0.5; // 增加拖尾亮度
+                const tailRadius = (8 - t) * scale; // 增加拖尾半径
 
                 const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
-                // 离子尾偏蓝
-                tailGradient.addColorStop(0, `rgba(150, 200, 255, ${tailOpacity})`);
-                tailGradient.addColorStop(1, `rgba(150, 200, 255, 0)`);
+                tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
+                tailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
 
                 ctx.beginPath();
                 ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
                 ctx.fillStyle = tailGradient;
                 ctx.fill();
               }
-            }
-
-            // 绘制尘埃尾（偏黄/白色，宽大）
-            const tailPoints = [];
-            for (let t = 0; t < tailSteps; t++) {
-              const tailProgress = segmentProgress - (t + 1) / tailSteps * tailLength;
-              if (tailProgress < 0) continue;
-
-              const tailIndex = Math.floor(tailProgress * pathPoints.length);
-              const tailNextIndex = (tailIndex + 1) % pathPoints.length;
-
-              if (tailIndex >= 0 && tailIndex < pathPoints.length && tailNextIndex < pathPoints.length) {
-                const tp1 = pathPoints[tailIndex];
-                const tp2 = pathPoints[tailNextIndex];
-                const tailX = tp1.x + (tp2.x - tp1.x) * tailProgress;
-                const tailY = tp1.y + (tp2.y - tp1.y) * tailProgress;
-                const tailZ = tp1.z + (tp2.z - tp1.z) * tailProgress;
-
-                // 彗星尾部逐渐散开（锥形效果）
-                const spreadFactor = (t / tailSteps) * 0.5; // 后面更宽
-                const tailWidth = (3 + t * 0.8 + spreadFactor * 6) * scale;
-
-                tailPoints.push({
-                  x: tailX + perpX * tailWidth,
-                  y: tailY + perpY * tailWidth,
-                  z: tailZ,
-                  opacity: lightOpacity * (1 - t / tailSteps) * 0.6,
-                  centerX: tailX,
-                  centerY: tailY
-                });
-              }
-            }
-
-            // 从头部开始，连接所有点形成拖尾形状
-            if (tailPoints.length > 1) {
-              // 上边缘
-              ctx.beginPath();
-              ctx.moveTo(x + perpX * 2 * scale, y + perpY * 2 * scale);
-
-              for (let i = 0; i < tailPoints.length; i++) {
-                const point = tailPoints[i];
-                ctx.lineTo(point.x, point.y);
-              }
-
-              // 下边缘
-              for (let i = tailPoints.length - 1; i >= 0; i--) {
-                const point = tailPoints[i];
-                ctx.lineTo(point.centerX - perpX * (3 + i * 0.5) * scale,
-                           point.centerY - perpY * (3 + i * 0.5) * scale);
-              }
-
-              ctx.closePath();
-
-              // 创建渐变填充
-              const gradient = ctx.createLinearGradient(x, y,
-                tailPoints[tailPoints.length - 1].centerX,
-                tailPoints[tailPoints.length - 1].centerY);
-
-              gradient.addColorStop(0, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
-              gradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 0.35})`);
-              gradient.addColorStop(0.7, `rgba(255, 255, 200, ${lightOpacity * 0.2})`);
-              gradient.addColorStop(1, `rgba(255, 255, 200, 0)`);
-
-              ctx.fillStyle = gradient;
-              ctx.fill();
             }
           }
 
