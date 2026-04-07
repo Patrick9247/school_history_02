@@ -2,6 +2,49 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
+// 特殊年份颜色配置（提取到组件外部，避免重复创建）
+const SPECIAL_YEAR_COLORS: Record<number, string> = {
+  1956: '#FF6B6B',
+  1958: '#FFA500',
+  1965: '#9370DB',
+  1993: '#FFA500',
+  2001: '#FFD700',
+  2017: '#00FF7F',
+  2025: '#00CED1'
+};
+
+// 灯带颜色配置（提取到组件外部）
+const LIGHT_COLORS = [
+  '147, 197, 253', // 蓝色
+  '167, 139, 250', // 紫色
+  '236, 72, 153', // 粉色
+  '34, 211, 238', // 青色
+  '251, 146, 60', // 橙色
+  '74, 222, 128', // 绿色
+  '250, 204, 21', // 黄色
+  '248, 113, 113', // 红色
+  '192, 132, 252', // 浅紫
+  '96, 165, 250', // 深蓝
+  '167, 243, 208', // 青绿
+  '254, 202, 202', // 浅红
+];
+
+// 角度缓存接口
+interface AngleCache {
+  cos: number;
+  sin: number;
+}
+
+// 创建角度缓存（避免重复计算 sin/cos）
+function createAngleCache(steps: number): AngleCache[] {
+  const cache: AngleCache[] = [];
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * Math.PI * 2;
+    cache[i] = { cos: Math.cos(angle), sin: Math.sin(angle) };
+  }
+  return cache;
+}
+
 interface Major {
   name: string;
   code: string;
@@ -143,6 +186,11 @@ export default function ProfessionalSpiralTower() {
   const colleges = useMemo((): College[] => {
     return collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
   }, [collegesWithMajors, baseColleges]);
+
+  // 优化：缓存最大年份，避免重复计算
+  const maxYear = useMemo(() => {
+    return data.length > 0 ? Math.max(...data.map(d => d.year)) : 2025;
+  }, [data]);
 
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
@@ -321,24 +369,27 @@ export default function ProfessionalSpiralTower() {
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
 
-    apiData.forEach(item => {
-      if (!yearMap.has(item.year)) {
-        yearMap.set(item.year, []);
+    // 优化：使用 for...of 替代 forEach，性能更好
+    for (const item of apiData) {
+      const year = item.year;
+      if (!yearMap.has(year)) {
+        yearMap.set(year, []);
       }
-      yearMap.get(item.year)?.push(item);
-    });
+      yearMap.get(year)!.push(item);
+    }
 
     const result: YearData[] = [];
-    yearMap.forEach((items, year) => {
+    // 优化：使用 for...of 替代 forEach
+    for (const [year, items] of yearMap) {
       const deptMap = new Map<string, Major[]>();
 
-      items.forEach(item => {
+      for (const item of items) {
         // 使用 category（学院）而不是 department 来统计院系
         const deptName = item.category || '其他';
         if (!deptMap.has(deptName)) {
           deptMap.set(deptName, []);
         }
-        deptMap.get(deptName)?.push({
+        deptMap.get(deptName)!.push({
           name: item.major,
           code: '',
           degree: item.level || '本科',
@@ -346,17 +397,17 @@ export default function ProfessionalSpiralTower() {
           original_college: item.category || '',
           original_dept: item.department || '',
         });
-      });
+      }
 
       const departments: Department[] = [];
-      deptMap.forEach((majors, deptName) => {
+      for (const [deptName, majors] of deptMap) {
         departments.push({
           name: deptName,
           college: deptName, // 学院名称
           majorCount: majors.length,
           majors,
         });
-      });
+      }
 
       result.push({
         year,
@@ -364,7 +415,7 @@ export default function ProfessionalSpiralTower() {
         majorCount: items.length,
         departments,
       });
-    });
+    }
 
     return result.sort((a, b) => a.year - b.year);
   };
@@ -401,7 +452,7 @@ export default function ProfessionalSpiralTower() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     const startYear = 1956;
-    const endYear = Math.max(...data.map(d => d.year));
+    const endYear = maxYear;
     const totalYears = endYear - startYear + 1;
     const rings = 6;
 
@@ -424,31 +475,20 @@ export default function ProfessionalSpiralTower() {
         year: item.year,
         count: item.majorCount,
         size: 12,
-        specialColor: (() => {
-          const specialColors: Record<number, string> = {
-            1956: '#FF6B6B',
-            1958: '#FFA500',
-            1965: '#9370DB',
-            1993: '#FFA500',
-            2001: '#FFD700',
-            2017: '#00FF7F',
-            2025: '#00CED1'
-          };
-          return specialColors[year] || null;
-        })()
+        specialColor: SPECIAL_YEAR_COLORS[year] || null
       };
     });
 
     // 3D 投影函数
     const project3D = (lx: number, ly: number, lz: number, rotX: number, rotY: number) => {
       // 绕 Y 轴旋转
-      let x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
-      let z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
-      let y = ly;
+      const x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
+      const z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
+      const y = ly;
 
       // 绕 X 轴旋转
-      let y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
-      let z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
+      const y2 = y * Math.cos(rotX) - z * Math.sin(rotX);
+      const z2 = y * Math.sin(rotX) + z * Math.cos(rotX);
 
       const perspective = 1200;
       // 防止除以零或负数
@@ -555,6 +595,15 @@ export default function ProfessionalSpiralTower() {
       ctx.globalAlpha = 1;
     };
 
+    // 优化：创建路径点的角度缓存，避免每帧重复计算 sin/cos
+    const drawTotalYears = totalYears + 1; // 多加一年
+    const pathSteps = Math.floor(drawTotalYears / 0.2);
+    const pathAngleCache = createAngleCache(pathSteps);
+
+    // 优化：创建学院轨道的角度缓存
+    const orbitSteps = 315; // 0.02 精度，约 315 个点
+    const orbitAngleCache = createAngleCache(orbitSteps);
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -576,16 +625,14 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints = [];
-        // 从1955年开始绘制，确保起始点之前也有线
-        const drawStartYear = startYear - 1; // 1955年
-        const drawTotalYears = totalYears + 1; // 多加一年
-        for (let i = 0; i <= drawTotalYears; i += 0.2) {
-          const progress = i / drawTotalYears;
-          const angle = progress * rings * Math.PI * 2;
+        // 优化：使用角度缓存，减少 sin/cos 计算
+        for (let i = 0; i <= pathSteps; i++) {
+          const progress = i / pathSteps;
+          const angleCacheItem = pathAngleCache[Math.min(i, pathSteps)];
           const proj = project3D(
-            Math.cos(angle) * baseRadius,
+            angleCacheItem.cos * baseRadius,
             (1 - progress) * spiralHeight - spiralHeight / 2,
-            Math.sin(angle) * baseRadius, 0, rotationRef.current
+            angleCacheItem.sin * baseRadius, 0, rotationRef.current
           );
           pathPoints.push({ ...proj, progress });
         }
@@ -608,21 +655,7 @@ export default function ProfessionalSpiralTower() {
         const lightSpeed = 0.03; // 流动速度
         const time = animationTimeRef.current;
 
-        // 为每个光点生成随机颜色
-        const lightColors = [
-          '147, 197, 253', // 蓝色
-          '167, 139, 250', // 紫色
-          '236, 72, 153', // 粉色
-          '34, 211, 238', // 青色
-          '251, 146, 60', // 橙色
-          '74, 222, 128', // 绿色
-          '250, 204, 21', // 黄色
-          '248, 113, 113', // 红色
-          '192, 132, 252', // 浅紫
-          '96, 165, 250', // 深蓝
-          '167, 243, 208', // 青绿
-          '254, 202, 202', // 浅红
-        ];
+        // 使用外部定义的 LIGHT_COLORS 常量，避免每次渲染创建新数组
 
         // 计算螺旋线末端的飞出方向（切线方向）
         const lastPointIndex = pathPoints.length - 1;
@@ -649,7 +682,7 @@ export default function ProfessionalSpiralTower() {
           const lightProgress = (time * lightSpeed + l / lightCount) % cycleTime;
           const segmentProgress = lightProgress % 1;
 
-            let x, y, z, scale, lightOpacity;
+            let x: number | undefined, y: number | undefined, z: number | undefined, scale: number = 1, lightOpacity: number = 1;
             let isFlyingOut = false;
 
             if (lightProgress < 1) {
@@ -695,8 +728,13 @@ export default function ProfessionalSpiralTower() {
               }
             }
 
-            // 获取该光点的颜色
-            const colorRGB = lightColors[l % lightColors.length];
+            // 如果变量未定义，跳过此光点的绘制
+            if (x === undefined || y === undefined) {
+              continue;
+            }
+
+            // 获取该光点的颜色（使用外部常量）
+            const colorRGB = LIGHT_COLORS[l % LIGHT_COLORS.length];
 
             // 绘制光点拖尾效果（只在螺旋线上时）
             if (!isFlyingOut && x !== undefined && y !== undefined) {
@@ -902,13 +940,14 @@ export default function ProfessionalSpiralTower() {
         // 保存渲染对象到 ref，用于点击检测
         renderObjectsRef.current = renderObjects;
 
-        // 绘制学院轨道线（椭圆）
+        // 绘制学院轨道线（椭圆）- 优化：使用角度缓存
         ctx.beginPath();
-        for (let angle = 0; angle <= Math.PI * 2; angle += 0.02) {
-          const lx = Math.cos(angle) * orbitRadiusX;
-          const ly = Math.sin(angle) * orbitRadiusY;
+        for (let i = 0; i <= orbitSteps; i++) {
+          const angleCacheItem = orbitAngleCache[i];
+          const lx = angleCacheItem.cos * orbitRadiusX;
+          const ly = angleCacheItem.sin * orbitRadiusY;
           const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current);
-          if (angle === 0) {
+          if (i === 0) {
             ctx.moveTo(proj.x, proj.y);
           } else {
             ctx.lineTo(proj.x, proj.y);
@@ -1010,7 +1049,7 @@ export default function ProfessionalSpiralTower() {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         const baseRadius = Math.min(rect.width, rect.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = maxYear - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
         const progress = data.indexOf(item) / totalYears;
@@ -1076,7 +1115,7 @@ export default function ProfessionalSpiralTower() {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         const baseRadius = Math.min(rect.width, rect.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = maxYear - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
         const progress = data.indexOf(item) / totalYears;
@@ -1110,7 +1149,7 @@ export default function ProfessionalSpiralTower() {
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         const baseRadius = Math.min(rect.width, rect.height) * 0.18;
-        const totalYears = Math.max(...data.map(d => d.year)) - 1956 + 1;
+        const totalYears = maxYear - 1956 + 1;
         const rings = 6;
         const spiralHeight = 800;
         const progress = data.indexOf(item) / totalYears;
@@ -1345,7 +1384,7 @@ export default function ProfessionalSpiralTower() {
           成都理工大学专业沿革星系图
         </h1>
         <p className="text-center text-[9px] md:text-[10px] text-white/50 mt-1">
-          1956 - {Math.max(...data.map(d => d.year))} {Math.max(...data.map(d => d.year)) - 1956 + 1}年岁月长河
+          1956 - {maxYear} {maxYear - 1956 + 1}年岁月长河
         </p>
         {yearStats && (
           <p className="text-center text-[9px] md:text-[10px] text-blue-300/80 mt-1">
