@@ -925,6 +925,8 @@ export default function ProfessionalSpiralTower() {
 
       if (clickedNode) {
         setSelectedYear(clickedNode.year); // 设置选中年份
+        // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
+        solarAutoRotationRef.current = rotationRef.current;
         setCurrentView('solar');
         // 更新年份统计信息
         setYearStats({
