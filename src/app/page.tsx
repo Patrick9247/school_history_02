@@ -726,7 +726,7 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 更新和绘制光点
-        const lightSpeed = 0.015; // 光点移动速度（原速度的一半）
+        const lightSpeed = 0.005; // 光点移动速度（减慢三倍，从0.015降至0.005）
         lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
           // 更新进度
           particle.progress += lightSpeed;
