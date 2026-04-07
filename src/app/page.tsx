@@ -9,6 +9,7 @@ interface Major {
   college: string;
   original_college: string;
   original_dept: string;
+  year?: number; // 可选的年份字段
 }
 
 interface Department {
@@ -72,6 +73,8 @@ export default function ProfessionalSpiralTower() {
   const [data, setData] = useState<YearData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [rawApiData, setRawApiData] = useState<ApiDataItem[]>([]); // 保存原始 API 数据
   const [tooltip, setTooltip] = useState<{
     year: number;
     count: number;
@@ -145,10 +148,13 @@ export default function ProfessionalSpiralTower() {
       const result = await response.json();
 
       if (result.success && result.data) {
+        // 保存原始 API 数据
+        setRawApiData(result.data);
+
         const transformedData = transformData(result.data);
         setData(transformedData);
 
-        // 按学院分组专业
+        // 按学院分组专业（所有年份）
         const collegeMap = new Map<string, Major[]>();
         result.data.forEach((item: ApiDataItem) => {
           const collegeName = item.category || '其他学院';
@@ -162,6 +168,7 @@ export default function ProfessionalSpiralTower() {
             college: item.category || '',
             original_college: item.category || '',
             original_dept: item.department || '',
+            year: item.year, // 添加年份信息
           });
         });
 
@@ -184,21 +191,7 @@ export default function ProfessionalSpiralTower() {
           };
         });
 
-        // 为没有匹配专业的学院添加示例数据
-        const collegesWithMajors = updatedColleges.map(college => {
-          if (college.majors.length === 0) {
-            // 添加示例专业数据
-            const sampleMajors: Major[] = [
-              { name: `${college.name.split('（')[0]}专业1`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name },
-              { name: `${college.name.split('（')[0]}专业2`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name },
-              { name: `${college.name.split('（')[0]}专业3`, code: '', degree: '四年', college: college.name, original_college: college.name, original_dept: college.name }
-            ];
-            return { ...college, majors: sampleMajors };
-          }
-          return college;
-        });
-
-        setCollegesWithMajors(collegesWithMajors);
+        setCollegesWithMajors(updatedColleges);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -206,6 +199,56 @@ export default function ProfessionalSpiralTower() {
       setLoading(false);
     }
   }, [baseColleges]);
+
+  // 根据选中年份过滤学院专业
+  const getCollegesByYear = useCallback((year: number): College[] => {
+    if (!rawApiData || rawApiData.length === 0) return collegesWithMajors;
+
+    // 过滤该年份的数据
+    const yearData = rawApiData.filter(item => item.year === year);
+
+    // 按学院分组
+    const collegeMap = new Map<string, Major[]>();
+    yearData.forEach(item => {
+      const collegeName = item.category || '其他学院';
+      if (!collegeMap.has(collegeName)) {
+        collegeMap.set(collegeName, []);
+      }
+      collegeMap.get(collegeName)?.push({
+        name: item.major,
+        code: '',
+        degree: item.level || '本科',
+        college: item.category || '',
+        original_college: item.category || '',
+        original_dept: item.department || '',
+      });
+    });
+
+    // 更新学院数据的专业列表
+    return baseColleges.map(college => {
+      let matchingMajors: Major[] = collegeMap.get(college.name) || [];
+
+      if (matchingMajors.length === 0) {
+        const collegeShortName = college.name.split('（')[0];
+        matchingMajors = Array.from(collegeMap.entries())
+          .filter(([collegeName]) => collegeName === collegeShortName || collegeName.startsWith(collegeShortName + '（'))
+          .flatMap(([, majors]) => majors);
+      }
+
+      return {
+        ...college,
+        majors: matchingMajors.length > 0 ? matchingMajors : []
+      };
+    });
+  }, [rawApiData, collegesWithMajors, baseColleges]);
+
+  // 获取当前视图使用的学院数据
+  const currentColleges = useMemo(() => {
+    if (currentView === 'solar' && selectedYear !== null) {
+      return getCollegesByYear(selectedYear);
+    }
+    return colleges;
+  }, [currentView, selectedYear, getCollegesByYear, colleges]);
 
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
@@ -471,8 +514,8 @@ export default function ProfessionalSpiralTower() {
         });
 
         // 学院
-        colleges.forEach((college: College, i: number) => {
-          const angle = (i / colleges.length) * Math.PI * 2 - Math.PI / 2;
+        currentColleges.forEach((college: College, i: number) => {
+          const angle = (i / currentColleges.length) * Math.PI * 2 - Math.PI / 2;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
           const lz = 0;
@@ -585,7 +628,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, colleges, keyEvents]);
+  }, [data, currentView, currentColleges, keyEvents]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -710,10 +753,12 @@ export default function ProfessionalSpiralTower() {
       });
 
       if (clickedNode) {
+        setSelectedYear(clickedNode.year); // 设置选中年份
         setCurrentView('solar');
       }
     } else if (currentView === 'solar') {
-      // 双击返回螺旋塔视图
+      // 双击返回螺旋塔视图，清除选中年份
+      setSelectedYear(null);
       setCurrentView('spiral');
     }
   };
@@ -790,8 +835,16 @@ export default function ProfessionalSpiralTower() {
       )}
 
       {/* 提示文字 */}
-      <div className="fixed bottom-9 left-1/2 -translate-x-1/2 text-[9px] text-white/35 z-10 text-center bg-black/30 px-3 py-1.5 rounded-full">
-        {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入学院' : '拖拽旋转 · 双指缩放 · 双击学院查看专业'}
+      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
+        {currentView === 'solar' && selectedYear && (
+          <div className="bg-[rgba(8,12,25,0.95)] border border-blue-400/50 rounded-full px-4 py-2 mb-2">
+            <span className="text-[16px] font-bold text-blue-400">{selectedYear} 年</span>
+            <span className="text-[11px] text-white/60 ml-2">学院分布</span>
+          </div>
+        )}
+        <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
+          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入学院' : '拖拽旋转 · 双指缩放 · 双击学院查看专业'}
+        </div>
       </div>
 
       {/* 学院模态框 */}
