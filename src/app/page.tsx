@@ -644,8 +644,9 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints: PathPoint[] = [];
-        // 从1955年开始绘制，确保起始点之前也有线
-        const drawTotalYears = totalYears + 1; // 多加一年
+        // 在1956年之前增加半圈（约4.3年，半圈 = 0.5圈/6圈 = 8.33%）
+        const extraStartYears = totalYears * 0.5 / rings;
+        const drawTotalYears = totalYears + extraStartYears;
         for (let i = 0; i <= drawTotalYears; i += 0.2) {
           const progress = i / drawTotalYears;
           const angle = progress * rings * Math.PI * 2;
