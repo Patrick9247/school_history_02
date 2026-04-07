@@ -50,8 +50,15 @@ interface College {
   majors: Major[];
 }
 
+interface DepartmentNode {
+  name: string;
+  color: string;
+  majors: Major[];
+  college: string; // 归属学院
+}
+
 interface RenderObject {
-  type: 'sun' | 'college' | 'major';
+  type: 'sun' | 'college' | 'major' | 'department';
   lx: number;
   ly: number;
   lz: number;
@@ -75,6 +82,7 @@ export default function ProfessionalSpiralTower() {
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [rawApiData, setRawApiData] = useState<ApiDataItem[]>([]); // 保存原始 API 数据
+  const [departmentsByYear, setDepartmentsByYear] = useState<Map<number, DepartmentNode[]>>(new Map()); // 按年份缓存的院系数据
   const [tooltip, setTooltip] = useState<{
     year: number;
     count: number;
@@ -242,6 +250,52 @@ export default function ProfessionalSpiralTower() {
     });
   }, [rawApiData, collegesWithMajors, baseColleges]);
 
+  // 根据选中年份获取院系数据（使用 department 字段）
+  const getDepartmentsByYear = useCallback((year: number): DepartmentNode[] => {
+    if (!rawApiData || rawApiData.length === 0) return [];
+
+    // 检查缓存
+    if (departmentsByYear.has(year)) {
+      return departmentsByYear.get(year)!;
+    }
+
+    // 过滤该年份的数据
+    const yearData = rawApiData.filter(item => item.year === year);
+
+    // 按原所在院系分组
+    const deptMap = new Map<string, { majors: Major[], college: string }>();
+    yearData.forEach(item => {
+      const deptName = item.department || '其他院系';
+      if (!deptMap.has(deptName)) {
+        deptMap.set(deptName, { majors: [], college: item.category || '' });
+      }
+      deptMap.get(deptName)!.majors.push({
+        name: item.major,
+        code: '',
+        degree: item.level || '本科',
+        college: item.category || '',
+        original_college: item.category || '',
+        original_dept: item.department || '',
+      });
+    });
+
+    // 生成院系节点，使用 HSL 颜色
+    const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
+      const hue = (index * 137.5) % 360; // 黄金角度分布
+      return {
+        name: deptName,
+        color: `hsl(${hue}, 70%, 55%)`,
+        majors: data.majors,
+        college: data.college
+      };
+    });
+
+    // 缓存结果
+    setDepartmentsByYear(prev => new Map(prev).set(year, departments));
+
+    return departments;
+  }, [rawApiData, departmentsByYear]);
+
   // 获取当前视图使用的学院数据
   const currentColleges = useMemo(() => {
     if (currentView === 'solar' && selectedYear !== null) {
@@ -249,6 +303,14 @@ export default function ProfessionalSpiralTower() {
     }
     return colleges;
   }, [currentView, selectedYear, getCollegesByYear, colleges]);
+
+  // 获取当前视图使用的院系数据
+  const currentDepartments = useMemo(() => {
+    if (currentView === 'solar' && selectedYear !== null) {
+      return getDepartmentsByYear(selectedYear);
+    }
+    return [];
+  }, [currentView, selectedYear, getDepartmentsByYear]);
 
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
@@ -367,21 +429,52 @@ export default function ProfessionalSpiralTower() {
       return { x: centerX + x * scale, y: centerY + y2 * scale * 0.6, scale, z: z2 };
     };
 
-    // 调整颜色亮度
-    const adjustBrightness = (hex: string, amount: number) => {
-      const num = parseInt(hex.slice(1), 16);
+    // 调整颜色亮度（支持 hex 和 hsl 格式）
+    const adjustBrightness = (color: string, amount: number): string => {
+      // 如果是 hsl 格式
+      if (color.startsWith('hsl(')) {
+        const match = color.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+        if (match) {
+          const h = parseFloat(match[1]);
+          const s = parseFloat(match[2]);
+          const l = Math.max(0, Math.min(100, parseFloat(match[3]) + amount));
+          return `hsl(${h}, ${s}%, ${l}%)`;
+        }
+      }
+
+      // 如果是 hex 格式
+      const num = parseInt(color.slice(1), 16);
       const r = Math.max(0, Math.min(255, (num >> 16) + amount));
       const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
       const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
       return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
     };
 
+    // 将颜色转换为带透明度的格式
+    const addAlpha = (color: string, alpha: number): string => {
+      if (color.startsWith('hsl(')) {
+        const match = color.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+        if (match) {
+          const h = parseFloat(match[1]);
+          const s = parseFloat(match[2]);
+          const l = parseFloat(match[3]);
+          return `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
+        }
+      }
+      // hex 格式转换为 rgba
+      const num = parseInt(color.slice(1), 16);
+      const r = num >> 16;
+      const g = (num >> 8) & 0x00FF;
+      const b = num & 0x0000FF;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
     // 绘制球体
     const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean) => {
       if (glow) {
         const glowGradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
-        glowGradient.addColorStop(0, color + '40');
-        glowGradient.addColorStop(1, color + '00');
+        glowGradient.addColorStop(0, addAlpha(color, 0.25));
+        glowGradient.addColorStop(1, addAlpha(color, 0));
         ctx.beginPath();
         ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
         ctx.fillStyle = glowGradient;
@@ -397,7 +490,7 @@ export default function ProfessionalSpiralTower() {
       gradient.addColorStop(0, '#ffffff');
       gradient.addColorStop(0.2, color);
       gradient.addColorStop(0.8, color);
-      gradient.addColorStop(1, adjustBrightness(color, -40));
+      gradient.addColorStop(1, adjustBrightness(color, -20));
 
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -513,24 +606,25 @@ export default function ProfessionalSpiralTower() {
           color: '#3b82f6'
         });
 
-        // 学院
-        currentColleges.forEach((college: College, i: number) => {
-          const angle = (i / currentColleges.length) * Math.PI * 2 - Math.PI / 2;
+        // 院系（原所在院系）
+        currentDepartments.forEach((dept: DepartmentNode, i: number) => {
+          const angle = (i / currentDepartments.length) * Math.PI * 2 - Math.PI / 2;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
           const lz = 0;
 
           renderObjects.push({
-            type: 'college',
+            type: 'department',
             index: i,
             lx, ly, lz,
             radius: 14,
-            color: college.color,
-            name: college.name
+            color: dept.color,
+            name: dept.name,
+            collegeName: dept.college
           });
 
           // 专业
-          if (college.majors && college.majors.length > 0) {
+          if (dept.majors && dept.majors.length > 0) {
             if (majorRotationAnglesRef.current[i] === undefined) {
               majorRotationAnglesRef.current[i] = Math.random() * Math.PI * 2;
             }
@@ -538,8 +632,8 @@ export default function ProfessionalSpiralTower() {
             majorRotationAnglesRef.current[i] += 0.008 + i * 0.001;
 
             const majorOrbitRadius = 50 * zoomLevelRef.current;
-            college.majors.forEach((major: Major, j: number) => {
-              const majorAngle = majorRotationAnglesRef.current[i] + (j / college.majors.length) * Math.PI * 2;
+            dept.majors.forEach((major: Major, j: number) => {
+              const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
 
               const mlx = lx + Math.cos(majorAngle) * majorOrbitRadius;
               const mly = ly + Math.sin(majorAngle) * majorOrbitRadius * 0.4;
@@ -550,9 +644,9 @@ export default function ProfessionalSpiralTower() {
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
                 radius: 4,
-                color: college.color,
+                color: dept.color,
                 majorData: major,
-                collegeName: college.name,
+                collegeName: dept.name,
                 angle: majorAngle
               });
             });
@@ -607,13 +701,15 @@ export default function ProfessionalSpiralTower() {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false);
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
-          } else if (obj.type === 'college') {
+          } else if (obj.type === 'college' || obj.type === 'department') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
             ctx.font = `${9 * (obj.scale || 1)}px sans-serif`;
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
-            ctx.fillText(obj.name?.split('（')[0] || '', obj.x || 0, (obj.y || 0) + obj.radius + 12);
+            // 对于院系，显示完整的名称（包括"系"或"学院"）
+            const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
+            ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + obj.radius + 12);
           }
         });
       }
@@ -628,7 +724,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, currentColleges, keyEvents]);
+  }, [data, currentView, currentDepartments, keyEvents]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -839,11 +935,11 @@ export default function ProfessionalSpiralTower() {
         {currentView === 'solar' && selectedYear && (
           <div className="bg-[rgba(8,12,25,0.95)] border border-blue-400/50 rounded-full px-4 py-2 mb-2">
             <span className="text-[16px] font-bold text-blue-400">{selectedYear} 年</span>
-            <span className="text-[11px] text-white/60 ml-2">学院分布</span>
+            <span className="text-[11px] text-white/60 ml-2">院系分布</span>
           </div>
         )}
         <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
-          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入学院' : '拖拽旋转 · 双指缩放 · 双击学院查看专业'}
+          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 双指缩放 · 双击院系查看专业'}
         </div>
       </div>
 
