@@ -1418,7 +1418,7 @@ export default function ProfessionalSpiralTower() {
       )}
 
       {/* 提示文字 */}
-      <div className="fixed top-14 md:top-16 left-1/2 -translate-x-1/2 z-10">
+      <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-10">
         <div className="text-[8px] md:text-[9px] text-white/35 text-center bg-black/30 px-2 md:px-3 py-1 md:py-1.5 rounded-full">
           {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '左键拖拽旋转学院 · 右键拖拽旋转视角 · 滚轮缩放 · 双击院系查看专业 · 双击空白返回'}
         </div>
