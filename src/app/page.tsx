@@ -94,6 +94,7 @@ export default function ProfessionalSpiralTower() {
   const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
+  const [yearStats, setYearStats] = useState<{ year: number; deptCount: number; majorCount: number } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -866,8 +867,15 @@ export default function ProfessionalSpiralTower() {
           y: e.clientY + 15,
           visible: true
         });
+        // 更新年份统计信息
+        setYearStats({
+          year: hoveredNode.year,
+          deptCount: hoveredNode.departmentCount,
+          majorCount: hoveredNode.majorCount
+        });
       } else {
         setTooltip(prev => ({ ...prev, visible: false }));
+        setYearStats(null);
       }
     }
   };
@@ -940,6 +948,12 @@ export default function ProfessionalSpiralTower() {
       if (clickedNode) {
         setSelectedYear(clickedNode.year); // 设置选中年份
         setCurrentView('solar');
+        // 更新年份统计信息
+        setYearStats({
+          year: clickedNode.year,
+          deptCount: clickedNode.departmentCount,
+          majorCount: clickedNode.majorCount
+        });
       }
     } else if (currentView === 'solar') {
       // 检测点击学院或专业球
@@ -988,6 +1002,7 @@ export default function ProfessionalSpiralTower() {
         setSelectedCollege(null);
         setSelectedMajor(null);
         setSelectedYear(null);
+        setYearStats(null);
         setCurrentView('spiral');
       }
     }
@@ -1088,6 +1103,11 @@ export default function ProfessionalSpiralTower() {
         <p className="text-center text-[10px] text-white/50 mt-1">
           1956 - {Math.max(...data.map(d => d.year))} {Math.max(...data.map(d => d.year)) - 1956 + 1}年岁月长河
         </p>
+        {yearStats && (
+          <p className="text-center text-[10px] text-blue-300/80 mt-1">
+            {yearStats.year}年 · {yearStats.deptCount}个学院 · {yearStats.majorCount}个专业
+          </p>
+        )}
       </div>
 
       {/* 缩放控制 */}
@@ -1191,6 +1211,8 @@ export default function ProfessionalSpiralTower() {
         <button
           onClick={() => {
             setCurrentView('spiral');
+            setYearStats(null);
+            setSelectedYear(null);
           }}
           className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-blue-400/25 border border-blue-400/50 text-white px-7 py-2.5 rounded-full text-[12px] cursor-pointer z-10 active:scale-95 transition-transform"
         >
