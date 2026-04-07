@@ -694,25 +694,22 @@ export default function ProfessionalSpiralTower() {
           ctx.stroke();
         }
 
-        // 绘制连接线
-        const majors = renderObjects.filter(o => o.type === 'major');
-        majors.forEach(major => {
-          const parent = renderObjects.find(o => o.type === 'department' && o.index === major.parentIndex);
-          if (parent) {
-            const opacity = Math.max(0.2, Math.min(0.6, (1 - (major.z || 0) / 600) * 0.6));
-
-            const gradient = ctx.createLinearGradient(parent.x || 0, parent.y || 0, major.x || 0, major.y || 0);
-            gradient.addColorStop(0, addAlpha(major.color, opacity * 0.8));
-            gradient.addColorStop(1, addAlpha(major.color, opacity * 0.3));
-
-            ctx.beginPath();
-            ctx.moveTo(parent.x || 0, parent.y || 0);
-            ctx.lineTo(major.x || 0, major.y || 0);
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
+        // 绘制学院轨道线（椭圆）
+        ctx.beginPath();
+        for (let angle = 0; angle <= Math.PI * 2; angle += 0.02) {
+          const lx = Math.cos(angle) * orbitRadiusX;
+          const ly = Math.sin(angle) * orbitRadiusY;
+          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current);
+          if (angle === 0) {
+            ctx.moveTo(proj.x, proj.y);
+          } else {
+            ctx.lineTo(proj.x, proj.y);
           }
-        });
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
         // 绘制球体
         renderObjects.forEach(obj => {
