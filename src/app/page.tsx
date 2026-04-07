@@ -500,13 +500,27 @@ export default function ProfessionalSpiralTower() {
       }
 
       if (glow) {
-        const glowGradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
-        glowGradient.addColorStop(0, addAlpha(color, 0.25));
-        glowGradient.addColorStop(1, addAlpha(color, 0));
+        // 外层光芒（淡）
+        const outerGlowGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2.5);
+        outerGlowGradient.addColorStop(0, addAlpha(color, 0.2));
+        outerGlowGradient.addColorStop(0.5, addAlpha(color, 0.1));
+        outerGlowGradient.addColorStop(1, addAlpha(color, 0));
         ctx.beginPath();
-        ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
-        ctx.fillStyle = glowGradient;
-        ctx.globalAlpha = opacity * 0.5;
+        ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = outerGlowGradient;
+        ctx.globalAlpha = opacity * 0.6;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // 内层光芒（亮）
+        const innerGlowGradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 1.5);
+        innerGlowGradient.addColorStop(0, addAlpha(color, 0.4));
+        innerGlowGradient.addColorStop(0.6, addAlpha(color, 0.2));
+        innerGlowGradient.addColorStop(1, addAlpha(color, 0));
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = innerGlowGradient;
+        ctx.globalAlpha = opacity * 0.8;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -907,18 +921,13 @@ export default function ProfessionalSpiralTower() {
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
-            // 在太阳球上绘制年份
+            // 在太阳球上绘制年份（只显示数字）
             if (selectedYear) {
-              ctx.font = `bold ${14 * (obj.scale || 1)}px sans-serif`;
+              ctx.font = `bold ${16 * (obj.scale || 1)}px sans-serif`;
               ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
-
-              ctx.font = `${10 * (obj.scale || 1)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.8})`;
-              ctx.textBaseline = 'middle';
-              ctx.fillText('年', obj.x || 0, (obj.y || 0) + 15 * (obj.scale || 1));
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
