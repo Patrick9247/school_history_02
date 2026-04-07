@@ -105,6 +105,7 @@ export default function ProfessionalSpiralTower() {
   const zoomLevelRef = useRef(1);
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
+  const renderObjectsRef = useRef<RenderObject[]>([]); // 保存太阳系视图的渲染对象
 
   // 基础学院数据（不带专业）
   const baseColleges: College[] = useMemo(() => [
@@ -661,6 +662,9 @@ export default function ProfessionalSpiralTower() {
 
         renderObjects.sort((a, b) => (b.z || 0) - (a.z || 0));
 
+        // 保存渲染对象到 ref，用于点击检测
+        renderObjectsRef.current = renderObjects;
+
         // 绘制学院之间的轨道线连接
         const departments = renderObjects.filter(o => o.type === 'department');
         if (departments.length > 1) {
@@ -883,9 +887,54 @@ export default function ProfessionalSpiralTower() {
         setCurrentView('solar');
       }
     } else if (currentView === 'solar') {
-      // 双击返回螺旋塔视图，清除选中年份
-      setSelectedYear(null);
-      setCurrentView('spiral');
+      // 检测点击学院或专业球
+      const renderObjects = renderObjectsRef.current;
+      let clickedObject: RenderObject | null = null;
+
+      // 检测点击学院
+      const clickedDept = renderObjects.find(obj => {
+        if (obj.type !== 'department') return false;
+        const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+        return distance < obj.radius * 1.5; // 增加点击范围
+      });
+
+      if (clickedDept) {
+        clickedObject = clickedDept;
+      } else {
+        // 检测点击专业
+        const clickedMajor = renderObjects.find(obj => {
+          if (obj.type !== 'major') return false;
+          const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+          return distance < obj.radius * 2; // 专业球较小，增加点击范围
+        });
+
+        if (clickedMajor) {
+          clickedObject = clickedMajor;
+        }
+      }
+
+      if (clickedObject) {
+        if (clickedObject.type === 'department' && clickedObject.name) {
+          // 双击学院，显示该学院的所有专业
+          const deptNode = currentDepartments.find(d => d.name === clickedObject.name);
+          if (deptNode && deptNode.majors.length > 0) {
+            setSelectedCollege({
+              name: clickedObject.name,
+              color: clickedObject.color,
+              majors: deptNode.majors
+            });
+          }
+        } else if (clickedObject.type === 'major' && clickedObject.majorData) {
+          // 双击专业，显示专业详细信息
+          setSelectedMajor(clickedObject.majorData);
+        }
+      } else {
+        // 双击空白区域，清除选中状态并返回螺旋塔视图
+        setSelectedCollege(null);
+        setSelectedMajor(null);
+        setSelectedYear(null);
+        setCurrentView('spiral');
+      }
     }
   };
 
@@ -965,7 +1014,7 @@ export default function ProfessionalSpiralTower() {
       {/* 提示文字 */}
       <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
         <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
-          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 双指缩放 · 双击院系查看专业'}
+          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 双指缩放 · 双击院系查看专业 · 双击空白返回'}
         </div>
       </div>
 
@@ -1015,16 +1064,26 @@ export default function ProfessionalSpiralTower() {
           </div>
           <div className="flex justify-between items-center py-2 border-b border-white/6">
             <span className="text-white/50 text-[12px]">学制</span>
-            <span className="text-[12px] font-medium">{selectedMajor.degree}</span>
+            <span className="text-[12px] font-medium">{selectedMajor.degree || '-'}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-white/6">
             <span className="text-white/50 text-[12px]">所属学院</span>
-            <span className="text-[12px] font-medium">{selectedMajor.college}</span>
+            <span className="text-[12px] font-medium">{selectedMajor.college || '-'}</span>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-white/6">
+            <span className="text-white/50 text-[12px]">原所属学院</span>
+            <span className="text-[12px] font-medium">{selectedMajor.original_college || '-'}</span>
           </div>
           <div className="flex justify-between items-center py-2">
-            <span className="text-white/50 text-[12px]">所属部门</span>
-            <span className="text-[12px] font-medium">{selectedMajor.original_dept}</span>
+            <span className="text-white/50 text-[12px]">原所属部门</span>
+            <span className="text-[12px] font-medium">{selectedMajor.original_dept || '-'}</span>
           </div>
+          {selectedMajor.year && (
+            <div className="flex justify-between items-center py-2 border-t border-white/6">
+              <span className="text-white/50 text-[12px]">设立年份</span>
+              <span className="text-[12px] font-medium">{selectedMajor.year}</span>
+            </div>
+          )}
         </div>
       )}
 
