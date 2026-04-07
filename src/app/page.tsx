@@ -404,8 +404,13 @@ export default function ProfessionalSpiralTower() {
     const endYear = Math.max(...data.map(d => d.year));
     const totalYears = endYear - startYear + 1;
     const rings = 6;
-    const spiralHeight = 800;
-    const baseRadius = Math.min(rect.width, rect.height) * 0.18;
+
+    // 响应式参数调整
+    const isMobile = rect.width < 768;
+    const isTablet = rect.width >= 768 && rect.width < 1024;
+
+    const spiralHeight = isMobile ? 600 : (isTablet ? 700 : 800);
+    const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18));
 
     // 生成螺旋节点
     const spiralNodes = data.map((item, index) => {
@@ -818,17 +823,24 @@ export default function ProfessionalSpiralTower() {
           solarAutoRotationRef.current += 0.003;
         }
 
-        const orbitRadiusY = Math.min(canvas.width, canvas.height) * 0.35 * zoomLevelRef.current;
-        const orbitRadiusX = Math.min(canvas.width, canvas.height) * 0.22 * zoomLevelRef.current;
+        // 响应式轨道半径
+        const isMobileSolar = canvas.width < 768;
+        const isTabletSolar = canvas.width >= 768 && canvas.width < 1024;
+        const orbitScaleY = isMobileSolar ? 0.32 : (isTabletSolar ? 0.34 : 0.35);
+        const orbitScaleX = isMobileSolar ? 0.28 : (isTabletSolar ? 0.25 : 0.22);
+
+        const orbitRadiusY = Math.min(canvas.width, canvas.height) * orbitScaleY * zoomLevelRef.current;
+        const orbitRadiusX = Math.min(canvas.width, canvas.height) * orbitScaleX * zoomLevelRef.current;
 
         const renderObjects: RenderObject[] = [];
 
-        // 中心太阳
+        // 中心太阳（响应式半径）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
+        const sunRadius = isMobileSolar ? 16 : (isTabletSolar ? 18 : 20);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
-          radius: 20 * pulseScale,
+          radius: sunRadius * pulseScale,
           color: '#3b82f6'
         });
 
@@ -843,7 +855,7 @@ export default function ProfessionalSpiralTower() {
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: 14,
+            radius: isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14),
             color: dept.color,
             name: dept.name,
             collegeName: dept.college
@@ -857,7 +869,7 @@ export default function ProfessionalSpiralTower() {
 
             majorRotationAnglesRef.current[i] += 0.008 + i * 0.001;
 
-            const majorOrbitRadius = 50 * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 38 : (isTabletSolar ? 44 : 50)) * zoomLevelRef.current;
             dept.majors.forEach((major: Major, j: number) => {
               const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
 
@@ -869,7 +881,7 @@ export default function ProfessionalSpiralTower() {
                 type: 'major',
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
-                radius: 4,
+                radius: isMobileSolar ? 3 : (isTabletSolar ? 3.5 : 4),
                 color: dept.color,
                 majorData: major,
                 collegeName: dept.name,
@@ -921,9 +933,10 @@ export default function ProfessionalSpiralTower() {
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
-            // 在太阳球上绘制年份（只显示数字）
+            // 在太阳球上绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
-              ctx.font = `bold ${16 * (obj.scale || 1)}px sans-serif`;
+              const sunFontSize = isMobileSolar ? 14 : (isTabletSolar ? 15 : 16);
+              ctx.font = `bold ${sunFontSize * (obj.scale || 1)}px sans-serif`;
               ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
@@ -932,7 +945,9 @@ export default function ProfessionalSpiralTower() {
           } else if (obj.type === 'college' || obj.type === 'department') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
-            ctx.font = `${9 * (obj.scale || 1)}px sans-serif`;
+            // 响应式字体大小
+            const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
+            ctx.font = `${deptFontSize * (obj.scale || 1)}px sans-serif`;
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
             // 对于院系，显示完整的名称（包括"系"或"学院"）
@@ -1247,6 +1262,49 @@ export default function ProfessionalSpiralTower() {
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
       background: rgba(96, 165, 250, 0.6);
     }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .mobile-sm {
+        font-size: 10px;
+      }
+      .mobile-xs {
+        font-size: 9px;
+      }
+      .mobile-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+      }
+      .mobile-modal {
+        max-width: calc(100% - 24px);
+        max-height: 60vh;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .mobile-sm {
+        font-size: 9px;
+      }
+      .mobile-xs {
+        font-size: 8px;
+      }
+      .mobile-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+      }
+      .mobile-modal {
+        max-width: calc(100% - 16px);
+        max-height: 70vh;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .desktop-lg {
+        font-size: 18px;
+      }
+    }
   `;
 
   if (loading) {
@@ -1282,15 +1340,15 @@ export default function ProfessionalSpiralTower() {
       />
 
       {/* 标题栏 */}
-      <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black to-transparent z-10">
-        <h1 className="text-center text-[15px] font-semibold text-blue-400 tracking-wider">
+      <div className="absolute top-0 left-0 right-0 p-2 md:p-3 bg-gradient-to-b from-black to-transparent z-10">
+        <h1 className="text-center text-[12px] md:text-[15px] font-semibold text-blue-400 tracking-wider">
           成都理工大学专业沿革星系图
         </h1>
-        <p className="text-center text-[10px] text-white/50 mt-1">
+        <p className="text-center text-[9px] md:text-[10px] text-white/50 mt-1">
           1956 - {Math.max(...data.map(d => d.year))} {Math.max(...data.map(d => d.year)) - 1956 + 1}年岁月长河
         </p>
         {yearStats && (
-          <p className="text-center text-[10px] text-blue-300/80 mt-1">
+          <p className="text-center text-[9px] md:text-[10px] text-blue-300/80 mt-1">
             {yearStats.year}年 · {yearStats.deptCount}个学院 · {yearStats.majorCount}个专业
           </p>
         )}
@@ -1298,22 +1356,22 @@ export default function ProfessionalSpiralTower() {
 
       {/* 缩放控制 */}
       {currentView === 'solar' && (
-        <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-2">
+        <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
           <button
             onClick={zoomIn}
-            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
           >
             +
           </button>
           <button
             onClick={zoomOut}
-            className="w-10 h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
           >
             −
           </button>
           <button
             onClick={resetView}
-            className="w-10 h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
+            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-[10px] md:text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
           >
             ↻
           </button>
@@ -1321,8 +1379,8 @@ export default function ProfessionalSpiralTower() {
       )}
 
       {/* 提示文字 */}
-      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
-        <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
+      <div className="fixed top-14 md:top-16 left-1/2 -translate-x-1/2 z-10">
+        <div className="text-[8px] md:text-[9px] text-white/35 text-center bg-black/30 px-2 md:px-3 py-1 md:py-1.5 rounded-full">
           {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '左键拖拽旋转学院 · 右键拖拽旋转视角 · 滚轮缩放 · 双击院系查看专业 · 双击空白返回'}
         </div>
       </div>
@@ -1330,42 +1388,42 @@ export default function ProfessionalSpiralTower() {
       {/* 螺旋视图年份提示框 */}
       {currentView === 'spiral' && tooltip.visible && (
         <div
-          className="fixed bg-[rgba(10,15,30,0.92)] border border-blue-400/40 rounded-lg p-3 pointer-events-none z-30 shadow-xl"
+          className="fixed bg-[rgba(10,15,30,0.92)] border border-blue-400/40 rounded-lg p-2.5 md:p-3 pointer-events-none z-30 shadow-xl"
           style={{
             left: tooltip.x,
             top: tooltip.y,
-            minWidth: '140px',
-            maxWidth: '180px'
+            minWidth: '120px',
+            maxWidth: '160px'
           }}
         >
-          <div className="text-[16px] font-bold text-blue-400 mb-1">{tooltip.year}年</div>
-          <div className="text-[11px] text-pink-300 font-medium mb-1">{tooltip.count}个专业</div>
-          {tooltip.event && <div className="text-[9px] text-white/60 leading-relaxed">{tooltip.event}</div>}
+          <div className="text-[14px] md:text-[16px] font-bold text-blue-400 mb-1">{tooltip.year}年</div>
+          <div className="text-[10px] md:text-[11px] text-pink-300 font-medium mb-1">{tooltip.count}个专业</div>
+          {tooltip.event && <div className="text-[8px] md:text-[9px] text-white/60 leading-relaxed">{tooltip.event}</div>}
         </div>
       )}
 
       {/* 学院模态框 */}
       {selectedCollege && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-3.5 z-30 w-[calc(100%-32px)] max-w-[360px] max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
-          <div className="flex justify-between items-center mb-2.5 pb-2.5 border-b border-white/20">
-            <div className="text-[14px] font-bold flex-1 pr-2.5 text-white drop-shadow-md">{selectedCollege.name}</div>
-            <div className="text-[11px] text-blue-300 font-medium">{selectedCollege.majors.length} 个专业</div>
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-2.5 md:p-3.5 z-30 w-[calc(100%-16px)] md:w-[calc(100%-32px)] max-w-[340px] md:max-w-[360px] max-h-[55vh] md:max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
+          <div className="flex justify-between items-center mb-2 pb-2 md:mb-2.5 md:pb-2.5 border-b border-white/20">
+            <div className="text-[13px] md:text-[14px] font-bold flex-1 pr-2 md:pr-2.5 text-white drop-shadow-md">{selectedCollege.name}</div>
+            <div className="text-[10px] md:text-[11px] text-blue-300 font-medium">{selectedCollege.majors.length} 个专业</div>
             <button
               onClick={() => setSelectedCollege(null)}
-              className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2.5 transition-colors"
+              className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-1.5 md:ml-2.5 transition-colors"
             >
               ×
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5 md:gap-2">
             {selectedCollege.majors.map((major, index) => (
               <div
                 key={index}
                 onClick={() => setSelectedMajor(major)}
-                className="p-2.5 bg-white/10 rounded-lg cursor-pointer transition-all border border-white/10 hover:bg-white/20 hover:border-blue-400/50"
+                className="p-2 md:p-2.5 bg-white/10 rounded-lg cursor-pointer transition-all border border-white/10 hover:bg-white/20 hover:border-blue-400/50"
               >
-                <div className="text-[12px] font-medium leading-tight text-white drop-shadow-sm">{major.name}</div>
-                <div className="text-[9px] text-blue-200/80 mt-1 font-medium">{major.degree}</div>
+                <div className="text-[11px] md:text-[12px] font-medium leading-tight text-white drop-shadow-sm">{major.name}</div>
+                <div className="text-[8px] md:text-[9px] text-blue-200/80 mt-1 font-medium">{major.degree}</div>
               </div>
             ))}
           </div>
@@ -1374,10 +1432,10 @@ export default function ProfessionalSpiralTower() {
 
       {/* 专业详情弹窗 */}
       {selectedMajor && (
-        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-5 z-40 w-[calc(100%-40px)] max-w-[320px] shadow-2xl shadow-black/50">
-          <div className="flex justify-between items-center mb-3.5 pb-3 border-b border-white/20">
+        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-3.5 md:p-5 z-40 w-[calc(100%-24px)] md:w-[calc(100%-40px)] max-w-[300px] md:max-w-[320px] shadow-2xl shadow-black/50">
+          <div className="flex justify-between items-center mb-3 pb-2.5 md:mb-3.5 md:pb-3 border-b border-white/20">
             <div
-              className="text-[15px] font-bold flex-1 text-white drop-shadow-md cursor-pointer hover:text-blue-300 transition-colors"
+              className="text-[13px] md:text-[15px] font-bold flex-1 text-white drop-shadow-md cursor-pointer hover:text-blue-300 transition-colors"
               onDoubleClick={() => setShowCollegeHistory(!showCollegeHistory)}
               title="双击查看专业沿革历史"
             >
@@ -1388,7 +1446,7 @@ export default function ProfessionalSpiralTower() {
                 setSelectedMajor(null);
                 setShowCollegeHistory(false);
               }}
-              className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2.5 transition-colors"
+              className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-1.5 md:ml-2.5 transition-colors"
             >
               ×
             </button>
@@ -1396,34 +1454,34 @@ export default function ProfessionalSpiralTower() {
 
           {!showCollegeHistory ? (
             <>
-              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-                <span className="text-blue-300/90 text-[12px] font-medium">专业代码</span>
-                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.code || '-'}</span>
+              <div className="flex justify-between items-center py-2 md:py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[11px] md:text-[12px] font-medium">专业代码</span>
+                <span className="text-[11px] md:text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.code || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-                <span className="text-blue-300/90 text-[12px] font-medium">学制</span>
-                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.degree || '-'}</span>
+              <div className="flex justify-between items-center py-2 md:py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[11px] md:text-[12px] font-medium">学制</span>
+                <span className="text-[11px] md:text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.degree || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-                <span className="text-blue-300/90 text-[12px] font-medium">所属学院</span>
-                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
+              <div className="flex justify-between items-center py-2 md:py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[11px] md:text-[12px] font-medium">所属学院</span>
+                <span className="text-[11px] md:text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
               </div>
-              <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-                <span className="text-blue-300/90 text-[12px] font-medium">原所属部门</span>
-                <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
+              <div className="flex justify-between items-center py-2 md:py-2.5 border-b border-white/15">
+                <span className="text-blue-300/90 text-[11px] md:text-[12px] font-medium">原所属部门</span>
+                <span className="text-[11px] md:text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
               </div>
               {selectedMajor.year && (
-                <div className="flex justify-between items-center py-2.5 border-t border-white/15">
-                  <span className="text-blue-300/90 text-[12px] font-medium">设立年份</span>
-                  <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.year}</span>
+                <div className="flex justify-between items-center py-2 md:py-2.5 border-t border-white/15">
+                  <span className="text-blue-300/90 text-[11px] md:text-[12px] font-medium">设立年份</span>
+                  <span className="text-[11px] md:text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.year}</span>
                 </div>
               )}
             </>
           ) : (
             <>
               {/* 显示专业沿革历史（箭头状时间线） */}
-              <div className="text-[11px] text-blue-300/80 mb-3 text-center">双击标题返回专业详情</div>
-              <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-0 custom-scrollbar">
+              <div className="text-[10px] md:text-[11px] text-blue-300/80 mb-2 md:mb-3 text-center">双击标题返回专业详情</div>
+              <div className="max-h-[55vh] md:max-h-[60vh] overflow-y-auto pr-1 space-y-0 custom-scrollbar">
                 {(() => {
                   const majorName = selectedMajor.name;
                   // 获取该专业的所有历史记录（按年份排序）
@@ -1452,25 +1510,25 @@ export default function ProfessionalSpiralTower() {
                       <div key={item.id} className="relative flex items-start">
                         {/* 箭头线 */}
                         {index < changedHistory.length - 1 && (
-                          <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
+                          <div className="absolute left-2.5 md:left-3 top-5 md:top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
                         )}
                         {/* 节点圆点 */}
-                        <div className="relative z-10 flex-shrink-0 w-6 h-6 rounded-full bg-blue-500/30 border-2 border-blue-400 flex items-center justify-center">
-                          <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                        <div className="relative z-10 flex-shrink-0 w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/30 border-2 border-blue-400 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-400"></div>
                         </div>
                         {/* 内容卡片 */}
-                        <div className="ml-3 mb-3 flex-1">
-                          <div className="bg-white/5 rounded-lg p-2 border border-white/10 hover:border-blue-400/30 transition-colors">
+                        <div className="ml-2.5 md:ml-3 mb-2 md:mb-3 flex-1">
+                          <div className="bg-white/5 rounded-lg p-1.5 md:p-2 border border-white/10 hover:border-blue-400/30 transition-colors">
                             <div className="flex justify-between items-center">
-                              <span className="text-[13px] font-bold text-blue-300">{item.year}年</span>
-                              <span className="text-[11px] text-blue-200/80">{item.department}</span>
+                              <span className="text-[12px] md:text-[13px] font-bold text-blue-300">{item.year}年</span>
+                              <span className="text-[10px] md:text-[11px] text-blue-200/80">{item.department}</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center text-[12px] text-white/60 py-4">暂无历史数据</div>
+                    <div className="text-center text-[11px] md:text-[12px] text-white/60 py-3 md:py-4">暂无历史数据</div>
                   );
                 })()}
               </div>
@@ -1487,7 +1545,7 @@ export default function ProfessionalSpiralTower() {
             setYearStats(null);
             setSelectedYear(null);
           }}
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-blue-400/25 border border-blue-400/50 text-white px-7 py-2.5 rounded-full text-[12px] cursor-pointer z-10 active:scale-95 transition-transform"
+          className="fixed bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 bg-blue-400/25 border border-blue-400/50 text-white px-5 md:px-7 py-2 md:py-2.5 rounded-full text-[11px] md:text-[12px] cursor-pointer z-10 active:scale-95 transition-transform"
         >
           返回螺旋塔
         </button>
