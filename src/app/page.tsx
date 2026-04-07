@@ -1450,10 +1450,7 @@ export default function ProfessionalSpiralTower() {
                           <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                         </div>
                         {/* 内容卡片 */}
-                        <div className="flex-1 mb-3">
-                          {/* 专业名称（最头上） */}
-                          <div className="text-[13px] font-bold text-white/95 mb-2 ml-1">{item.major}</div>
-                          {/* 信息框 */}
+                        <div className="ml-3 mb-3 flex-1">
                           <div className="bg-white/5 rounded-lg p-2 border border-white/10 hover:border-blue-400/30 transition-colors">
                             <div className="flex justify-between items-center">
                               <span className="text-[13px] font-bold text-blue-300">{item.year}年</span>
