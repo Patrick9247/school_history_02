@@ -105,6 +105,7 @@ export default function ProfessionalSpiralTower() {
   const zoomLevelRef = useRef(1);
   const animationTimeRef = useRef(0);
   const majorRotationAnglesRef = useRef<number[]>([]);
+  const solarRenderObjectsRef = useRef<RenderObject[]>([]);
 
   // 基础学院数据（不带专业）
   const baseColleges: College[] = useMemo(() => [
@@ -659,6 +660,9 @@ export default function ProfessionalSpiralTower() {
           obj.x = proj.x; obj.y = proj.y; obj.scale = proj.scale; obj.z = proj.z;
         });
 
+        // 保存到 ref，供双击检测使用
+        solarRenderObjectsRef.current = renderObjects;
+
         renderObjects.sort((a, b) => (b.z || 0) - (a.z || 0));
 
         // 绘制轨道环
@@ -669,23 +673,35 @@ export default function ProfessionalSpiralTower() {
         ctx.stroke();
 
         // 绘制连接线
+        // 1. 学院与专业之间的连接线
         const majors = renderObjects.filter(o => o.type === 'major');
-        majors.forEach(major => {
-          const parent = renderObjects.find(o => o.type === 'college' && o.index === major.parentIndex);
+        majors.forEach((major) => {
+          const parent = renderObjects.find(o => (o.type === 'college' || o.type === 'department') && o.index === major.parentIndex);
           if (parent) {
             const opacity = Math.max(0.2, Math.min(0.6, (1 - (major.z || 0) / 600) * 0.6));
 
-            const gradient = ctx.createLinearGradient(parent.x || 0, parent.y || 0, major.x || 0, major.y || 0);
-            gradient.addColorStop(0, major.color + Math.round(opacity * 255 * 0.8).toString(16).padStart(2, '0'));
-            gradient.addColorStop(1, major.color + Math.round(opacity * 255 * 0.3).toString(16).padStart(2, '0'));
-
+            // 直接使用纯色，避免颜色格式转换问题
             ctx.beginPath();
             ctx.moveTo(parent.x || 0, parent.y || 0);
             ctx.lineTo(major.x || 0, major.y || 0);
-            ctx.strokeStyle = gradient;
+            ctx.strokeStyle = addAlpha(major.color, opacity);
             ctx.lineWidth = 1.5;
             ctx.stroke();
           }
+        });
+
+        // 2. 学院之间的连接线（连接相邻学院）
+        const departments = renderObjects.filter(o => o.type === 'college' || o.type === 'department');
+        departments.forEach((dept, i) => {
+          const nextDept = departments[(i + 1) % departments.length];
+          const opacity = Math.max(0.1, Math.min(0.3, (1 - (dept.z || 0) / 600) * 0.3));
+
+          ctx.beginPath();
+          ctx.moveTo(dept.x || 0, dept.y || 0);
+          ctx.lineTo(nextDept.x || 0, nextDept.y || 0);
+          ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
         });
 
         // 绘制球体
@@ -787,6 +803,14 @@ export default function ProfessionalSpiralTower() {
     isDraggingRef.current = false;
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    if (currentView === 'solar') {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      zoomLevelRef.current = Math.max(0.5, Math.min(2, zoomLevelRef.current * delta));
+    }
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     if (!canvasRef.current || data.length === 0) return;
 
@@ -853,8 +877,48 @@ export default function ProfessionalSpiralTower() {
         setCurrentView('solar');
       }
     } else if (currentView === 'solar') {
-      // 双击返回螺旋塔视图，清除选中年份
+      // 在太阳系视图中检测双击的学院或专业
+      const renderObjects = solarRenderObjectsRef.current;
+
+      // 先检测是否双击了专业球
+      const clickedMajor = renderObjects.find(obj => {
+        if (obj.type !== 'major') return false;
+        const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+        return distance < (obj.radius * (obj.scale || 1) + 10);
+      });
+
+      if (clickedMajor && clickedMajor.majorData) {
+        // 显示专业详细信息
+        setSelectedMajor(clickedMajor.majorData);
+        setSelectedCollege(null);
+        return;
+      }
+
+      // 再检测是否双击了学院球
+      const clickedDept = renderObjects.find(obj => {
+        if (obj.type !== 'college' && obj.type !== 'department') return false;
+        const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+        return distance < (obj.radius * (obj.scale || 1) + 10);
+      });
+
+      if (clickedDept && clickedDept.name) {
+        // 显示学院的专业列表
+        const deptData = currentDepartments.find(d => d.name === clickedDept.name);
+        if (deptData) {
+          setSelectedCollege({
+            name: deptData.name,
+            color: deptData.color,
+            majors: deptData.majors || []
+          });
+          setSelectedMajor(null);
+        }
+        return;
+      }
+
+      // 如果没有点击到任何对象，双击返回螺旋塔视图
       setSelectedYear(null);
+      setSelectedCollege(null);
+      setSelectedMajor(null);
       setCurrentView('spiral');
     }
   };
@@ -888,6 +952,7 @@ export default function ProfessionalSpiralTower() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
       />
