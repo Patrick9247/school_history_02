@@ -778,13 +778,12 @@ export default function ProfessionalSpiralTower() {
 
       if (currentView === 'spiral') {
         rotationRef.current += deltaX * 0.005;
-      } else if (currentView === 'solar') {
-        // 太阳系视图：专业球沿着轨道转动
-        // 水平拖拽 → 专业球沿着轨道转动
-        const rotationSpeed = 0.005;
-        for (let i = 0; i < majorRotationAnglesRef.current.length; i++) {
-          majorRotationAnglesRef.current[i] += deltaX * rotationSpeed;
-        }
+      } else {
+        // 太阳系视图：支持多轴旋转
+        // 水平拖拽 → 绕 Y 轴旋转
+        solarRotYRef.current += deltaX * 0.005;
+        // 垂直拖拽 → 绕 X 轴旋转
+        solarRotXRef.current += deltaY * 0.005;
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
