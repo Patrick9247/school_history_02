@@ -100,6 +100,7 @@ export default function ProfessionalSpiralTower() {
     { name: "地球与行星科学学院", color: "#3b82f6", majors: [] },
     { name: "地球物理学院", color: "#10b981", majors: [] },
     { name: "能源学院（页岩气现代产业学院）", color: "#f59e0b", majors: [] },
+    { name: "能源学院", color: "#f97316", majors: [] },
     { name: "核技术与自动化工程学院", color: "#ef4444", majors: [] },
     { name: "环境与土木工程学院", color: "#06b6d4", majors: [] },
     { name: "材料与化学化工学院（锂资源与锂电产业学院）", color: "#8b5cf6", majors: [] },
@@ -109,16 +110,16 @@ export default function ProfessionalSpiralTower() {
     { name: "物理学院", color: "#0ea5e9", majors: [] },
     { name: "数学科学学院", color: "#6366f1", majors: [] },
     { name: "外国语学院", color: "#f472b6", majors: [] },
-    { name: "法学院", color: "#a855f7", majors: [] },
-    { name: "马克思主义学院", color: "#dc2626", majors: [] },
+    { name: "文法学院（纪检监察学院）", color: "#84cc16", majors: [] },
     { name: "马克思主义学院", color: "#dc2626", majors: [] },
     { name: "商学院", color: "#f97316", majors: [] },
-    { name: "旅游与城乡规划学院", color: "#eab308", majors: [] },
+    { name: "地理与规划学院", color: "#eab308", majors: [] },
     { name: "信息科学与技术学院", color: "#7c3aed", majors: [] },
-    { name: "工程技术学院", color: "#db2777", majors: [] },
-    { name: "文法学院", color: "#84cc16", majors: [] },
+    { name: "机电工程学院", color: "#db2777", majors: [] },
     { name: "体育学院", color: "#14b8a6", majors: [] },
-    { name: "继续教育学院", color: "#9333ea", majors: [] }
+    { name: "计算机与网络安全学院（示范性软件学院）", color: "#9333ea", majors: [] },
+    { name: "传播科学与艺术学院", color: "#a855f7", majors: [] },
+    { name: "国际教育学院（成都理工大学牛津布鲁克斯学院）", color: "#f472b6", majors: [] }
   ], []);
 
   // 学院数据（使用带专业的版本）
@@ -164,12 +165,19 @@ export default function ProfessionalSpiralTower() {
           });
         });
 
-        // 更新学院数据的专业列表
+        // 更新学院数据的专业列表（精确匹配）
         const updatedColleges: College[] = baseColleges.map(college => {
-          const collegeShortName = college.name.split('（')[0];
-          const matchingMajors: Major[] = Array.from(collegeMap.entries())
-            .filter(([collegeName]) => collegeName.includes(collegeShortName) || collegeShortName.includes(collegeName))
-            .flatMap(([, majors]) => majors);
+          // 优先精确匹配学院名称
+          let matchingMajors: Major[] = collegeMap.get(college.name) || [];
+
+          // 如果精确匹配失败，尝试使用学院名称的部分匹配
+          if (matchingMajors.length === 0) {
+            const collegeShortName = college.name.split('（')[0];
+            matchingMajors = Array.from(collegeMap.entries())
+              .filter(([collegeName]) => collegeName === collegeShortName || collegeName.startsWith(collegeShortName + '（'))
+              .flatMap(([, majors]) => majors);
+          }
+
           return {
             ...college,
             majors: matchingMajors.length > 0 ? matchingMajors : []
