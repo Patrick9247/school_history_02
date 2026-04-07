@@ -172,7 +172,7 @@ export default function ProfessionalSpiralTower() {
 
   // 产生新光点的定时器
   const lastLightCreateTimeRef = useRef(0);
-  const LIGHT_CREATE_INTERVAL = 0.8; // 每秒产生的光点数量（0.8秒产生一个）
+  const LIGHT_CREATE_INTERVAL = 1.6; // 每秒产生的光点数量（1.6秒产生一个）
 
   // 获取随机颜色
   const getRandomLightColor = (): string => {
@@ -711,7 +711,7 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 更新和绘制光点
-        const lightSpeed = 0.03;
+        const lightSpeed = 0.015; // 光点移动速度（原速度的一半）
         lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
           // 更新进度
           particle.progress += lightSpeed;
