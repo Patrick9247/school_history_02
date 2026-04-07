@@ -1115,10 +1115,6 @@ export default function ProfessionalSpiralTower() {
             <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.college || '-'}</span>
           </div>
           <div className="flex justify-between items-center py-2.5 border-b border-white/15">
-            <span className="text-blue-300/90 text-[12px] font-medium">原所属学院</span>
-            <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_college || '-'}</span>
-          </div>
-          <div className="flex justify-between items-center py-2.5 border-b border-white/15">
             <span className="text-blue-300/90 text-[12px] font-medium">原所属部门</span>
             <span className="text-[12px] font-medium text-white drop-shadow-sm">{selectedMajor.original_dept || '-'}</span>
           </div>
