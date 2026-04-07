@@ -100,6 +100,7 @@ export default function ProfessionalSpiralTower() {
   const rotationRef = useRef(0);
   const solarRotXRef = useRef(0.5);
   const solarRotYRef = useRef(0);
+  const solarAutoRotationRef = useRef(0); // 学院球自动旋转角度
   const isDraggingRef = useRef(false);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number | undefined>(undefined);
@@ -535,6 +536,9 @@ export default function ProfessionalSpiralTower() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // 更新动画时间
+      animationTimeRef.current += 0.016;
+
       if (currentView === 'spiral') {
         // 更新旋转
         if (!isDraggingRef.current) {
@@ -614,7 +618,11 @@ export default function ProfessionalSpiralTower() {
         });
       } else {
         // 太阳系视图
-        animationTimeRef.current += 0.016;
+
+        // 自动旋转学院球（如果没有拖动）
+        if (!isDraggingRef.current) {
+          solarAutoRotationRef.current += 0.003;
+        }
 
         const orbitRadiusY = Math.min(canvas.width, canvas.height) * 0.35 * zoomLevelRef.current;
         const orbitRadiusX = Math.min(canvas.width, canvas.height) * 0.22 * zoomLevelRef.current;
@@ -632,7 +640,7 @@ export default function ProfessionalSpiralTower() {
 
         // 院系（原所在院系）
         currentDepartments.forEach((dept: DepartmentNode, i: number) => {
-          const angle = (i / currentDepartments.length) * Math.PI * 2 - Math.PI / 2;
+          const angle = (i / currentDepartments.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
           const lz = 0;
@@ -778,12 +786,18 @@ export default function ProfessionalSpiralTower() {
 
       if (currentView === 'spiral') {
         rotationRef.current += deltaX * 0.005;
-      } else {
-        // 太阳系视图：支持多轴旋转
-        // 水平拖拽 → 绕 Y 轴旋转
-        solarRotYRef.current += deltaX * 0.005;
-        // 垂直拖拽 → 绕 X 轴旋转
-        solarRotXRef.current += deltaY * 0.005;
+      } else if (currentView === 'solar') {
+        // 太阳系视图
+        // 左键拖动（button === 0）：学院球沿着轨道面转动
+        // 右键拖动（button === 2）：视角旋转
+        if (e.buttons === 1) { // 左键
+          solarAutoRotationRef.current += deltaX * 0.01;
+        } else if (e.buttons === 2) { // 右键
+          // 水平拖拽 → 绕 Y 轴旋转
+          solarRotYRef.current += deltaX * 0.005;
+          // 垂直拖拽 → 绕 X 轴旋转
+          solarRotXRef.current += deltaY * 0.005;
+        }
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
@@ -1041,6 +1055,7 @@ export default function ProfessionalSpiralTower() {
         onTouchEnd={handleTouchEnd}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
+        onContextMenu={(e) => e.preventDefault()}
       />
 
       {/* 标题栏 */}
@@ -1085,7 +1100,7 @@ export default function ProfessionalSpiralTower() {
       {/* 提示文字 */}
       <div className="fixed top-16 left-1/2 -translate-x-1/2 z-10">
         <div className="text-[9px] text-white/35 text-center bg-black/30 px-3 py-1.5 rounded-full">
-          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '拖拽旋转 · 滚轮/双指缩放 · 双击院系查看专业 · 双击空白返回'}
+          {currentView === 'spiral' ? '拖拽旋转 · 单击显示年份 · 双击进入院系' : '左键拖拽旋转学院 · 右键拖拽旋转视角 · 滚轮缩放 · 双击院系查看专业 · 双击空白返回'}
         </div>
       </div>
 
