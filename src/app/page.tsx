@@ -557,8 +557,11 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints = [];
-        for (let i = 0; i <= totalYears; i += 0.2) {
-          const progress = i / totalYears;
+        // 从1955年开始绘制，确保起始点之前也有线
+        const drawStartYear = startYear - 1; // 1955年
+        const drawTotalYears = totalYears + 1; // 多加一年
+        for (let i = 0; i <= drawTotalYears; i += 0.2) {
+          const progress = i / drawTotalYears;
           const angle = progress * rings * Math.PI * 2;
           const proj = project3D(
             Math.cos(angle) * baseRadius,
