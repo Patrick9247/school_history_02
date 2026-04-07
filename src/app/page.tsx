@@ -1209,11 +1209,27 @@ export default function ProfessionalSpiralTower() {
                   .filter(item => item.major === majorName)
                   .sort((a, b) => a.year - b.year);
 
-                return majorHistory.length > 0 ? (
-                  majorHistory.map((item, index) => (
+                // 过滤出有变化的年份
+                const changedHistory = majorHistory.filter((item, index) => {
+                  // 第一条记录总是显示（初始设立）
+                  if (index === 0) return true;
+
+                  // 比较与前一条记录是否有变化
+                  const prevItem = majorHistory[index - 1];
+                  const hasChanges =
+                    item.department !== prevItem.department ||
+                    item.description !== prevItem.description ||
+                    item.category !== prevItem.category ||
+                    item.level !== prevItem.level;
+
+                  return hasChanges;
+                });
+
+                return changedHistory.length > 0 ? (
+                  changedHistory.map((item, index) => (
                     <div key={item.id} className="relative flex items-start">
                       {/* 箭头线 */}
-                      {index < majorHistory.length - 1 && (
+                      {index < changedHistory.length - 1 && (
                         <div className="absolute left-3 top-6 w-[2px] h-full bg-gradient-to-b from-blue-400/60 to-blue-400/20"></div>
                       )}
                       {/* 节点圆点 */}
