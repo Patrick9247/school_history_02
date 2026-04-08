@@ -1128,7 +1128,8 @@ export default function ProfessionalSpiralTower() {
         const spot3D = projectRotation(
           Math.cos(spotCurrentAngle) * spotRadius3D,
           Math.sin(spotCurrentAngle * 0.3) * radius * 0.15, // 轻微的纬度变化
-          Math.sin(spotCurrentAngle) * spotRadius3D * 0.3
+          Math.sin(spotCurrentAngle) * spotRadius3D * 0.3,
+          rot
         );
         
         // 斑块大小根据z值变化（靠近观察者时大，远离时小）
@@ -1161,12 +1162,14 @@ export default function ProfessionalSpiralTower() {
           const lineTop3D = projectRotation(
             Math.cos(lineCurrentAngle) * radius * 0.9,
             -radius * 0.9,
-            Math.sin(lineCurrentAngle) * radius * 0.3
+            Math.sin(lineCurrentAngle) * radius * 0.3,
+            rot * 0.8
           );
           const lineBottom3D = projectRotation(
             Math.cos(lineCurrentAngle) * radius * 0.9,
             radius * 0.9,
-            Math.sin(lineCurrentAngle) * radius * 0.3
+            Math.sin(lineCurrentAngle) * radius * 0.3,
+            rot * 0.8
           );
           
           // 只绘制朝向观察者的经线部分
@@ -1377,8 +1380,8 @@ export default function ProfessionalSpiralTower() {
         
         // 外层轨道光晕
         const spiralGlowGradient = ctx.createRadialGradient(
-          centerX, centerY, projection.baseRadius * 0.3,
-          centerX, centerY, projection.baseRadius * 1.2
+          centerX, centerY, baseRadius * 0.3,
+          centerX, centerY, baseRadius * 1.2
         );
         spiralGlowGradient.addColorStop(0, 'rgba(96, 165, 250, 0)');
         spiralGlowGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.03)');
