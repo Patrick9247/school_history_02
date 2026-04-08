@@ -2118,17 +2118,19 @@ export default function ProfessionalSpiralTower() {
               const majorFontSize = isMobileSolar ? 8 : 9;
               const textX = obj.x || 0;
               const textY = (obj.y || 0) + scaledRadius + 14;
-              ctx.font = `bold ${majorFontSize * (obj.scale || 1) + 2}px sans-serif`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              const textMetrics = ctx.measureText(obj.majorData?.name || '');
+              const majorName = obj.majorData?.name || '';
+              const majorYear = obj.majorData?.year || 0;
+              const displayText = majorYear > 0 ? `${majorName} (${majorYear})` : majorName;
+              const textMetrics = ctx.measureText(displayText);
               const textWidth = textMetrics.width;
               const textHeight = majorFontSize * (obj.scale || 1);
               ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * glowIntensity})`;
               ctx.fillRect(textX - textWidth / 2 - 4, textY - textHeight / 2 - 2, textWidth + 8, textHeight + 4);
               ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
-              ctx.fillText(obj.majorData?.name || '', textX, textY);
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(displayText, textX, textY);
             } else {
               drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, false, false);
             }
