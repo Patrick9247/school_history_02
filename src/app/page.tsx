@@ -905,7 +905,7 @@ export default function ProfessionalSpiralTower() {
         year: year,
         count: dataItem?.majorCount || 0,
         departmentCount: dataItem?.departmentCount || 0,
-        size: isMobile ? 8 : (isTablet ? 10 : 12), // 手机端8px，平板10px，电脑12px
+        size: isMobile ? 10 : (isTablet ? 12 : 14), // 手机端10px，平板12px，电脑14px
         specialColor: specialColor,
         hasData: hasData // 标记是否有数据
       };
