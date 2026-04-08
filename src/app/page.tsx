@@ -1632,7 +1632,7 @@ export default function ProfessionalSpiralTower() {
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: (isMobileSolar ? 16 : (isTabletSolar ? 18 : 20)) * Math.sqrt(zoomLevelRef.current), // 增大球体
+            radius: (isMobileSolar ? 10 : (isTabletSolar ? 12 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
             collegeName: dept.college,
@@ -1973,13 +1973,12 @@ export default function ProfessionalSpiralTower() {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
-            const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
+            const deptFontSize = isMobileSolar ? 7 : (isTabletSolar ? 7.5 : 8);
             ctx.font = `${deptFontSize * (obj.scale || 1)}px sans-serif`;
             ctx.fillStyle = searchMatch || isCollegeHighlighted ? '#FFD700' : `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
-            // 对于院系，显示完整的名称（包括"系"或"学院"）
             const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
-            const textYOffset = obj.radius * (obj.scale || 1) + 12;
+            const textYOffset = obj.radius * (obj.scale || 1) + 10;
             ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + textYOffset);
           }
         });
