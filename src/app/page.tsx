@@ -575,7 +575,7 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
@@ -607,29 +607,40 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = 1;
       }
 
-      const gradient = ctx.createRadialGradient(
-        x - radius * 0.3, y - radius * 0.3, radius * 0.1,
-        x, y, radius
-      );
-      gradient.addColorStop(0, '#ffffff');
-      gradient.addColorStop(0.2, color);
-      gradient.addColorStop(0.8, color);
-      gradient.addColorStop(1, adjustBrightness(color, -20));
+      if (enable3D) {
+        // 3D渐变效果
+        const gradient = ctx.createRadialGradient(
+          x - radius * 0.3, y - radius * 0.3, radius * 0.1,
+          x, y, radius
+        );
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(0.2, color);
+        gradient.addColorStop(0.8, color);
+        gradient.addColorStop(1, adjustBrightness(color, -20));
 
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
-      ctx.globalAlpha = opacity;
-      ctx.fill();
-      ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
 
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = adjustBrightness(color, -20);
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = opacity * 0.8;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = adjustBrightness(color, -20);
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = opacity * 0.8;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        // 纯色填充（无3D效果）
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     };
 
     // 优化：创建学院轨道的角度缓存
@@ -898,9 +909,9 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光
+          // 所有年度球都发光，但不显示3D效果
           const shouldGlow = true;
-          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined);
+          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, false);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           // 当是关键事件或鼠标悬停在该年份时，显示详细信息
