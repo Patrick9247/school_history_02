@@ -394,6 +394,7 @@ export default function ProfessionalSpiralTower() {
         college: item.category || '',
         original_college: item.category || '',
         original_dept: item.department || '',
+        year: item.year, // 添加年份信息，确保专业只显示当年数据
       });
     });
 
@@ -1935,7 +1936,9 @@ export default function ProfessionalSpiralTower() {
                           className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex flex-col"
                         >
                           <span className="font-medium">{major.name}</span>
-                          <span className="text-[10px] text-white/60 mt-1">{major.degree}</span>
+                          <span className="text-[10px] text-white/60 mt-1">
+                            {major.degree} {major.year ? `· ${major.year}年` : ''}
+                          </span>
                         </div>
                       ))
                   )}
@@ -2085,7 +2088,9 @@ export default function ProfessionalSpiralTower() {
                 className="p-2 md:p-2.5 bg-white/10 rounded-lg cursor-pointer transition-all border border-white/10 hover:bg-white/20 hover:border-blue-400/50"
               >
                 <div className="text-[11px] md:text-[12px] font-medium leading-tight text-white drop-shadow-sm">{major.name}</div>
-                <div className="text-[8px] md:text-[9px] text-blue-200/80 mt-1 font-medium">{major.degree}</div>
+                <div className="text-[8px] md:text-[9px] text-blue-200/80 mt-1 font-medium">
+                  {major.degree}{major.year ? ` · ${major.year}年` : ''}
+                </div>
               </div>
             ))}
           </div>
