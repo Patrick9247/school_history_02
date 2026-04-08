@@ -1827,6 +1827,9 @@ export default function ProfessionalSpiralTower() {
       {/* 用户发送光球选择框 */}
       <div className="absolute right-3 md:right-4 top-16 md:top-20 z-20">
         <div className="flex flex-col items-end gap-2">
+          <div className="text-[10px] md:text-[11px] text-white/50 text-right mb-1">
+            请输入专业名称试一试
+          </div>
           <div className="relative w-36 md:w-44 major-input-container">
             <input
               type="text"
