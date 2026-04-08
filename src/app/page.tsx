@@ -919,15 +919,25 @@ export default function ProfessionalSpiralTower() {
       const lightX = x + Math.cos(lightAngle) * radius * 0.5;
       const lightY = y + Math.sin(lightAngle) * radius * 0.5;
       
+      // 更强的3D光照渐变
       const baseGradient = ctx.createRadialGradient(
         lightX, lightY, 0,
-        x, y, radius * 1.2
+        x, y, radius * 1.4
       );
-      baseGradient.addColorStop(0, adjustBrightness(color, 50));
-      baseGradient.addColorStop(0.3, adjustBrightness(color, 25));
-      baseGradient.addColorStop(0.6, color);
-      baseGradient.addColorStop(0.85, adjustBrightness(color, -20));
-      baseGradient.addColorStop(1, adjustBrightness(color, -50));
+      // 高光区（光源方向）- 更亮
+      baseGradient.addColorStop(0, adjustBrightness(color, 80));
+      // 次高光区
+      baseGradient.addColorStop(0.15, adjustBrightness(color, 55));
+      // 正常光照区
+      baseGradient.addColorStop(0.35, adjustBrightness(color, 30));
+      // 正常区域
+      baseGradient.addColorStop(0.5, color);
+      // 半阴影区
+      baseGradient.addColorStop(0.7, adjustBrightness(color, -25));
+      // 深阴影区
+      baseGradient.addColorStop(0.85, adjustBrightness(color, -45));
+      // 边缘暗区
+      baseGradient.addColorStop(1, adjustBrightness(color, -65));
       ctx.fillStyle = baseGradient;
       ctx.globalAlpha = opacity;
       ctx.fill();
@@ -1214,16 +1224,17 @@ export default function ProfessionalSpiralTower() {
       // 恢复上下文状态
       ctx.restore();
 
-      // 添加3D高光效果（模拟光源在左上方）
+      // 添加3D镜面高光效果（模拟光源在左上方）
+      // 主高光点 - 更亮更集中
       const highlightX = x - radius * 0.35;
       const highlightY = y - radius * 0.35;
       const highlightGradient = ctx.createRadialGradient(
         highlightX, highlightY, 0,
-        highlightX, highlightY, radius * 0.7
+        highlightX, highlightY, radius * 0.6
       );
-      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-      highlightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.2)');
-      highlightGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.05)');
+      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+      highlightGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.5)');
+      highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
       highlightGradient.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1232,14 +1243,32 @@ export default function ProfessionalSpiralTower() {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // 球体边缘阴影（模拟背光面）
+      // 次高光区域（扩大光照范围）
+      const secondaryHighlightX = x - radius * 0.2;
+      const secondaryHighlightY = y - radius * 0.25;
+      const secondaryHighlightGrad = ctx.createRadialGradient(
+        secondaryHighlightX, secondaryHighlightY, 0,
+        secondaryHighlightX, secondaryHighlightY, radius * 0.45
+      );
+      secondaryHighlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+      secondaryHighlightGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+      secondaryHighlightGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = secondaryHighlightGrad;
+      ctx.globalAlpha = opacity * 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // 球体边缘阴影（模拟背光面）- 更强的3D阴影
       const shadowGradient = ctx.createRadialGradient(
-        x + radius * 0.3, y + radius * 0.3, radius * 0.5,
-        x + radius * 0.3, y + radius * 0.3, radius * 1.1
+        x + radius * 0.4, y + radius * 0.4, radius * 0.4,
+        x + radius * 0.4, y + radius * 0.4, radius * 1.3
       );
       shadowGradient.addColorStop(0, 'transparent');
-      shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.15)');
-      shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+      shadowGradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.2)');
+      shadowGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.35)');
+      shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fillStyle = shadowGradient;
@@ -1247,26 +1276,76 @@ export default function ProfessionalSpiralTower() {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // 边缘描边
+      // 边缘大气光晕效果（模拟大气层散射）
+      const atmosphereGradient = ctx.createRadialGradient(
+        x, y, radius * 0.85,
+        x, y, radius * 1.15
+      );
+      atmosphereGradient.addColorStop(0, 'transparent');
+      atmosphereGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, 30), 0.15));
+      atmosphereGradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 1.15, 0, Math.PI * 2);
+      ctx.fillStyle = atmosphereGradient;
+      ctx.globalAlpha = opacity * 0.6;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // 底部环境阴影（球体在空间中的投影）
+      const bottomShadowGradient = ctx.createRadialGradient(
+        x, y + radius * 1.5, 0,
+        x, y + radius * 1.5, radius * 0.8
+      );
+      bottomShadowGradient.addColorStop(0, 'rgba(0, 0, 20, 0.3)');
+      bottomShadowGradient.addColorStop(0.5, 'rgba(0, 0, 20, 0.15)');
+      bottomShadowGradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.ellipse(x, y + radius * 1.3, radius * 0.6, radius * 0.25, 0, 0, Math.PI * 2);
+      ctx.fillStyle = bottomShadowGradient;
+      ctx.globalAlpha = opacity * 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // 边缘描边（更细腻的边缘过渡）
+      // 内边缘高光
+      ctx.beginPath();
+      ctx.arc(x, y, radius - 0.5, 0, Math.PI * 2);
+      ctx.strokeStyle = adjustBrightness(color, 20);
+      ctx.lineWidth = 0.5;
+      ctx.globalAlpha = opacity * 0.3;
+      ctx.stroke();
+      // 外边缘暗线
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = adjustBrightness(color, -60);
-      ctx.lineWidth = 1.5;
-      ctx.globalAlpha = opacity * 0.6;
+      ctx.strokeStyle = adjustBrightness(color, -70);
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = opacity * 0.7;
       ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // 外发光效果
+      // 外发光效果（行星大气辉光）
       if (glow) {
-        const outerGlowGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2.5);
-        outerGlowGradient.addColorStop(0, addAlpha(color, 0.4));
-        outerGlowGradient.addColorStop(0.4, addAlpha(color, 0.15));
-        outerGlowGradient.addColorStop(0.7, addAlpha(color, 0.05));
+        // 内层辉光
+        const innerGlowGradient = ctx.createRadialGradient(x, y, radius * 0.9, x, y, radius * 1.5);
+        innerGlowGradient.addColorStop(0, addAlpha(adjustBrightness(color, 40), 0.5));
+        innerGlowGradient.addColorStop(0.4, addAlpha(color, 0.25));
+        innerGlowGradient.addColorStop(0.7, addAlpha(color, 0.1));
+        innerGlowGradient.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = innerGlowGradient;
+        ctx.globalAlpha = opacity * 0.8;
+        ctx.fill();
+        // 外层辉光
+        const outerGlowGradient = ctx.createRadialGradient(x, y, radius * 1.3, x, y, radius * 2.8);
+        outerGlowGradient.addColorStop(0, addAlpha(color, 0.3));
+        outerGlowGradient.addColorStop(0.3, addAlpha(color, 0.12));
+        outerGlowGradient.addColorStop(0.6, addAlpha(color, 0.04));
         outerGlowGradient.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 2.8, 0, Math.PI * 2);
         ctx.fillStyle = outerGlowGradient;
-        ctx.globalAlpha = opacity * 0.6;
+        ctx.globalAlpha = opacity * 0.5;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
