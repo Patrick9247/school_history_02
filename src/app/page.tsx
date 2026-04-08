@@ -1023,6 +1023,146 @@ export default function ProfessionalSpiralTower() {
       }
     };
 
+    // 绘制太阳效果
+    const drawSun = (x: number, y: number, radius: number, opacity: number, animationTime: number) => {
+      // 防止无效值
+      if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
+        return;
+      }
+
+      // 太阳脉动效果
+      const pulse = 1 + Math.sin(animationTime * 3) * 0.05;
+
+      // 第一层：外层日冕（最暗）
+      const corona1Gradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 3);
+      corona1Gradient.addColorStop(0, 'rgba(255, 200, 50, 0.3)');
+      corona1Gradient.addColorStop(0.3, 'rgba(255, 150, 50, 0.2)');
+      corona1Gradient.addColorStop(0.6, 'rgba(255, 100, 50, 0.1)');
+      corona1Gradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 3 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = corona1Gradient;
+      ctx.fill();
+
+      // 第二层：日冕光芒
+      const corona2Gradient = ctx.createRadialGradient(x, y, radius * 0.5, x, y, radius * 2);
+      corona2Gradient.addColorStop(0, 'rgba(255, 220, 100, 0.6)');
+      corona2Gradient.addColorStop(0.4, 'rgba(255, 180, 80, 0.3)');
+      corona2Gradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 2 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = corona2Gradient;
+      ctx.fill();
+
+      // 第三层：内层日冕
+      const corona3Gradient = ctx.createRadialGradient(x, y, radius * 0.3, x, y, radius * 1.3);
+      corona3Gradient.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
+      corona3Gradient.addColorStop(0.5, 'rgba(255, 230, 120, 0.7)');
+      corona3Gradient.addColorStop(1, 'rgba(255, 180, 50, 0.3)');
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 1.3 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = corona3Gradient;
+      ctx.fill();
+
+      // 保存上下文用于裁剪
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      // 太阳表面渐变（核心）
+      const sunGradient = ctx.createRadialGradient(
+        x - radius * 0.2, y - radius * 0.2, 0,
+        x, y, radius
+      );
+      sunGradient.addColorStop(0, '#FFFFD0'); // 核心最亮
+      sunGradient.addColorStop(0.3, '#FFFACD'); // 淡黄色
+      sunGradient.addColorStop(0.6, '#FFD700'); // 金黄色
+      sunGradient.addColorStop(0.85, '#FFA500'); // 橙色
+      sunGradient.addColorStop(1, '#FF6B00'); // 深橙色边缘
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = sunGradient;
+      ctx.fill();
+
+      // 太阳表面纹理：太阳黑子（暗斑）
+      const sunspotCount = 3;
+      for (let i = 0; i < sunspotCount; i++) {
+        const spotAngle = (animationTime * 0.2 + i * 2.1) % (Math.PI * 2);
+        const spotRadius = radius * (0.2 + (i % 2) * 0.3);
+        const spotX = x + Math.cos(spotAngle) * radius * 0.4;
+        const spotY = y + Math.sin(spotAngle) * radius * 0.3;
+        const spotSize = radius * (0.1 + (i % 3) * 0.05);
+        
+        const spotGradient = ctx.createRadialGradient(spotX, spotY, 0, spotX, spotY, spotSize);
+        spotGradient.addColorStop(0, 'rgba(139, 69, 19, 0.6)');
+        spotGradient.addColorStop(0.5, 'rgba(139, 69, 19, 0.3)');
+        spotGradient.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(spotX, spotY, spotSize, 0, Math.PI * 2);
+        ctx.fillStyle = spotGradient;
+        ctx.fill();
+      }
+
+      // 太阳表面纹理：米粒组织（细微亮度变化）
+      const granuleCount = Math.floor(radius * 1.5);
+      for (let i = 0; i < granuleCount; i++) {
+        const angle = (i * 137.5 + animationTime * 0.5) % (Math.PI * 2);
+        const dist = Math.random() * radius * 0.85;
+        const gx = x + Math.cos(angle) * dist;
+        const gy = y + Math.sin(angle) * dist;
+        const gr = radius * 0.03 + Math.random() * radius * 0.02;
+        
+        // 距离中心越远，米粒越暗
+        const distFactor = 1 - (dist / radius) * 0.5;
+        ctx.fillStyle = `rgba(255, 255, 200, ${0.2 * distFactor})`;
+        ctx.beginPath();
+        ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 太阳表面纹理：日珥（红色突出物）
+      for (let i = 0; i < 5; i++) {
+        const prominenceAngle = (animationTime * 0.3 + i * 1.26) % (Math.PI * 2);
+        const prominenceHeight = radius * (0.1 + Math.sin(animationTime * 2 + i) * 0.05);
+        const px = x + Math.cos(prominenceAngle) * radius;
+        const py = y + Math.sin(prominenceAngle) * radius;
+        
+        const promGradient = ctx.createRadialGradient(px, py, 0, px, py, prominenceHeight);
+        promGradient.addColorStop(0, 'rgba(255, 100, 50, 0.8)');
+        promGradient.addColorStop(0.5, 'rgba(255, 50, 50, 0.4)');
+        promGradient.addColorStop(1, 'transparent');
+        
+        ctx.beginPath();
+        ctx.arc(px, py, prominenceHeight, 0, Math.PI * 2);
+        ctx.fillStyle = promGradient;
+        ctx.fill();
+      }
+
+      // 恢复上下文
+      ctx.restore();
+
+      // 太阳表面高光
+      const highlightGradient = ctx.createRadialGradient(
+        x - radius * 0.35, y - radius * 0.35, 0,
+        x - radius * 0.35, y - radius * 0.35, radius * 0.5
+      );
+      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+      highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
+      highlightGradient.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = highlightGradient;
+      ctx.fill();
+
+      // 太阳边缘光晕
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 150, 50, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
+
     // 绘制球体（保留原函数用于其他场景）
     const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true) => {
       // 防止无效值
@@ -1720,13 +1860,13 @@ export default function ProfessionalSpiralTower() {
               drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
             }
           } else if (obj.type === 'sun') {
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+            drawSun(obj.x || 0, obj.y || 0, obj.radius, opacity, animationTimeRef.current);
 
             // 在太阳球上绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
               const sunFontSize = isMobileSolar ? 14 : (isTabletSolar ? 15 : 16);
               ctx.font = `bold ${sunFontSize * (obj.scale || 1)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              ctx.fillStyle = `rgba(0, 0, 0, ${opacity * 0.8})`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
