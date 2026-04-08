@@ -1373,16 +1373,69 @@ export default function ProfessionalSpiralTower() {
           pathPoints.push({ ...proj, progress });
         }
 
-        // 绘制基础线条
+        // 绘制基础线条 - 模仿学院视图轨道样式
+        
+        // 外层轨道光晕
+        const spiralGlowGradient = ctx.createRadialGradient(
+          centerX, centerY, projection.baseRadius * 0.3,
+          centerX, centerY, projection.baseRadius * 1.2
+        );
+        spiralGlowGradient.addColorStop(0, 'rgba(96, 165, 250, 0)');
+        spiralGlowGradient.addColorStop(0.5, 'rgba(147, 112, 219, 0.03)');
+        spiralGlowGradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+        
+        // 计算螺旋线的外边界用于绘制光晕
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const point of pathPoints) {
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+          minY = Math.min(minY, point.y);
+          maxY = Math.max(maxY, point.y);
+        }
+        const glowWidth = (maxX - minX) * 0.6;
+        const glowHeight = (maxY - minY) * 0.4;
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, glowWidth, glowHeight, 0, 0, Math.PI * 2);
+        ctx.fillStyle = spiralGlowGradient;
+        ctx.fill();
+        
+        // 主轨道线（渐变）- 带3D投影效果
         for (let i = 1; i < pathPoints.length; i++) {
-          const avgZ = (pathPoints[i - 1].z + pathPoints[i].z) / 2;
-          const lineOpacity = Math.max(0.15, Math.min(0.5, (1 - avgZ / 600) * 0.5));
-
+          const p1 = pathPoints[i - 1];
+          const p2 = pathPoints[i];
+          const avgZ = (p1.z + p2.z) / 2;
+          
+          // 渐变颜色：蓝色到紫色再到蓝色，模拟学院视图
+          const zRatio = avgZ / 600;
+          const opacity = Math.max(0.15, Math.min(0.5, (1 - zRatio) * 0.5));
+          
+          // 根据z值调整颜色（近处偏紫，远处偏蓝）
+          const colorR = Math.floor(96 + (147 - 96) * (1 - zRatio));
+          const colorG = Math.floor(165 + (112 - 165) * (1 - zRatio));
+          const colorB = Math.floor(250 + (219 - 250) * (1 - zRatio));
+          
+          const lineWidth = 2.5 * Math.min(p1.scale, p2.scale);
+          
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(96, 165, 250, ${lineOpacity})`;
-          ctx.lineWidth = 2.5 * Math.min(pathPoints[i - 1].scale, pathPoints[i].scale);
-          ctx.moveTo(pathPoints[i - 1].x, pathPoints[i - 1].y);
-          ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(${colorR}, ${colorG}, ${colorB}, ${opacity})`;
+          ctx.lineWidth = lineWidth;
+          ctx.stroke();
+        }
+        
+        // 内层轨道光晕 - 更细更亮
+        for (let i = 1; i < pathPoints.length; i++) {
+          const p1 = pathPoints[i - 1];
+          const p2 = pathPoints[i];
+          const avgZ = (p1.z + p2.z) / 2;
+          const opacity = Math.max(0.08, Math.min(0.25, (1 - avgZ / 600) * 0.25));
+          
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(147, 112, 219, ${opacity})`;
+          ctx.lineWidth = 1 * Math.min(p1.scale, p2.scale);
           ctx.stroke();
         }
 
