@@ -1102,7 +1102,7 @@ export default function ProfessionalSpiralTower() {
         // 绘制用户发送的光球
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
           // 更新进度（从0到1表示从firstAppearYear到endYear，1到1.5表示飞出）
-          ball.progress += lightSpeed * 2; // 用户光球速度快两倍
+          ball.progress += lightSpeed * 4; // 用户光球速度快4倍
 
           // 如果进度超过1.5，移除该光球
           if (ball.progress >= 1.5) {
