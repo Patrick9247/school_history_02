@@ -1951,7 +1951,7 @@ export default function ProfessionalSpiralTower() {
             majorRotationAnglesRef.current[i] += 0.015 + i * 0.002;
 
             // 专业球轨道半径（围绕学院球的卫星轨道）
-            const majorOrbitRadius = (isMobileSolar ? 18 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 36 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             dept.majors.forEach((major: Major, j: number) => {
               // 每个专业有不同的相位角，围绕学院球均匀分布并持续旋转
               const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
@@ -2057,7 +2057,7 @@ export default function ProfessionalSpiralTower() {
             const deptAngle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
             const dlx = Math.cos(deptAngle) * orbitRadiusX;
             const dly = Math.sin(deptAngle) * orbitRadiusY;
-            const majorOrbitRadius = (isMobileSolar ? 18 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 36 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             ctx.beginPath();
             ctx.ellipse(
               centerX + dlx,
