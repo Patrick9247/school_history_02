@@ -1030,100 +1030,161 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 步骤2: 表面纹理层（优化绘制次数）
-        // 自转轴固定倾斜23.5度（像地球），纹理绕此轴旋转
+        // 步骤2: 表面纹理层 - 使用3D投影模拟真实的行星自转
+        // 自转轴固定倾斜23.5度（像地球），纹理绕倾斜轴旋转产生透视效果
         const AXIAL_TILT = 23.5 * Math.PI / 180; // 23.5度倾角
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(AXIAL_TILT); // 先倾斜自转轴
-        ctx.rotate(bandAngle + rot); // 再加上自转角度
         
-        // 主条纹带（简化计算）
+        // 3D自转投影函数：计算3D球面上一点绕倾斜轴旋转后的2D投影位置
+        // 这是模拟真实行星自转的关键 - 球面上不同纬度的点移动速度不同
+        const projectRotation = (bx: number, by: number, bz: number, angle: number) => {
+          // 第一步：将点转换到自转轴坐标系（自转轴沿Z轴）
+          const y1 = by * Math.cos(AXIAL_TILT) - bz * Math.sin(AXIAL_TILT);
+          const z1 = by * Math.sin(AXIAL_TILT) + bz * Math.cos(AXIAL_TILT);
+          
+          // 第二步：绕Z轴（新自转轴）旋转
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
+          const bx1 = bx * cosA - y1 * sinA;
+          const y2 = bx * sinA + y1 * cosA;
+          
+          // 第三步：转换回原坐标系
+          const newBy = y2 * Math.cos(AXIAL_TILT) + z1 * Math.sin(AXIAL_TILT);
+          const newBz = -y2 * Math.sin(AXIAL_TILT) + z1 * Math.cos(AXIAL_TILT);
+          
+          return { x: bx1, y: newBy, z: newBz };
+        };
+        
+        // 主条纹带 - 使用3D投影计算条纹位置，产生真实的自转透视效果
         for (let i = 0; i < bandCount + 2; i++) {
           const [baseY, widthVar, phase] = bandRandoms[i] || [0, 1, 0];
           const bandY = baseY * radius;
           const bandHeight = (radius * 0.4 / bandCount) * widthVar;
+          // 漩涡效果与自转角度关联
           const waveOffset = (Math.sin(baseY * 4 + rot + phase) * radius * swirl + Math.sin(baseY * 6 - rot * 1.2) * radius * turbulence * 0.7);
           
+          // 使用3D投影计算条纹带的实际位置
+          const projCenter = projectRotation(waveOffset, bandY, 0, rot);
+          const projX = projCenter.x * 0.8; // 透视压缩效果
+          const projY = projCenter.y;
+          
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.4, bandHeight, 0, 0, Math.PI * 2);
+          ctx.ellipse(x + projX, y + projY, radius * 1.4, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i % bandCount];
           ctx.globalAlpha = opacity * 0.5;
           ctx.fill();
         }
         
-        // 漩涡斑块（减少数量）
+        // 漩涡斑块 - 使用3D投影，斑块随自转从右向左移动
         for (let i = 0; i < 2; i++) {
           const [vortexYRatio, colorOffset] = vortexRandoms[i] || [0, -10];
           const vortexY = vortexYRatio * radius;
           const vortexX = Math.sin(vortexYRatio * 5 + rot) * radius * swirl;
           const vortexWidth = radius * 0.15;
           
+          // 3D投影斑块位置
+          const projVortex = projectRotation(vortexX, vortexY, 0, rot);
+          
           ctx.beginPath();
-          ctx.ellipse(vortexX, vortexY, vortexWidth, vortexWidth * 0.6, 0, 0, Math.PI * 2);
+          ctx.ellipse(x + projVortex.x * 0.8, y + projVortex.y, vortexWidth, vortexWidth * 0.6, 0, 0, Math.PI * 2);
           ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], colorOffset);
           ctx.globalAlpha = opacity * 0.4;
           ctx.fill();
         }
         
-        // 云带（简化，随自转变化）
+        // 云带 - 使用3D投影，云层随自转漂移
         for (let i = 0; i < 3; i++) {
           const [cloudYRatio, cloudAlpha] = cloudRandoms[i] || [0, 0.2];
-          const cloudY = cloudYRatio * radius + rot * radius * 0.2;
+          const cloudY = cloudYRatio * radius;
+          const cloudXOffset = rot * radius * 0.3; // 云层随自转横向漂移
+          
+          // 3D投影云带
+          const projCloud = projectRotation(cloudXOffset, cloudY, 0, rot);
           
           ctx.beginPath();
-          ctx.ellipse(rot * radius * 0.1, cloudY, radius * 0.8, radius * 0.03, 0, 0, Math.PI * 2);
+          ctx.ellipse(x + projCloud.x * 0.7, y + projCloud.y, radius * 0.8, radius * 0.03, 0, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255, 255, 255, ${cloudAlpha})`;
           ctx.globalAlpha = opacity;
           ctx.fill();
         }
-        
-        ctx.restore();
 
-        // 步骤2.5: 自转指示器（明显的赤道标记带 + 特征斑块）
-        // 赤道高亮带 - 中间一条明显的白色带，随自转旋转
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(AXIAL_TILT); // 自转轴固定倾斜
-        ctx.rotate(rot);
+        // 步骤2.5: 自转指示器 - 使用3D投影，赤道标记和特征斑块随自转真实移动
+        // 赤道高亮带 - 明显的白色带，使用3D投影随自转旋转
+        const equatorY = 0;
         
-        // 赤道带（半透明白色条带）
-        const equatorWidth = radius * 0.08;
+        // 绘制赤道带（透视椭圆弧）
         ctx.beginPath();
-        ctx.ellipse(0, 0, radius * 1.2, equatorWidth, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y, radius * 0.9, radius * 0.06, 0, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = radius * 0.12;
-        ctx.globalAlpha = opacity * 0.6;
+        ctx.lineWidth = radius * 0.1;
+        ctx.globalAlpha = opacity * 0.5;
         ctx.stroke();
         
-        // 特征斑块 - 球体右侧一个明显的深色斑块，随自转移动
-        const spotX = radius * 0.5;
-        const spotY = radius * 0.1;
-        ctx.beginPath();
-        ctx.ellipse(spotX, spotY, radius * 0.12, radius * 0.08, 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = adjustBrightness(color, -30);
-        ctx.globalAlpha = opacity * 0.7;
-        ctx.fill();
+        // 特征斑块 - 使用3D投影，斑块随自转从右向左移动（1秒1圈）
+        const spotInitialAngle = 0; // 斑块初始在右侧
+        const spotCurrentAngle = spotInitialAngle + rot; // 随自转移动
+        const spotRadius3D = radius * 0.85; // 斑块在球面上的位置
         
-        // 斑块内部高光
-        ctx.beginPath();
-        ctx.ellipse(spotX * 0.9, spotY * 0.8, radius * 0.06, radius * 0.04, 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = adjustBrightness(color, -15);
-        ctx.globalAlpha = opacity * 0.5;
-        ctx.fill();
+        // 斑块的3D位置
+        const spot3D = projectRotation(
+          Math.cos(spotCurrentAngle) * spotRadius3D,
+          Math.sin(spotCurrentAngle * 0.3) * radius * 0.15, // 轻微的纬度变化
+          Math.sin(spotCurrentAngle) * spotRadius3D * 0.3
+        );
         
-        // 经线标记 - 画几条淡淡的经线帮助观察旋转
-        for (let i = 0; i < 3; i++) {
-          const lineAngle = (i / 3) * Math.PI - Math.PI / 2;
+        // 斑块大小根据z值变化（靠近观察者时大，远离时小）
+        const spotScale = 0.7 + spot3D.z * 0.3 / radius;
+        const spotX = x + spot3D.x * 0.8;
+        const spotY = y + spot3D.y;
+        
+        // 只在斑块朝向观察者时绘制
+        if (spot3D.z > -radius * 0.5) {
           ctx.beginPath();
-          ctx.ellipse(0, 0, radius * 0.95, radius * 0.1, lineAngle, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-          ctx.lineWidth = 1;
-          ctx.globalAlpha = opacity * 0.3;
-          ctx.stroke();
+          ctx.ellipse(spotX, spotY, radius * 0.12 * spotScale, radius * 0.08 * spotScale, 0.3, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(color, -35);
+          ctx.globalAlpha = opacity * 0.75 * spotScale;
+          ctx.fill();
+          
+          // 斑块内部高光
+          ctx.beginPath();
+          ctx.ellipse(spotX * 0.95, spotY * 0.95, radius * 0.06 * spotScale, radius * 0.04 * spotScale, 0.3, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(color, -20);
+          ctx.globalAlpha = opacity * 0.5 * spotScale;
+          ctx.fill();
         }
         
-        ctx.restore();
+        // 经线标记 - 使用3D投影画经线，像地球仪上的经线一样随自转旋转
+        for (let i = 0; i < 3; i++) {
+          const lineInitialAngle = (i / 3) * Math.PI; // 三条经线间隔120度
+          const lineCurrentAngle = lineInitialAngle + rot * 0.8; // 经线随自转移动，稍慢于表面特征
+          
+          // 经线的两个端点
+          const lineTop3D = projectRotation(
+            Math.cos(lineCurrentAngle) * radius * 0.9,
+            -radius * 0.9,
+            Math.sin(lineCurrentAngle) * radius * 0.3
+          );
+          const lineBottom3D = projectRotation(
+            Math.cos(lineCurrentAngle) * radius * 0.9,
+            radius * 0.9,
+            Math.sin(lineCurrentAngle) * radius * 0.3
+          );
+          
+          // 只绘制朝向观察者的经线部分
+          if (lineTop3D.z > -radius * 0.3 || lineBottom3D.z > -radius * 0.3) {
+            ctx.beginPath();
+            ctx.moveTo(x + lineTop3D.x * 0.8, y + lineTop3D.y);
+            ctx.quadraticCurveTo(
+              x + lineTop3D.x * 0.6, 
+              y, 
+              x + lineBottom3D.x * 0.8, 
+              y + lineBottom3D.y
+            );
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = opacity * 0.35;
+            ctx.stroke();
+          }
+        }
 
         // 步骤3: 极地冰盖（简化）
         const polarCapHeight = radius * 0.2;
