@@ -1760,7 +1760,44 @@ export default function ProfessionalSpiralTower() {
               drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false, false);
             }
           } else if (obj.type === 'sun') {
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, true, undefined, animationTimeRef.current * 0.3);
+            // Google Earth 太阳效果：均匀的径向渐变，无纹理
+            const x = obj.x || 0;
+            const y = obj.y || 0;
+            const r = obj.radius;
+            
+            // 最外层大光晕（柔和淡出）
+            const outerGlow = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 3);
+            outerGlow.addColorStop(0, `rgba(255, 200, 100, 0.5)`);
+            outerGlow.addColorStop(0.4, `rgba(255, 180, 80, 0.25)`);
+            outerGlow.addColorStop(0.7, `rgba(255, 150, 50, 0.1)`);
+            outerGlow.addColorStop(1, `rgba(255, 120, 30, 0)`);
+            ctx.beginPath();
+            ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+            ctx.fillStyle = outerGlow;
+            ctx.fill();
+            
+            // 中层光晕
+            const midGlow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 1.8);
+            midGlow.addColorStop(0, `rgba(255, 255, 220, 0.9)`);
+            midGlow.addColorStop(0.3, `rgba(255, 230, 150, 0.8)`);
+            midGlow.addColorStop(0.6, `rgba(255, 200, 100, 0.7)`);
+            midGlow.addColorStop(1, `rgba(255, 180, 80, 0.4)`);
+            ctx.beginPath();
+            ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
+            ctx.fillStyle = midGlow;
+            ctx.fill();
+            
+            // 核心球体（中心白、向外渐变到橙黄色）
+            const sunCore = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 0, x, y, r);
+            sunCore.addColorStop(0, `rgba(255, 255, 255, 1)`);
+            sunCore.addColorStop(0.2, `rgba(255, 255, 230, 1)`);
+            sunCore.addColorStop(0.5, `rgba(255, 230, 150, 1)`);
+            sunCore.addColorStop(0.8, `rgba(255, 200, 100, 1)`);
+            sunCore.addColorStop(1, `rgba(255, 180, 80, 1)`);
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = sunCore;
+            ctx.fill();
 
             // 在太阳球上绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
@@ -1769,7 +1806,7 @@ export default function ProfessionalSpiralTower() {
               ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
+              ctx.fillText(selectedYear.toString(), x, y);
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
             // 检查该学院是否包含高亮的专业
