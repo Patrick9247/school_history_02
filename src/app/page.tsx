@@ -990,10 +990,10 @@ export default function ProfessionalSpiralTower() {
         const ovalBands = planetData.ovalBands || [];
 
         // 行星渲染 - 优化版本
-        // 缓存随机值（减少重复计算）
-        const seed = Math.floor(radius * 1000);
+        // 使用固定的 planetData 索引作为随机种子，确保纹理固定
+        const planetSeed = (planetData?.swirlStrength || 0.1) * 10000;
         const rand = (offset: number, min: number, max: number) => {
-          const t = Math.sin((seed + offset) * 12.9898 + 78.233) * 43758.5453;
+          const t = Math.sin((planetSeed + offset) * 12.9898 + 78.233) * 43758.5453;
           return min + (t - Math.floor(t)) * (max - min);
         };
         
