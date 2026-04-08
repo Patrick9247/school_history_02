@@ -537,6 +537,7 @@ export default function ProfessionalSpiralTower() {
 
   // 用户发送的光球状态
   const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户选中的专业
+  const [highlightedMajor, setHighlightedMajor] = useState<string | null>(null); // 高亮显示的专业名
   const [popoverOpen, setPopoverOpen] = useState(false); // 下拉列表打开状态
   const userLightBallsRef = useRef<Array<{
     majorName: string;
@@ -1354,13 +1355,37 @@ export default function ProfessionalSpiralTower() {
                              (obj.type === 'sun') ? true :
                              false;
 
+          // 检查是否是高亮显示的专业
+          const isHighlighted = obj.type === 'major' && obj.majorData?.name === highlightedMajor;
+          
           if (obj.type === 'major') {
             const tailLength = 3;
+            // 如果是高亮的专业，增加发光效果
+            const glowIntensity = isHighlighted ? (0.5 + Math.sin(animationTimeRef.current * 5) * 0.5) : 0;
+            const highlightGlow = isHighlighted;
+            
             for (let t = tailLength; t >= 0; t--) {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
-              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, shouldGlow);
+              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow);
             }
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
+            
+            // 绘制球体
+            if (isHighlighted) {
+              // 高亮专业：先画一个大的发光球
+              const glowRadius = obj.radius * (1.5 + glowIntensity * 0.5);
+              drawSphere(obj.x || 0, obj.y || 0, glowRadius, '#FFD700', 0.3 * glowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+              
+              // 显示专业名称
+              const majorFontSize = isMobileSolar ? 7 : 8;
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(obj.majorData?.name || '', obj.x || 0, obj.y || 0);
+            } else {
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
+            }
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
@@ -1399,7 +1424,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, keyEvents, searchKeyword]);
+  }, [data, currentView, keyEvents, searchKeyword, highlightedMajor]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1969,6 +1994,20 @@ export default function ProfessionalSpiralTower() {
       {/* 缩放控制（只在太阳系视图中显示） */}
       {currentView === 'solar' && (
         <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
+          {/* 显示已选中的高亮专业名 */}
+          {highlightedMajor && (
+            <div className="relative w-36 md:w-40 bg-blue-500/30 border border-blue-400/50 rounded-md px-3 py-2 text-center">
+              <span className="text-[11px] md:text-[12px] text-white font-medium animate-pulse">
+                {highlightedMajor}
+              </span>
+              <button
+                onClick={() => setHighlightedMajor(null)}
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center hover:bg-red-600"
+              >
+                ×
+              </button>
+            </div>
+          )}
           {/* 太阳系视图搜索框 */}
           <div className="relative w-36 md:w-40 search-container">
             <input
@@ -1976,7 +2015,7 @@ export default function ProfessionalSpiralTower() {
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onFocus={() => setSearchOpen(true)}
-              placeholder="搜索专业..."
+              placeholder={highlightedMajor ? "重新搜索..." : "搜索专业..."}
               className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
             />
             {searchOpen && searchKeyword && (
@@ -2001,6 +2040,11 @@ export default function ProfessionalSpiralTower() {
                         <div
                           key={`${major.name}-${index}`}
                           className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex flex-col"
+                          onClick={() => {
+                            setHighlightedMajor(major.name);
+                            setSearchOpen(false);
+                            setSearchKeyword('');
+                          }}
                         >
                           <span className="font-medium">{major.name}</span>
                           <span className="text-[10px] text-white/60 mt-1">
