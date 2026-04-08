@@ -1663,9 +1663,9 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图
 
-        // 学院球缓慢围绕太阳公转（不自转）
+        // 学院球公转：5秒转一圈（每帧约0.00314）
         if (!isDraggingRef.current && !isHoveringCollegeRef.current && !isTouchDraggingRef.current) {
-          solarAutoRotationRef.current += 0.0003; // 缓慢公转，20秒左右转一圈
+          solarAutoRotationRef.current += 0.00314;
         }
 
         // 响应式轨道半径
@@ -2012,8 +2012,8 @@ export default function ProfessionalSpiralTower() {
             ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            // 学院球不自转，只有公转
-            const planetRotation = (obj.index || 0) * 0.3;
+            // 学院球自转：与公转同步，5秒转一圈
+            const planetRotation = solarAutoRotationRef.current;
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
