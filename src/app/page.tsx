@@ -1599,7 +1599,7 @@ export default function ProfessionalSpiralTower() {
 
         // 中心太阳（响应式半径，跟随缩放）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
-        const sunRadius = (isMobileSolar ? 10 : (isTabletSolar ? 11 : 12)) * Math.sqrt(zoomLevelRef.current);
+        const sunRadius = (isMobileSolar ? 15 : (isTabletSolar ? 17 : 18)) * Math.sqrt(zoomLevelRef.current);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
@@ -1799,32 +1799,33 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = sunCore;
             ctx.fill();
 
-            // 在太阳球上绘制年份（只显示数字，响应式字体）
+            // 在太阳球下方绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
               const sunFontSize = isMobileSolar ? 18 : (isTabletSolar ? 20 : 22);
               const scale = obj.scale || 1;
               const yearText = selectedYear.toString();
+              const textY = y + r + sunFontSize * scale * 0.8; // 字体在球体下方
               
               // 绘制文字阴影（让年份更清晰）
               ctx.font = `bold ${sunFontSize * scale}px "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif`;
               ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
+              ctx.textBaseline = 'top';
               
               // 文字阴影层
               ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-              ctx.fillText(yearText, x + 1, y + 1);
-              ctx.fillText(yearText, x - 1, y - 1);
-              ctx.fillText(yearText, x + 1, y - 1);
-              ctx.fillText(yearText, x - 1, y + 1);
+              ctx.fillText(yearText, x + 1, textY + 1);
+              ctx.fillText(yearText, x - 1, textY - 1);
+              ctx.fillText(yearText, x + 1, textY - 1);
+              ctx.fillText(yearText, x - 1, textY + 1);
               
               // 文字描边层（更清晰）
               ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
               ctx.lineWidth = 2;
-              ctx.strokeText(yearText, x, y);
+              ctx.strokeText(yearText, x, textY);
               
               // 主文字（白色，更清晰）
               ctx.fillStyle = '#FFFFFF';
-              ctx.fillText(yearText, x, y);
+              ctx.fillText(yearText, x, textY);
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
             // 检查该学院是否包含高亮的专业
