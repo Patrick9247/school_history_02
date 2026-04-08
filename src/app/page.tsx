@@ -989,104 +989,111 @@ export default function ProfessionalSpiralTower() {
         const bandWidthVar = planetData.bandWidthVar || 1;
         const ovalBands = planetData.ovalBands || [];
 
-        // 行星3D效果 - 参考太空看到的行星外观
-        // 1. 基础球体渐变 - 让球体有明显的3D立体感
+        // 行星渲染 - 参考游戏中的行星效果
+        // 步骤1: 填充基础球体（从亮到暗的自然渐变）
         const baseGradient = ctx.createRadialGradient(
-          x - radius * 0.4, y - radius * 0.4, 0,
-          x, y, radius * 1.2
+          x - radius * 0.5, y - radius * 0.5, 0,  // 光源方向：左上方
+          x + radius * 0.3, y + radius * 0.3, radius * 1.3  // 延伸到右下方
         );
-        baseGradient.addColorStop(0, adjustBrightness(color, 25));
-        baseGradient.addColorStop(0.2, adjustBrightness(color, 12));
+        baseGradient.addColorStop(0, adjustBrightness(color, 30));
+        baseGradient.addColorStop(0.3, adjustBrightness(color, 15));
         baseGradient.addColorStop(0.5, color);
-        baseGradient.addColorStop(0.8, adjustBrightness(color, -15));
-        baseGradient.addColorStop(1, adjustBrightness(color, -35));
+        baseGradient.addColorStop(0.7, adjustBrightness(color, -20));
+        baseGradient.addColorStop(1, adjustBrightness(color, -50));
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = baseGradient;
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 2. 表面色调层 - 增强表面质感
+        // 步骤2: 表面纹理层（淡化，不抢球体感）
         ctx.save();
+        ctx.globalCompositeOperation = 'soft-light';
         ctx.translate(x, y);
         ctx.rotate(bandAngle);
-        
-        for (let i = 0; i < bandCount; i++) {
+        for (let i = 0; i < Math.min(bandCount, 6); i++) {
           const normalizedY = (i / (bandCount - 1)) * 2 - 1;
           const bandY = normalizedY * radius;
-          const widthFactor = bandWidthVar * (1 - Math.abs(normalizedY) * 0.5);
-          const bandHeight = (radius * 0.5 / bandCount) * widthFactor;
-          const waveOffset = Math.sin(normalizedY * 4 + rot) * radius * swirl + 
-                            Math.sin(normalizedY * 3 - rot * 0.6) * radius * turbulence;
-          
+          const bandHeight = (radius * 0.35 / bandCount) * (1 - Math.abs(normalizedY) * 0.5);
+          const waveOffset = Math.sin(normalizedY * 3 + rot) * radius * swirl * 0.5;
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.5, bandHeight, 0, 0, Math.PI * 2);
+          ctx.ellipse(waveOffset, bandY, radius * 1.2, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i];
-          ctx.globalAlpha = opacity * 0.75;
+          ctx.globalAlpha = opacity * 0.4;
           ctx.fill();
         }
+        ctx.globalCompositeOperation = 'source-over';
         ctx.restore();
 
-        // 3. 极地冰盖 - 行星特征
-        const polarCapHeight = radius * 0.28;
-        ctx.save();
-        // 北极冰盖
+        // 步骤3: 极地冰盖
+        const polarCapHeight = radius * 0.22;
+        // 北极
         ctx.beginPath();
-        ctx.ellipse(x, y - radius * 0.88, radius * 0.65, polarCapHeight, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.ellipse(x, y - radius * 0.9, radius * 0.5, polarCapHeight, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(240, 248, 255, 0.6)';
         ctx.globalAlpha = opacity;
         ctx.fill();
-        // 南极冰盖
+        // 南极
         ctx.beginPath();
-        ctx.ellipse(x, y + radius * 0.88, radius * 0.55, polarCapHeight * 0.9, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(230, 245, 255, 0.45)';
+        ctx.ellipse(x, y + radius * 0.9, radius * 0.45, polarCapHeight * 0.85, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(220, 240, 255, 0.5)';
+        ctx.globalAlpha = opacity * 0.85;
+        ctx.fill();
+
+        // 步骤4: 晨昏线阴影（背光面）
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        const nightGradient = ctx.createLinearGradient(x - radius, y, x + radius, y);
+        nightGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        nightGradient.addColorStop(0.35, 'rgba(0, 0, 0, 0)');
+        nightGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.08)');
+        nightGradient.addColorStop(0.65, 'rgba(0, 0, 0, 0.25)');
+        nightGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.45)');
+        nightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+        ctx.fillStyle = nightGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.restore();
+
+        // 步骤5: 大气辉光（边缘发光）- 这是行星最标志的效果
+        ctx.save();
+        // 外层大气辉光
+        const outerAtmos = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.25);
+        outerAtmos.addColorStop(0, 'rgba(130, 180, 255, 0)');
+        outerAtmos.addColorStop(0.5, 'rgba(130, 180, 255, 0.08)');
+        outerAtmos.addColorStop(0.8, 'rgba(150, 195, 255, 0.18)');
+        outerAtmos.addColorStop(1, 'rgba(180, 215, 255, 0.28)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.25, 0, Math.PI * 2);
+        ctx.fillStyle = outerAtmos;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+
+        // 内层大气辉光（更亮）
+        const innerAtmos = ctx.createRadialGradient(x, y, radius * 0.9, x, y, radius * 1.08);
+        innerAtmos.addColorStop(0, 'rgba(180, 210, 255, 0)');
+        innerAtmos.addColorStop(0.4, 'rgba(180, 210, 255, 0.12)');
+        innerAtmos.addColorStop(1, 'rgba(200, 225, 255, 0.22)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.08, 0, Math.PI * 2);
+        ctx.fillStyle = innerAtmos;
         ctx.globalAlpha = opacity * 0.9;
         ctx.fill();
         ctx.restore();
 
-        // 4. 3D光照效果 - 简单的半球明暗
-        // 向光面高光
-        const lightGradient = ctx.createRadialGradient(
-          x - radius * 0.35, y - radius * 0.35, 0,
-          x - radius * 0.2, y - radius * 0.2, radius * 1.1
+        // 步骤6: 向光面微弱高光
+        const sunlit = ctx.createRadialGradient(
+          x - radius * 0.4, y - radius * 0.4, 0,
+          x - radius * 0.2, y - radius * 0.2, radius * 0.8
         );
-        lightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-        lightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.12)');
-        lightGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0)');
-        lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        sunlit.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        sunlit.addColorStop(0.5, 'rgba(255, 255, 255, 0.06)');
+        sunlit.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = lightGradient;
-        ctx.globalAlpha = opacity;
-        ctx.fill();
-
-        // 背光面阴影
-        const darkGradient = ctx.createRadialGradient(
-          x + radius * 0.5, y + radius * 0.5, radius * 0.4,
-          x + radius * 0.5, y + radius * 0.5, radius * 1.1
-        );
-        darkGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        darkGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.2)');
-        darkGradient.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = darkGradient;
-        ctx.globalAlpha = opacity;
-        ctx.fill();
-
-        // 5. 大气层边缘辉光 - 蓝色边缘光晕（地球的标志特征）
-        const atmosGlow = ctx.createRadialGradient(
-          x, y, radius * 0.85,
-          x, y, radius * 1.12
-        );
-        atmosGlow.addColorStop(0, 'rgba(100, 150, 255, 0)');
-        atmosGlow.addColorStop(0.6, 'rgba(100, 150, 255, 0.06)');
-        atmosGlow.addColorStop(0.85, 'rgba(120, 170, 255, 0.12)');
-        atmosGlow.addColorStop(1, 'rgba(150, 190, 255, 0.2)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 1.12, 0, Math.PI * 2);
-        ctx.fillStyle = atmosGlow;
-        ctx.globalAlpha = opacity * 0.8;
+        ctx.fillStyle = sunlit;
+        ctx.globalAlpha = opacity * 0.7;
         ctx.fill();
       } else if (enable3D) {
         // Google Earth 风格的 3D 渐变效果（调亮）
