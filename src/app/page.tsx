@@ -553,20 +553,6 @@ export default function ProfessionalSpiralTower() {
     };
   }>>([]);
 
-  // 太阳系视图用户光球状态
-  const solarUserBallsRef = useRef<Array<{
-    id: string;
-    majorName: string;
-    color: string;
-    startTime: number;
-    angle: number; // 初始角度
-    orbitRadius: number; // 轨道半径
-    lx: number;
-    ly: number;
-    lz: number;
-    sparkPhase: number; // 闪光相位，用于错开闪光时间
-  }>>([]);
-
   // 获取可用于发送光球的专业列表
   // 在太阳系视图中，只显示当前选中年份的专业
   // 在螺旋视图中，显示所有专业
@@ -584,27 +570,15 @@ export default function ProfessionalSpiralTower() {
     return allMajors;
   }, [currentView, selectedYear, rawApiData, allMajors]);
 
-  // 发送光球
+  // 发送光球 / 点亮专业球
   const sendLightBall = () => {
     if (!userSelectedMajor) return;
 
     if (currentView === 'solar') {
-      // 太阳系视图：创建太阳系中的专业球
-      const newSolarBall = {
-        id: `solar-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        majorName: userSelectedMajor,
-        color: getRandomLightColor(),
-        startTime: animationTimeRef.current,
-        angle: Math.random() * Math.PI * 2, // 随机初始角度
-        orbitRadius: 80 + Math.random() * 60, // 随机轨道半径（在学校和专业之间）
-        lx: 0,
-        ly: 0,
-        lz: 0,
-        sparkPhase: Math.random() * Math.PI * 2 // 随机闪光相位
-      };
-      solarUserBallsRef.current.push(newSolarBall);
+      // 太阳系视图：点亮对应的专业球
+      setHighlightedMajor(userSelectedMajor);
     } else {
-      // 螺旋视图：使用原有逻辑
+      // 螺旋视图：使用原有逻辑，发送光球
       const newLightBall = {
         majorName: userSelectedMajor,
         progress: 0,
@@ -1461,80 +1435,6 @@ export default function ProfessionalSpiralTower() {
             const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
             ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + obj.radius + 12);
           }
-        });
-
-        // 绘制用户发送的专业球（太阳系视图）
-        const currentTime = animationTimeRef.current;
-        solarUserBallsRef.current = solarUserBallsRef.current.filter(ball => {
-          // 计算光球存活时间，超过30秒移除
-          const age = currentTime - ball.startTime;
-          if (age > 30) return false;
-
-          // 更新位置：绕太阳旋转
-          const rotationSpeed = 0.5; // 旋转速度
-          ball.angle += rotationSpeed * 0.02;
-          
-          const ballLx = Math.cos(ball.angle) * ball.orbitRadius;
-          const ballLy = Math.sin(ball.angle) * ball.orbitRadius * 0.3; // 椭圆轨道
-          const ballLz = Math.sin(ball.angle * 2) * 30; // 3D起伏效果
-
-          // 投影到2D
-          const proj = project3D(ballLx, ballLy, ballLz, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
-
-          // 计算球体大小（响应式）
-          const ballRadius = (isMobileSolar ? 8 : (isTabletSolar ? 9 : 10)) * Math.sqrt(zoomLevelRef.current) * proj.scale;
-
-          // 闪光效果：使用正弦函数产生脉冲
-          const sparkIntensity = (Math.sin(currentTime * 4 + ball.sparkPhase) + 1) / 2; // 0-1之间
-          const glowAlpha = 0.4 + sparkIntensity * 0.6; // 0.4-1.0之间变化
-
-          // 绘制专业球外层光芒（动态闪烁）
-          if (glowAlpha > 0.5) {
-            const outerGlowRadius = ballRadius * (2 + sparkIntensity * 1.5);
-            const glowGradient = ctx.createRadialGradient(proj.x, proj.y, 0, proj.x, proj.y, outerGlowRadius);
-            glowGradient.addColorStop(0, `rgba(255, 255, 255, ${glowAlpha * 0.6})`);
-            glowGradient.addColorStop(0.2, `rgba(${ball.color}, ${glowAlpha * 0.5})`);
-            glowGradient.addColorStop(0.5, `rgba(${ball.color}, ${glowAlpha * 0.3})`);
-            glowGradient.addColorStop(1, `rgba(${ball.color}, 0)`);
-            ctx.beginPath();
-            ctx.arc(proj.x, proj.y, outerGlowRadius, 0, Math.PI * 2);
-            ctx.fillStyle = glowGradient;
-            ctx.fill();
-          }
-
-          // 绘制专业球主体（使用3D渐变）
-          // 将 RGB 字符串转换为数组来调整亮度
-          const colorParts = ball.color.split(',').map(Number);
-          const darkerColor = `${Math.floor(colorParts[0] * 0.6)}, ${Math.floor(colorParts[1] * 0.6)}, ${Math.floor(colorParts[2] * 0.6)}`;
-          
-          const ballGradient = ctx.createRadialGradient(
-            proj.x - ballRadius * 0.3, proj.y - ballRadius * 0.3, ballRadius * 0.1,
-            proj.x, proj.y, ballRadius
-          );
-          ballGradient.addColorStop(0, '#ffffff');
-          ballGradient.addColorStop(0.3, `rgb(${ball.color})`);
-          ballGradient.addColorStop(1, `rgb(${darkerColor})`);
-
-          ctx.beginPath();
-          ctx.arc(proj.x, proj.y, ballRadius, 0, Math.PI * 2);
-          ctx.fillStyle = ballGradient;
-          ctx.fill();
-
-          // 绘制高光点
-          ctx.beginPath();
-          ctx.arc(proj.x - ballRadius * 0.25, proj.y - ballRadius * 0.25, ballRadius * 0.2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + sparkIntensity * 0.4})`;
-          ctx.fill();
-
-          // 绘制专业名称（在球上方）
-          const majorFontSize = isMobileSolar ? 9 : 10;
-          ctx.font = `bold ${majorFontSize * proj.scale}px sans-serif`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + sparkIntensity * 0.2})`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(ball.majorName, proj.x, proj.y - ballRadius - 4);
-
-          return true;
         });
 
       }
