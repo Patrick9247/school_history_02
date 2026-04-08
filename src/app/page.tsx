@@ -1663,10 +1663,10 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图
 
-        // 学院球不自动旋转（用户手动拖动时才旋转）
-        // if (!isDraggingRef.current && !isHoveringCollegeRef.current && !isTouchDraggingRef.current) {
-        //   solarAutoRotationRef.current += 0.003;
-        // }
+        // 学院球缓慢围绕太阳公转（不自转）
+        if (!isDraggingRef.current && !isHoveringCollegeRef.current && !isTouchDraggingRef.current) {
+          solarAutoRotationRef.current += 0.0003; // 缓慢公转，20秒左右转一圈
+        }
 
         // 响应式轨道半径
         const isMobileSolar = canvas.width < 768;
