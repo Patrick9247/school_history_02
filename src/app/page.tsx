@@ -2678,7 +2678,14 @@ export default function ProfessionalSpiralTower() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
-      <div className="relative w-full h-screen overflow-hidden" style={{ backgroundImage: 'url(https://aka.doubaocdn.com/s/Y3YW1wD3oo)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="relative w-full h-screen overflow-hidden">
+        {/* 深空纯色背景 */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 50%, #050510 100%)'
+          }}
+        />
         {/* 遮罩层 */}
         <div className="absolute inset-0 bg-black/30"></div>
         {/* 校徽背景层 - 填充整个屏幕 */}
