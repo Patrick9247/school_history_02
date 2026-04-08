@@ -1509,9 +1509,41 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光，显示3D效果
+          // 所有年度球都发光，显示3D效果（太阳般的均匀渐变）
           const shouldGlow = true;
-          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, true);
+          
+          // 绘制太阳般均匀渐变的年度球
+          // 外层大光晕
+          const outerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.5, node.x, node.y, size * 2.5);
+          outerSunGlow.addColorStop(0, addAlpha(color, opacity * 0.6));
+          outerSunGlow.addColorStop(0.4, addAlpha(color, opacity * 0.3));
+          outerSunGlow.addColorStop(1, addAlpha(color, 0));
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size * 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = outerSunGlow;
+          ctx.fill();
+          
+          // 内层光晕
+          const innerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.3, node.x, node.y, size * 1.3);
+          innerSunGlow.addColorStop(0, addAlpha('#ffffff', opacity * 0.9));
+          innerSunGlow.addColorStop(0.2, addAlpha(color, opacity * 0.95));
+          innerSunGlow.addColorStop(0.5, addAlpha(color, opacity * 0.8));
+          innerSunGlow.addColorStop(1, addAlpha(color, opacity * 0.5));
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size * 1.3, 0, Math.PI * 2);
+          ctx.fillStyle = innerSunGlow;
+          ctx.fill();
+          
+          // 核心球体（均匀渐变，中心亮边缘暗）
+          const sunCore = ctx.createRadialGradient(node.x - size * 0.25, node.y - size * 0.25, 0, node.x, node.y, size);
+          sunCore.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+          sunCore.addColorStop(0.3, color);
+          sunCore.addColorStop(0.7, adjustBrightness(color, -10));
+          sunCore.addColorStop(1, adjustBrightness(color, -25));
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = sunCore;
+          ctx.fill();
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           // 当是关键事件或鼠标悬停在该年份时，显示详细信息
