@@ -1044,7 +1044,8 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制球体
         renderObjects.forEach(obj => {
-          const opacity = Math.max(0.6, Math.min(1, (1 - (obj.z || 0) / 600)));
+          // 学院球不透明，固定透明度为1
+          const opacity = 1;
 
           if (obj.type === 'major') {
             const tailLength = 3;
