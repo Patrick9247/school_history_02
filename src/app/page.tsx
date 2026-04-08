@@ -2673,9 +2673,14 @@ export default function ProfessionalSpiralTower() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
-      <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
-        {/* 半透明遮罩层，确保内容清晰可见 */}
-        <div className="absolute inset-0 bg-black/60"></div>
+      <div className="relative w-full h-screen overflow-hidden">
+        {/* 背景图片层 - 30%透明度 */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+          style={{ backgroundImage: 'url(/bg-pattern.jpg)' }}
+        />
+        {/* 原有的黑色背景作为底层 */}
+        <div className="absolute inset-0 bg-black/70"></div>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
