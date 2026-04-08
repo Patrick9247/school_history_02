@@ -1757,13 +1757,19 @@ export default function ProfessionalSpiralTower() {
           ctx.fillStyle = coreGradient;
           ctx.fill();
 
-          // 绘制专业名字（在光球附近，飞出时不显示）
+          // 绘制专业名字和年份（在光球附近，飞出时不显示）
           if (!isFlyingOut && opacity > 0.5) {
+            // 显示专业名
             ctx.font = `bold ${Math.max(10, 12 * scale)}px sans-serif`;
             ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
             ctx.fillText(ball.majorName, x, y - glowRadius - 3);
+            
+            // 显示年份（时间）
+            ctx.font = `${Math.max(9, 10 * scale)}px sans-serif`;
+            ctx.fillStyle = `rgba(147, 197, 253, ${opacity * 0.8})`;
+            ctx.fillText(`${ball.firstAppearYear}年`, x, y - glowRadius - 3 - 14 * scale);
           }
 
           return true;
