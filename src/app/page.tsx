@@ -2505,10 +2505,10 @@ export default function ProfessionalSpiralTower() {
             className="fixed inset-0 bg-black/70 z-50"
             onClick={() => setMilestoneModal({ visible: false, year: 0, content: '' })}
           />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/95 border border-blue-400/60 rounded-2xl shadow-2xl shadow-blue-500/40 w-[90%] max-w-md overflow-hidden">
-            <div className="p-4 md:p-5">
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/95 border border-blue-400/60 rounded-2xl shadow-2xl shadow-blue-500/40 w-[90%] max-w-lg overflow-hidden">
+            <div className="p-4 md:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[14px] md:text-[15px] text-blue-400 font-semibold">
+                <h3 className="text-[14px] md:text-[16px] text-blue-400 font-semibold">
                   {milestoneModal.year}年大事记
                 </h3>
                 <button
@@ -2518,8 +2518,13 @@ export default function ProfessionalSpiralTower() {
                   ✕
                 </button>
               </div>
-              <div className="text-[12px] md:text-[13px] text-white/90 leading-relaxed max-h-64 overflow-y-auto">
-                {milestoneModal.content}
+              <div className="text-[12px] md:text-[13px] text-white/90 leading-relaxed max-h-[60vh] overflow-y-auto space-y-3">
+                {milestoneModal.content.split('\n').filter(line => line.trim()).map((line, index) => (
+                  <div key={index} className="flex gap-3">
+                    <span className="text-blue-400/60 shrink-0">{index + 1}.</span>
+                    <span className="text-white/90">{line.trim()}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
