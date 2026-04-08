@@ -156,6 +156,7 @@ export default function ProfessionalSpiralTower() {
   const solarAutoRotationRef = useRef(0); // 学院球自动旋转角度
   const isDraggingRef = useRef(false);
   const isHoveringCollegeRef = useRef(false); // 鼠标是否悬停在学院球上
+  const isHoveringSpiralRef = useRef(false); // 鼠标是否悬停在螺旋体上
   const isTouchingNodeRef = useRef(false); // 触摸是否在球上
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef<number | undefined>(undefined);
@@ -812,8 +813,8 @@ export default function ProfessionalSpiralTower() {
       animationTimeRef.current += 0.016;
 
       if (currentView === 'spiral') {
-        // 更新旋转（如果没有拖动且没有触摸操作）
-        if (!isDraggingRef.current && !isTouchDraggingRef.current && !isTouchingNodeRef.current) {
+        // 更新旋转（如果没有拖动、没有触摸操作、且鼠标不在螺旋体上）
+        if (!isDraggingRef.current && !isTouchDraggingRef.current && !isTouchingNodeRef.current && !isHoveringSpiralRef.current) {
           rotationRef.current += 0.002;
         }
 
@@ -1421,6 +1422,7 @@ export default function ProfessionalSpiralTower() {
         });
 
         if (hoveredNode) {
+          isHoveringSpiralRef.current = true;
           const keyEvent = keyEvents.find(e => e.year === hoveredNode.year);
           setHoveredYear(hoveredNode.year);
           setTooltip({
@@ -1438,6 +1440,7 @@ export default function ProfessionalSpiralTower() {
             majorCount: hoveredNode.majorCount
           });
         } else {
+          isHoveringSpiralRef.current = false;
           setHoveredYear(null);
           setTooltip(prev => ({ ...prev, visible: false }));
           setYearStats(null);
@@ -1458,6 +1461,16 @@ export default function ProfessionalSpiralTower() {
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
+    isHoveringSpiralRef.current = false;
+  };
+
+  // 鼠标离开 canvas 时的处理
+  const handleCanvasMouseLeave = () => {
+    isDraggingRef.current = false;
+    isHoveringSpiralRef.current = false;
+    setHoveredYear(null);
+    setTooltip(prev => ({ ...prev, visible: false }));
+    setYearStats(null);
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -1860,7 +1873,7 @@ export default function ProfessionalSpiralTower() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleCanvasMouseLeave}
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
