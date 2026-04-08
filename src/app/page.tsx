@@ -899,7 +899,7 @@ export default function ProfessionalSpiralTower() {
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-    // 绘制3D球体（无纹理）
+    // 绘制带状纹理的气态行星球体（简洁优雅的木星/土星风格）
     const drawPlanetSphere = (x: number, y: number, radius: number, color: string, opacity: number, planetIndex: number, glow?: boolean) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
@@ -932,6 +932,37 @@ export default function ProfessionalSpiralTower() {
       ctx.globalAlpha = opacity;
       ctx.fill();
 
+      // 添加简洁的横向带状纹理（木星/土星风格）
+      const bandCount = 5 + (planetIndex % 3); // 5-7条带
+      const baseSeed = planetIndex * 7;
+      
+      for (let i = 0; i < bandCount; i++) {
+        // 计算带的位置（考虑球面透视）
+        const normalizedY = (i + 0.5) / bandCount;
+        const bandY = y - radius + normalizedY * radius * 2;
+        
+        // 球面透视：边缘的带被压缩
+        const edgeFactor = Math.sqrt(1 - Math.pow((normalizedY - 0.5) * 2, 2));
+        const bandHeight = (radius * 2 / bandCount) * Math.max(0.3, edgeFactor) * 0.7;
+        
+        // 明暗交替
+        const isLightBand = i % 2 === 0;
+        const brightness = isLightBand ? 15 : -20;
+        
+        // 渐变带（自然过渡）
+        const bandGradient = ctx.createLinearGradient(x - radius, bandY, x + radius, bandY);
+        bandGradient.addColorStop(0, 'transparent');
+        bandGradient.addColorStop(0.05, 'transparent');
+        bandGradient.addColorStop(0.15, addAlpha(adjustBrightness(color, brightness), 0.5));
+        bandGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, brightness + 10), 0.6));
+        bandGradient.addColorStop(0.85, addAlpha(adjustBrightness(color, brightness), 0.5));
+        bandGradient.addColorStop(0.95, 'transparent');
+        bandGradient.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = bandGradient;
+        ctx.fillRect(x - radius, bandY - bandHeight / 2, radius * 2, bandHeight);
+      }
+
       // 恢复上下文状态
       ctx.restore();
 
@@ -962,6 +993,36 @@ export default function ProfessionalSpiralTower() {
       ctx.globalAlpha = opacity;
       ctx.fill();
       ctx.globalAlpha = 1;
+
+      // 部分球体添加土星光环效果
+      if ((planetIndex % 4) === 0) {
+        // 光环（半透明椭圆形）
+        ctx.save();
+        ctx.globalAlpha = opacity * 0.4;
+        
+        // 外层光环
+        ctx.strokeStyle = addAlpha(adjustBrightness(color, 30), 0.5);
+        ctx.lineWidth = radius * 0.06;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.5, radius * 0.12, 0.15, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 中层光环
+        ctx.strokeStyle = addAlpha(adjustBrightness(color, 15), 0.4);
+        ctx.lineWidth = radius * 0.04;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.35, radius * 0.1, 0.15, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 内层光环
+        ctx.strokeStyle = addAlpha('#fff', 0.3);
+        ctx.lineWidth = radius * 0.025;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.55, radius * 0.14, 0.15, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.restore();
+      }
 
       // 外发光效果
       if (glow) {
