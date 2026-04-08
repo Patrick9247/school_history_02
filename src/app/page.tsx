@@ -1389,7 +1389,7 @@ export default function ProfessionalSpiralTower() {
           if (obj.type === 'major') {
             const tailLength = 3;
             // 如果是高亮的专业，增加发光效果
-            const glowIntensity = isHighlighted ? (0.5 + Math.sin(animationTimeRef.current * 5) * 0.5) : 0;
+            const glowIntensity = isHighlighted ? (0.6 + Math.sin(animationTimeRef.current * 8) * 0.4) : 0;
             const highlightGlow = isHighlighted;
             
             for (let t = tailLength; t >= 0; t--) {
@@ -1399,18 +1399,37 @@ export default function ProfessionalSpiralTower() {
             
             // 绘制球体
             if (isHighlighted) {
-              // 高亮专业：先画一个大的发光球
-              const glowRadius = obj.radius * (1.5 + glowIntensity * 0.5);
-              drawSphere(obj.x || 0, obj.y || 0, glowRadius, '#FFD700', 0.3 * glowIntensity, true);
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+              // 高亮专业：绘制多层发光效果
+              // 最外层大光晕
+              const outerGlowRadius = obj.radius * (2.5 + glowIntensity * 1.5);
+              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.2 * glowIntensity, true);
+              // 中层光晕
+              const midGlowRadius = obj.radius * (1.8 + glowIntensity * 0.8);
+              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * glowIntensity, true);
+              // 内层光晕
+              const innerGlowRadius = obj.radius * (1.3 + glowIntensity * 0.4);
+              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF6600', 0.45 * glowIntensity, true);
+              // 核心球体
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, '#FFD700', opacity, true);
               
-              // 显示专业名称
-              const majorFontSize = isMobileSolar ? 7 : 8;
-              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              // 显示专业名称（带发光背景）
+              const majorFontSize = isMobileSolar ? 8 : 9;
+              const textX = obj.x || 0;
+              const textY = (obj.y || 0) + obj.radius + 14;
+              // 文字背景发光
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1) + 2}px sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(obj.majorData?.name || '', obj.x || 0, obj.y || 0);
+              const textMetrics = ctx.measureText(obj.majorData?.name || '');
+              const textWidth = textMetrics.width;
+              const textHeight = majorFontSize * (obj.scale || 1);
+              // 绘制文字背景
+              ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * glowIntensity})`;
+              ctx.fillRect(textX - textWidth / 2 - 4, textY - textHeight / 2 - 2, textWidth + 8, textHeight + 4);
+              // 绘制文字
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
+              ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
               drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
             }
