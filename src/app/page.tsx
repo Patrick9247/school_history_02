@@ -2,31 +2,31 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
-// 行星颜色配置（偏暗色系，全部带状纹理，条纹随机）
+// 行星颜色配置（明亮色系，全部带状纹理，条纹随机）
 const PLANET_COLORS = [
-  // 所有行星都带状纹理，使用随机条纹
-  { name: '水星', color: '#5A5A5A', gradient: ['#7A7A7A', '#3A3A3A'], baseBandColor: '#6A6A6A' },
-  { name: '金星', color: '#8B7355', gradient: ['#9B8365', '#6B5335'], baseBandColor: '#7B6345' },
-  { name: '地球', color: '#2F4F4F', gradient: ['#4A6A6A', '#1A2F2F'], baseBandColor: '#3A5F5F' },
-  { name: '火星', color: '#8B3A3A', gradient: ['#9B4A4A', '#6B2A2A'], baseBandColor: '#7B3A3A' },
-  { name: '木星', color: '#8B6914', gradient: ['#A67C00', '#5C4A1F'], baseBandColor: '#9B7924' },
-  { name: '土星', color: '#8B7500', gradient: ['#9B8500', '#6B5500'], baseBandColor: '#7B6500' },
-  { name: '天王星', color: '#3A5F5F', gradient: ['#5F8F8F', '#2A3F3F'], baseBandColor: '#4A6F6F' },
-  { name: '海王星', color: '#2E4A62', gradient: ['#4E6A82', '#1A2A42'], baseBandColor: '#3E5A72' },
-  { name: '冥王星', color: '#6B5344', gradient: ['#8B7355', '#4A3A2A'], baseBandColor: '#5B4334' },
-  { name: '月球', color: '#4A4A4A', gradient: ['#6A6A6A', '#2A2A2A'], baseBandColor: '#5A5A5A' },
-  { name: '彗星', color: '#4A3A5F', gradient: ['#6B5B8F', '#2A1A3F'], baseBandColor: '#5A4A6F' },
-  { name: '星云', color: '#2A4A4A', gradient: ['#3A5A5A', '#1A2A2A'], baseBandColor: '#3A4A4A' },
-  { name: '银河', color: '#3A2A4A', gradient: ['#5A4A6A', '#2A1A3A'], baseBandColor: '#4A3A5A' },
-  { name: '极光', color: '#2A4A2A', gradient: ['#3A5A3A', '#1A2A1A'], baseBandColor: '#3A4A3A' },
-  { name: '暗星1', color: '#4A3A2A', gradient: ['#5A4A3A', '#3A2A1A'], baseBandColor: '#5A4A3A' },
-  { name: '暗星2', color: '#3A4A5A', gradient: ['#4A5A6A', '#2A3A4A'], baseBandColor: '#4A5A5A' },
-  { name: '暗星3', color: '#5A3A4A', gradient: ['#6A4A5A', '#4A2A3A'], baseBandColor: '#5A4A4A' },
-  { name: '暗星4', color: '#3A5A4A', gradient: ['#4A6A5A', '#2A4A3A'], baseBandColor: '#4A5A4A' },
-  { name: '暗星5', color: '#4A4A3A', gradient: ['#5A5A4A', '#3A3A2A'], baseBandColor: '#4A4A3A' },
-  { name: '暗星6', color: '#5A4A3A', gradient: ['#6A5A4A', '#4A3A2A'], baseBandColor: '#5A5A3A' },
-  { name: '暗星7', color: '#4A3A3A', gradient: ['#5A4A4A', '#3A2A2A'], baseBandColor: '#5A4A4A' },
-  { name: '暗星8', color: '#3A3A4A', gradient: ['#4A4A5A', '#2A2A3A'], baseBandColor: '#4A4A5A' },
+  // 所有行星都带状纹理，使用随机条纹，亮度提升
+  { name: '水星', color: '#9A9A9A', gradient: ['#BABABA', '#7A7A7A'], baseBandColor: '#AAAAAA' },
+  { name: '金星', color: '#C9A96E', gradient: ['#D9B97E', '#A98A5E'], baseBandColor: '#B9A97E' },
+  { name: '地球', color: '#5A8A8A', gradient: ['#6A9A9A', '#4A7A7A'], baseBandColor: '#6A8A8A' },
+  { name: '火星', color: '#C45C5C', gradient: ['#D46C6C', '#A44C4C'], baseBandColor: '#B45C5C' },
+  { name: '木星', color: '#C49A4E', gradient: ['#D4AA5E', '#A48A3E'], baseBandColor: '#B49A4E' },
+  { name: '土星', color: '#C4A850', gradient: ['#D4B860', '#A49840'], baseBandColor: '#B4A850' },
+  { name: '天王星', color: '#6A9A9A', gradient: ['#8AAAAA', '#5A8A8A'], baseBandColor: '#7A9A9A' },
+  { name: '海王星', color: '#5A7A9A', gradient: ['#7A8AAA', '#4A6A8A'], baseBandColor: '#6A7A9A' },
+  { name: '冥王星', color: '#9A856A', gradient: ['#AA957A', '#8A756A'], baseBandColor: '#9A857A' },
+  { name: '月球', color: '#8A8A8A', gradient: ['#9A9A9A', '#7A7A7A'], baseBandColor: '#8A8A8A' },
+  { name: '彗星', color: '#8A6A9A', gradient: ['#9A7AAA', '#7A5A8A'], baseBandColor: '#8A6A9A' },
+  { name: '星云', color: '#5A8A8A', gradient: ['#7A9A9A', '#4A7A7A'], baseBandColor: '#6A8A8A' },
+  { name: '银河', color: '#7A5A8A', gradient: ['#8A6A9A', '#6A4A7A'], baseBandColor: '#7A5A8A' },
+  { name: '极光', color: '#5A8A5A', gradient: ['#7A9A7A', '#4A7A4A'], baseBandColor: '#6A8A6A' },
+  { name: '亮星1', color: '#8A7A6A', gradient: ['#9A8A7A', '#7A6A5A'], baseBandColor: '#8A7A7A' },
+  { name: '亮星2', color: '#6A8A9A', gradient: ['#8A9AAA', '#5A7A8A'], baseBandColor: '#7A8A9A' },
+  { name: '亮星3', color: '#9A6A8A', gradient: ['#AA7A9A', '#8A5A7A'], baseBandColor: '#9A6A8A' },
+  { name: '亮星4', color: '#6A9A8A', gradient: ['#8AAA9A', '#5A8A7A'], baseBandColor: '#7A9A8A' },
+  { name: '亮星5', color: '#8A8A6A', gradient: ['#9A9A7A', '#7A7A5A'], baseBandColor: '#8A8A7A' },
+  { name: '亮星6', color: '#9A8A6A', gradient: ['#AA9A7A', '#8A7A5A'], baseBandColor: '#9A8A7A' },
+  { name: '亮星7', color: '#8A6A6A', gradient: ['#9A7A7A', '#7A5A5A'], baseBandColor: '#8A7A7A' },
+  { name: '亮星8', color: '#6A6A8A', gradient: ['#8A7A9A', '#5A5A7A'], baseBandColor: '#7A6A8A' },
 ];
 
 // 生成带状纹理数据（条纹角度随机，数量3-8条）
@@ -984,16 +984,16 @@ export default function ProfessionalSpiralTower() {
         
         ctx.restore();
 
-        // 添加 Google Earth 风格的3D阴影覆盖
+        // 添加 Google Earth 风格的3D阴影覆盖（调亮）
         const shadowGradient = ctx.createRadialGradient(
           x - radius * 0.4, y - radius * 0.4, 0,
           x, y, radius * 1.2
         );
-        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-        shadowGradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.08)');
+        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+        shadowGradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.12)');
         shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
-        shadowGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.2)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+        shadowGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.12)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1002,18 +1002,18 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
         ctx.globalAlpha = 1;
       } else if (enable3D) {
-        // Google Earth 风格的 3D 渐变效果
+        // Google Earth 风格的 3D 渐变效果（调亮）
         // 创建多层渐变实现更真实的 3D 效果
         const gradient = ctx.createRadialGradient(
           x - radius * 0.35, y - radius * 0.35, radius * 0.05,
           x, y, radius * 1.1
         );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-        gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.15)');
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+        gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.2)');
         gradient.addColorStop(0.3, color);
         gradient.addColorStop(0.7, color);
-        gradient.addColorStop(0.85, adjustBrightness(color, -15));
-        gradient.addColorStop(1, adjustBrightness(color, -40));
+        gradient.addColorStop(0.85, adjustBrightness(color, -8));
+        gradient.addColorStop(1, adjustBrightness(color, -25));
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1021,14 +1021,14 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 添加边缘高光
+        // 添加边缘高光（调亮）
         const edgeGradient = ctx.createLinearGradient(
           x - radius, y - radius,
           x + radius, y + radius
         );
-        edgeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+        edgeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
         edgeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0)');
-        edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1037,12 +1037,12 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
         ctx.globalAlpha = 1;
 
-        // 绘制球体轮廓
+        // 绘制球体轮廓（调亮）
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = adjustBrightness(color, -30);
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = opacity * 0.6;
+        ctx.strokeStyle = adjustBrightness(color, -20);
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = opacity * 0.5;
         ctx.stroke();
         ctx.globalAlpha = 1;
       } else {
