@@ -2675,52 +2675,52 @@ export default function ProfessionalSpiralTower() {
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
       <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
         {/* 半透明遮罩层，确保内容清晰可见 - 适当降低透明度以显示校徽 */}
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
         
         {/* 成都理工大学校徽背景装饰 - 隐约透明，大气稳重 */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-          {/* 主校徽 - 中心偏下 */}
+          {/* 主校徽 - 中心偏下，更大更明显 */}
           <div 
-            className="absolute opacity-[0.08] md:opacity-[0.1]"
+            className="absolute opacity-[0.18] md:opacity-[0.22]"
             style={{
-              width: 'min(80vw, 800px)',
-              height: 'min(80vw, 800px)',
-              top: '10%',
+              width: 'min(100vw, 1000px)',
+              height: 'min(100vw, 1000px)',
+              top: '50%',
               left: '50%',
-              transform: 'translateX(-50%)',
+              transform: 'translate(-50%, -50%)',
             }}
           >
             <img 
               src="/college-emblem.svg" 
               alt="" 
               className="w-full h-full object-contain"
-              style={{ filter: 'blur(1px) brightness(0.8)' }}
+              style={{ filter: 'drop-shadow(0 0 30px rgba(37, 99, 235, 0.3))' }}
             />
           </div>
           
-          {/* 辅助装饰 - 右上角小校徽 */}
+          {/* 右上角装饰校徽 */}
           <div 
-            className="absolute top-8 right-8 md:top-12 md:right-16 opacity-[0.12] md:opacity-[0.15]"
-            style={{ width: '120px', height: '120px' }}
+            className="absolute top-16 right-12 md:top-20 md:right-24 opacity-[0.15] md:opacity-[0.18]"
+            style={{ width: '150px', height: '150px' }}
           >
             <img 
               src="/college-emblem.svg" 
               alt="" 
               className="w-full h-full object-contain"
-              style={{ filter: 'blur(0.5px)' }}
+              style={{ filter: 'drop-shadow(0 0 15px rgba(251, 191, 36, 0.2))' }}
             />
           </div>
           
-          {/* 辅助装饰 - 左下角小校徽 */}
+          {/* 左下角装饰校徽 */}
           <div 
-            className="absolute bottom-16 left-4 md:bottom-24 md:left-12 opacity-[0.1] md:opacity-[0.12]"
-            style={{ width: '80px', height: '80px' }}
+            className="absolute bottom-20 left-8 md:bottom-28 md:left-16 opacity-[0.12] md:opacity-[0.15]"
+            style={{ width: '100px', height: '100px' }}
           >
             <img 
               src="/college-emblem.svg" 
               alt="" 
               className="w-full h-full object-contain"
-              style={{ filter: 'blur(0.5px)' }}
+              style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.2))' }}
             />
           </div>
         </div>
