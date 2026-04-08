@@ -1951,7 +1951,7 @@ export default function ProfessionalSpiralTower() {
             majorRotationAnglesRef.current[i] += 0.015 + i * 0.002;
 
             // 专业球轨道半径（围绕学院球的卫星轨道）
-            const majorOrbitRadius = (isMobileSolar ? 36 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             dept.majors.forEach((major: Major, j: number) => {
               // 每个专业有不同的相位角，围绕学院球均匀分布并持续旋转
               const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
@@ -2057,7 +2057,7 @@ export default function ProfessionalSpiralTower() {
             const deptAngle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
             const dlx = Math.cos(deptAngle) * orbitRadiusX;
             const dly = Math.sin(deptAngle) * orbitRadiusY;
-            const majorOrbitRadius = (isMobileSolar ? 36 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             ctx.beginPath();
             ctx.ellipse(
               centerX + dlx,
@@ -2136,7 +2136,31 @@ export default function ProfessionalSpiralTower() {
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
               ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
-              drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, false, false);
+              // 普通专业球 - 添加3D渐变和柔和光晕
+              const x = obj.x || 0;
+              const y = obj.y || 0;
+              const r = scaledRadius;
+              
+              // 外层光晕
+              const outerGlow = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.5);
+              outerGlow.addColorStop(0, `rgba(147, 197, 253, ${opacity * 0.4})`);
+              outerGlow.addColorStop(0.5, `rgba(147, 197, 253, ${opacity * 0.15})`);
+              outerGlow.addColorStop(1, `rgba(147, 197, 253, 0)`);
+              ctx.beginPath();
+              ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
+              ctx.fillStyle = outerGlow;
+              ctx.fill();
+              
+              // 3D渐变球体
+              const coreGrad = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, 0, x, y, r);
+              coreGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+              coreGrad.addColorStop(0.3, obj.color);
+              coreGrad.addColorStop(0.7, obj.color);
+              coreGrad.addColorStop(1, `rgba(0, 0, 0, ${opacity * 0.3})`);
+              ctx.beginPath();
+              ctx.arc(x, y, r, 0, Math.PI * 2);
+              ctx.fillStyle = coreGrad;
+              ctx.fill();
             }
           } else if (obj.type === 'sun') {
             // Google Earth 太阳效果：均匀的径向渐变，无纹理
