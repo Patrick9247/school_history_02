@@ -542,6 +542,7 @@ export default function ProfessionalSpiralTower() {
     progress: number;
     color: string;
     createdAt: number;
+    firstAppearYear: number; // 该专业第一次出现的年份
     flyOutStart?: {
       x: number;
       y: number;
@@ -579,11 +580,18 @@ export default function ProfessionalSpiralTower() {
       setHighlightedMajor(userSelectedMajor);
     } else {
       // 螺旋视图：使用原有逻辑，发送光球
+      // 计算该专业第一次出现的年份
+      const majorFirstAppear = rawApiData
+        .filter(item => item.major === userSelectedMajor)
+        .map(item => item.year)
+        .sort((a, b) => a - b)[0] || 1956;
+      
       const newLightBall = {
         majorName: userSelectedMajor,
         progress: 0,
         color: getRandomLightColor(),
-        createdAt: animationTimeRef.current
+        createdAt: animationTimeRef.current,
+        firstAppearYear: majorFirstAppear
       };
       userLightBallsRef.current.push(newLightBall);
     }
@@ -1093,118 +1101,146 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制用户发送的光球
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
-          // 更新进度
+          // 更新进度（从0到1表示从firstAppearYear到endYear，1到1.5表示飞出）
           ball.progress += lightSpeed * 0.3; // 用户光球速度与自动光球一致
 
-          // 如果进度超过2，移除该光球
-          if (ball.progress >= 2) {
+          // 如果进度超过1.5，移除该光球
+          if (ball.progress >= 1.5) {
             return false;
           }
 
-          // 计算光球位置（与自动光球相同的逻辑）
-          let x: number | undefined, y: number | undefined, z: number | undefined, scale: number = 1, lightOpacity: number = 1;
-          let isFlyingOut = false;
+          // 计算光球在螺旋线上的实际位置
+          const projection = spiralProjectionRef.current;
+          if (!projection) return false;
+
+          // 计算该专业第一次出现年份对应的 progress（起始点）
+          const startProgress = (ball.firstAppearYear - projection.startYear) / (projection.totalYears - 1);
           const colorRGB = ball.color;
 
-          if (ball.progress < 1) {
-            // 在螺旋线上
-            const segmentProgress = ball.progress;
-            const lightPointIndex = Math.floor(segmentProgress * pathPoints.length);
-            const nextLightPointIndex = (lightPointIndex + 1) % pathPoints.length;
+          let x: number, y: number, z: number, scale: number;
+          let isFlyingOut = ball.progress > 1;
 
-            if (lightPointIndex < pathPoints.length && nextLightPointIndex < pathPoints.length) {
-              const currentPoint = pathPoints[lightPointIndex];
-              const nextPoint = pathPoints[nextLightPointIndex];
-              const t = (segmentProgress * pathPoints.length) - lightPointIndex;
+          if (!isFlyingOut) {
+            // 在螺旋线上：从 firstAppearYear 到 endYear
+            const actualProgress = startProgress + ball.progress * (1 - startProgress);
 
-              x = currentPoint.x + (nextPoint.x - currentPoint.x) * t;
-              y = currentPoint.y + (nextPoint.y - currentPoint.y) * t;
-              z = currentPoint.z + (nextPoint.z - currentPoint.z) * t;
-              scale = currentPoint.scale + (nextPoint.scale - currentPoint.scale) * t;
-            }
+            // 计算光球位置
+            const angle = actualProgress * projection.rings * Math.PI * 2;
+            const lx = Math.cos(angle) * projection.baseRadius;
+            const ly = (1 - actualProgress) * projection.spiralHeight - projection.spiralHeight / 2;
+            const lz = Math.sin(angle) * projection.baseRadius;
+            const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, centerX, centerY);
+
+            x = proj.x;
+            y = proj.y;
+            z = proj.z;
+            scale = proj.scale;
           } else {
             // 飞出螺旋线
-            isFlyingOut = true;
-            const flyOutProgress = ball.progress - 1;
-
-            if (flyOutProgress < 0.8) {
-              const flyOutDistance = flyOutProgress * 600;
-
-              const lastP = pathPoints[lastPointIndex];
-
-              if (!ball.flyOutStart) {
-                ball.flyOutStart = {
-                  x: lastP.x,
-                  y: lastP.y,
-                  z: lastP.z,
-                  scale: lastP.scale,
-                  dirX: flyOutDirX,
-                  dirY: flyOutDirY,
-                  opacity: 1.0
-                };
-              }
-
-              const startPos = ball.flyOutStart;
-              x = startPos.x + startPos.dirX * flyOutDistance;
-              y = startPos.y + startPos.dirY * flyOutDistance - flyOutDistance * 0.4;
-              z = startPos.z + flyOutDistance * 0.6;
-              scale = startPos.scale * (1 - flyOutProgress * 0.4);
-              lightOpacity = Math.max(0, 1 - flyOutProgress * 1.25);
-            } else {
-              return false;
+            if (!ball.flyOutStart) {
+              // 计算螺旋线末端的位置作为飞出起点
+              const endAngle = 1 * projection.rings * Math.PI * 2;
+              ball.flyOutStart = {
+                x: Math.cos(endAngle) * projection.baseRadius,
+                y: (1 - 1) * projection.spiralHeight - projection.spiralHeight / 2,
+                z: Math.sin(endAngle) * projection.baseRadius,
+                scale: 1,
+                dirX: flyOutDirX,
+                dirY: flyOutDirY,
+                opacity: 1
+              };
             }
+
+            const flyOutProgress = ball.progress - 1;
+            const flyOutDistance = flyOutProgress * 400;
+
+            const startX = ball.flyOutStart.x;
+            const startY = ball.flyOutStart.y;
+            const startZ = ball.flyOutStart.z;
+
+            x = startX + ball.flyOutStart.dirX * flyOutDistance;
+            y = startY + ball.flyOutStart.dirY * flyOutDistance - flyOutDistance * 0.4;
+            z = startZ + flyOutDistance * 0.6;
+
+            const proj = projection.project3D(x, y, z, 0, rotationRef.current, centerX, centerY);
+            x = proj.x;
+            y = proj.y;
+            scale = ball.flyOutStart.scale * (1 - flyOutProgress * 0.4);
           }
 
-          // 绘制用户光球（更大更亮）
-          if (x !== undefined && y !== undefined) {
-            const glowRadius = isFlyingOut ? 15 * scale : 18 * scale;
-            const midRadius = isFlyingOut ? 8 * scale : 10 * scale;
-            const coreRadius = isFlyingOut ? 4 * scale : 5 * scale;
+          // 绘制用户光球
+          const glowRadius = isFlyingOut ? 12 * scale : 18 * scale;
+          const midRadius = isFlyingOut ? 6 * scale : 10 * scale;
+          const coreRadius = isFlyingOut ? 3 * scale : 5 * scale;
+          const opacity = isFlyingOut ? Math.max(0, 1 - (ball.progress - 1) * 2) : 1;
 
-            // 外层光晕
-            const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
-            lightGlowGradient.addColorStop(0.15, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
-            lightGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.7})`);
-            lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
-            ctx.beginPath();
-            ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-            ctx.fillStyle = lightGlowGradient;
-            ctx.fill();
+          // 外层光晕
+          const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+          lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+          lightGlowGradient.addColorStop(0.15, `rgba(${colorRGB}, ${opacity * 0.95})`);
+          lightGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${opacity * 0.7})`);
+          lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
+          ctx.beginPath();
+          ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+          ctx.fillStyle = lightGlowGradient;
+          ctx.fill();
 
-            // 中层光晕
-            const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
-            midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
-            midGlowGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 1.0})`);
-            midGlowGradient.addColorStop(0.7, `rgba(${colorRGB}, ${lightOpacity * 0.85})`);
-            midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.6})`);
-            ctx.beginPath();
-            ctx.arc(x, y, midRadius, 0, Math.PI * 2);
-            ctx.fillStyle = midGlowGradient;
-            ctx.fill();
+          // 中层光晕
+          const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
+          midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+          midGlowGradient.addColorStop(0.3, `rgba(${colorRGB}, ${opacity})`);
+          midGlowGradient.addColorStop(0.7, `rgba(${colorRGB}, ${opacity * 0.85})`);
+          midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${opacity * 0.6})`);
+          ctx.beginPath();
+          ctx.arc(x, y, midRadius, 0, Math.PI * 2);
+          ctx.fillStyle = midGlowGradient;
+          ctx.fill();
 
-            // 核心光球
-            const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
-            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
-            coreGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 1.0})`);
-            coreGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
-            coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
-            ctx.beginPath();
-            ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
-            ctx.fillStyle = coreGradient;
-            ctx.fill();
+          // 核心光球
+          const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
+          coreGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
+          coreGradient.addColorStop(0.2, `rgba(${colorRGB}, ${opacity})`);
+          coreGradient.addColorStop(0.5, `rgba(${colorRGB}, ${opacity * 0.95})`);
+          coreGradient.addColorStop(1, `rgba(${colorRGB}, ${opacity * 0.9})`);
+          ctx.beginPath();
+          ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+          ctx.fillStyle = coreGradient;
+          ctx.fill();
 
-            // 绘制专业名字（在光球附近）
-            if (lightOpacity > 0.3) {
-              ctx.font = `bold ${Math.max(10, 12 * scale)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${lightOpacity * 0.9})`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'bottom';
-              ctx.fillText(ball.majorName, x, y - glowRadius - 3);
-            }
+          // 绘制专业名字（在光球附近，飞出时不显示）
+          if (!isFlyingOut && opacity > 0.5) {
+            ctx.font = `bold ${Math.max(10, 12 * scale)}px sans-serif`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(ball.majorName, x, y - glowRadius - 3);
           }
 
           return true;
+        });
+
+        // 触发年份闪烁（当专业光球经过时）
+        userLightBallsRef.current.forEach(ball => {
+          if (ball.progress < 0.02) { // 开始的前2%进度内闪烁
+            const flashIntensity = (0.02 - ball.progress) / 0.02;
+            // 找到该年份的节点并绘制闪烁效果
+            const flashNode = projectedNodes.find(node => node.year === ball.firstAppearYear);
+            if (flashNode) {
+              // 在节点位置绘制闪烁光晕
+              const flashRadius = flashNode.size * flashNode.scale * (1 + flashIntensity * 0.5);
+              const flashGradient = ctx.createRadialGradient(
+                flashNode.x, flashNode.y, 0,
+                flashNode.x, flashNode.y, flashRadius * 3
+              );
+              flashGradient.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity * 0.8})`);
+              flashGradient.addColorStop(0.3, `rgba(${ball.color}, ${flashIntensity * 0.6})`);
+              flashGradient.addColorStop(1, `rgba(${ball.color}, 0)`);
+              ctx.beginPath();
+              ctx.arc(flashNode.x, flashNode.y, flashRadius * 3, 0, Math.PI * 2);
+              ctx.fillStyle = flashGradient;
+              ctx.fill();
+            }
+          }
         });
 
         // 绘制节点
