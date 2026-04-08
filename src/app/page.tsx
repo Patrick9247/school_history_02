@@ -899,7 +899,7 @@ export default function ProfessionalSpiralTower() {
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-    // 绘制带状纹理的气态行星球体（简洁优雅的木星/土星风格）
+    // 绘制带纹理的行星球体
     const drawPlanetSphere = (x: number, y: number, radius: number, color: string, opacity: number, planetIndex: number, glow?: boolean) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
@@ -914,123 +914,359 @@ export default function ProfessionalSpiralTower() {
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.clip();
 
-      // 球体基础渐变（3D光照效果）
-      const lightX = x - radius * 0.35;
-      const lightY = y - radius * 0.35;
+      // 绘制球体基础渐变（模拟光照）
+      const lightAngle = -Math.PI / 4; // 光源从左上方
+      const lightX = x + Math.cos(lightAngle) * radius * 0.5;
+      const lightY = y + Math.sin(lightAngle) * radius * 0.5;
       
       const baseGradient = ctx.createRadialGradient(
-        lightX, lightY, radius * 0.1,
-        x, y, radius
+        lightX, lightY, 0,
+        x, y, radius * 1.2
       );
       baseGradient.addColorStop(0, adjustBrightness(color, 50));
-      baseGradient.addColorStop(0.25, adjustBrightness(color, 25));
-      baseGradient.addColorStop(0.5, color);
-      baseGradient.addColorStop(0.75, adjustBrightness(color, -20));
-      baseGradient.addColorStop(1, adjustBrightness(color, -40));
-
+      baseGradient.addColorStop(0.3, adjustBrightness(color, 25));
+      baseGradient.addColorStop(0.6, color);
+      baseGradient.addColorStop(0.85, adjustBrightness(color, -20));
+      baseGradient.addColorStop(1, adjustBrightness(color, -50));
       ctx.fillStyle = baseGradient;
       ctx.globalAlpha = opacity;
       ctx.fill();
 
-      // 添加清晰的横向带状纹理（木星/土星风格）
-      const bandCount = 5 + (planetIndex % 3); // 5-7条带
-      
-      for (let i = 0; i < bandCount; i++) {
-        // 计算带的位置
-        const normalizedY = (i + 0.5) / bandCount;
-        const bandY = y - radius + normalizedY * radius * 2;
-        
-        // 球面透视：边缘的带被压缩
-        const edgeFactor = Math.sqrt(1 - Math.pow((normalizedY - 0.5) * 2, 2));
-        const bandHeight = (radius * 2 / bandCount) * Math.max(0.35, edgeFactor) * 0.8;
-        
-        // 明暗交替，更强对比
-        const isLightBand = i % 2 === 0;
-        const brightness = isLightBand ? 25 : -30;
-        
-        // 清晰的带状纹理（减少渐变过渡，更分明）
-        const bandGradient = ctx.createLinearGradient(x - radius, bandY, x + radius, bandY);
-        bandGradient.addColorStop(0, 'transparent');
-        bandGradient.addColorStop(0.1, addAlpha(adjustBrightness(color, brightness), 0.75));
-        bandGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, brightness + 15), 0.85));
-        bandGradient.addColorStop(0.9, addAlpha(adjustBrightness(color, brightness), 0.75));
-        bandGradient.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = bandGradient;
-        ctx.fillRect(x - radius, bandY - bandHeight / 2, radius * 2, bandHeight);
+      // 根据行星索引添加不同纹理（8种行星类型）
+      const textureType = planetIndex % 8;
+
+      if (textureType === 0) {
+        // 木星风格：横向条纹带漩涡
+        // 深色条纹
+        for (let i = 0; i < 6; i++) {
+          const stripeY = y - radius + (i + 0.5) * (radius * 2 / 6);
+          const stripeHeight = radius / 6 * 0.6;
+          const stripeGradient = ctx.createLinearGradient(x - radius, stripeY, x + radius, stripeY);
+          const isLight = i % 2 === 0;
+          stripeGradient.addColorStop(0, 'transparent');
+          stripeGradient.addColorStop(0.1, 'transparent');
+          stripeGradient.addColorStop(0.3, addAlpha(adjustBrightness(color, isLight ? 20 : -30), 0.6));
+          stripeGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, isLight ? 35 : -20), 0.8));
+          stripeGradient.addColorStop(0.7, addAlpha(adjustBrightness(color, isLight ? 20 : -30), 0.6));
+          stripeGradient.addColorStop(0.9, 'transparent');
+          stripeGradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = stripeGradient;
+          ctx.fillRect(x - radius, stripeY - stripeHeight, radius * 2, stripeHeight * 2);
+        }
+        // 条纹中的漩涡/风暴
+        const stormCount = 3;
+        for (let i = 0; i < stormCount; i++) {
+          const stormX = x + (i - 1) * radius * 0.4;
+          const stormY = y - radius * 0.3 + (i % 2) * radius * 0.6;
+          const stormR = radius * 0.15;
+          const stormGrad = ctx.createRadialGradient(stormX, stormY, 0, stormX, stormY, stormR);
+          stormGrad.addColorStop(0, adjustBrightness(color, 30));
+          stormGrad.addColorStop(0.5, adjustBrightness(color, -10));
+          stormGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = stormGrad;
+          ctx.beginPath();
+          ctx.arc(stormX, stormY, stormR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (textureType === 1) {
+        // 土星风格：倾斜条纹 + 光环
+        // 条纹带
+        for (let i = 0; i < 5; i++) {
+          const stripeY = y - radius + (i + 0.5) * (radius * 2 / 5);
+          const stripeGradient = ctx.createLinearGradient(x - radius, stripeY, x + radius, stripeY);
+          stripeGradient.addColorStop(0, 'transparent');
+          stripeGradient.addColorStop(0.2, 'transparent');
+          stripeGradient.addColorStop(0.4, addAlpha(adjustBrightness(color, i % 2 === 0 ? 10 : -25), 0.5));
+          stripeGradient.addColorStop(0.6, addAlpha(adjustBrightness(color, i % 2 === 0 ? 15 : -20), 0.5));
+          stripeGradient.addColorStop(0.8, 'transparent');
+          stripeGradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = stripeGradient;
+          ctx.fillRect(x - radius, stripeY - radius / 8, radius * 2, radius / 4);
+        }
+        // 光环系统
+        ctx.strokeStyle = addAlpha('#E8D4A8', 0.4);
+        ctx.lineWidth = radius * 0.08;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.6, radius * 0.15, 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = addAlpha('#D4C4A8', 0.3);
+        ctx.lineWidth = radius * 0.05;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.4, radius * 0.12, 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = addAlpha('#F0E8D8', 0.35);
+        ctx.lineWidth = radius * 0.03;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius * 1.7, radius * 0.18, 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+
+      } else if (textureType === 2) {
+        // 地球风格：海洋 + 大陆 + 云层 + 极地
+        // 海洋（深色区域）
+        for (let i = 0; i < 4; i++) {
+          const oceanX = x + Math.sin(planetIndex * 5 + i * 2) * radius * 0.4;
+          const oceanY = y + Math.cos(planetIndex * 3 + i * 3) * radius * 0.3;
+          const oceanGrad = ctx.createRadialGradient(oceanX, oceanY, 0, oceanX, oceanY, radius * 0.4);
+          oceanGrad.addColorStop(0, adjustBrightness(color, -15));
+          oceanGrad.addColorStop(0.7, adjustBrightness(color, -10));
+          oceanGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = oceanGrad;
+          ctx.beginPath();
+          ctx.arc(oceanX, oceanY, radius * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // 大陆（浅色区域）
+        for (let i = 0; i < 3; i++) {
+          const landX = x + Math.cos(planetIndex * 7 + i * 2.5) * radius * 0.35;
+          const landY = y + Math.sin(planetIndex * 4 + i * 3) * radius * 0.25;
+          const landGrad = ctx.createRadialGradient(landX, landY, 0, landX, landY, radius * 0.25);
+          landGrad.addColorStop(0, adjustBrightness('#4CAF50', 20));
+          landGrad.addColorStop(0.6, adjustBrightness('#388E3C', 10));
+          landGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = landGrad;
+          ctx.beginPath();
+          ctx.arc(landX, landY, radius * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // 极地冰盖
+        const polarGrad = ctx.createRadialGradient(x, y - radius * 0.7, 0, x, y - radius * 0.7, radius * 0.3);
+        polarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        polarGrad.addColorStop(0.5, 'rgba(200, 220, 255, 0.4)');
+        polarGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = polarGrad;
+        ctx.beginPath();
+        ctx.arc(x, y - radius * 0.7, radius * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        // 云层
+        for (let i = 0; i < 5; i++) {
+          const cloudX = x + (i - 2) * radius * 0.25;
+          const cloudY = y + Math.sin(planetIndex + i) * radius * 0.2;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.beginPath();
+          ctx.ellipse(cloudX, cloudY, radius * 0.15, radius * 0.05, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (textureType === 3) {
+        // 火星风格：陨石坑 + 峡谷 + 极地
+        // 陨石坑
+        for (let i = 0; i < 6; i++) {
+          const craterAngle = (planetIndex * 10 + i * 1.3) % (Math.PI * 2);
+          const craterDist = radius * (0.2 + (i % 3) * 0.25);
+          const craterX = x + Math.cos(craterAngle) * craterDist;
+          const craterY = y + Math.sin(craterAngle) * craterDist;
+          const craterR = radius * (0.08 + (i % 2) * 0.06);
+          
+          // 陨石坑边缘
+          ctx.beginPath();
+          ctx.arc(craterX, craterY, craterR, 0, Math.PI * 2);
+          ctx.fillStyle = addAlpha(adjustBrightness(color, -25), 0.7);
+          ctx.fill();
+          // 陨石坑中心
+          const craterCenterGrad = ctx.createRadialGradient(craterX - craterR * 0.2, craterY - craterR * 0.2, 0, craterX, craterY, craterR * 0.7);
+          craterCenterGrad.addColorStop(0, adjustBrightness(color, 15));
+          craterCenterGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = craterCenterGrad;
+          ctx.beginPath();
+          ctx.arc(craterX, craterY, craterR * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // 极地冰冠
+        const marsPolarGrad = ctx.createRadialGradient(x, y - radius * 0.65, 0, x, y - radius * 0.65, radius * 0.35);
+        marsPolarGrad.addColorStop(0, 'rgba(255, 240, 240, 0.9)');
+        marsPolarGrad.addColorStop(0.5, 'rgba(255, 220, 220, 0.5)');
+        marsPolarGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = marsPolarGrad;
+        ctx.beginPath();
+        ctx.arc(x, y - radius * 0.65, radius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (textureType === 4) {
+        // 天王星/海王星风格：冰层 + 风暴
+        // 冰层纹理
+        for (let i = 0; i < 8; i++) {
+          const bandAngle = (planetIndex * 5 + i * 0.8);
+          const bandY = y + Math.sin(bandAngle) * radius * 0.4;
+          const bandGrad = ctx.createLinearGradient(x - radius, bandY, x + radius, bandY);
+          const brightness = Math.sin(i * 0.8) * 20;
+          bandGrad.addColorStop(0, 'transparent');
+          bandGrad.addColorStop(0.2, 'transparent');
+          bandGrad.addColorStop(0.4, addAlpha(adjustBrightness(color, brightness), 0.3));
+          bandGrad.addColorStop(0.6, addAlpha(adjustBrightness(color, brightness + 10), 0.3));
+          bandGrad.addColorStop(0.8, 'transparent');
+          bandGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = bandGrad;
+          ctx.fillRect(x - radius, bandY - radius / 12, radius * 2, radius / 6);
+        }
+        // 冰风暴
+        for (let i = 0; i < 3; i++) {
+          const stormX = x + (i - 1) * radius * 0.3;
+          const stormY = y + Math.cos(planetIndex * 3 + i) * radius * 0.2;
+          const stormGrad = ctx.createRadialGradient(stormX, stormY, 0, stormX, stormY, radius * 0.2);
+          stormGrad.addColorStop(0, addAlpha('#87CEEB', 0.5));
+          stormGrad.addColorStop(0.5, addAlpha(color, 0.3));
+          stormGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = stormGrad;
+          ctx.beginPath();
+          ctx.arc(stormX, stormY, radius * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (textureType === 5) {
+        // 金星风格：浓厚云层 + 旋涡
+        // 云层带
+        for (let i = 0; i < 6; i++) {
+          const cloudY = y - radius + (i + 0.5) * (radius * 2 / 6);
+          const cloudGrad = ctx.createLinearGradient(x - radius, cloudY, x + radius, cloudY);
+          cloudGrad.addColorStop(0, 'transparent');
+          cloudGrad.addColorStop(0.15, 'transparent');
+          cloudGrad.addColorStop(0.3, addAlpha('#F5DEB3', 0.4));
+          cloudGrad.addColorStop(0.5, addAlpha('#FFE4B5', 0.5));
+          cloudGrad.addColorStop(0.7, addAlpha('#F5DEB3', 0.4));
+          cloudGrad.addColorStop(0.85, 'transparent');
+          cloudGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = cloudGrad;
+          ctx.fillRect(x - radius, cloudY - radius / 10, radius * 2, radius / 5);
+        }
+        // 旋涡风暴
+        for (let i = 0; i < 3; i++) {
+          const vortexAngle = planetIndex * 2 + i * 2.1;
+          const vortexX = x + Math.cos(vortexAngle) * radius * 0.35;
+          const vortexY = y + Math.sin(vortexAngle) * radius * 0.25;
+          for (let j = 0; j < 3; j++) {
+            const spiralR = radius * (0.1 + j * 0.05);
+            ctx.beginPath();
+            ctx.arc(vortexX, vortexY, spiralR, 0, Math.PI * 2);
+            ctx.strokeStyle = addAlpha('#FFE4B5', 0.3 - j * 0.08);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+
+      } else if (textureType === 6) {
+        // 泰坦（土卫六）风格：橙色大气 + 甲烷湖
+        // 大气层渐变
+        const hazeGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius);
+        hazeGrad.addColorStop(0, 'transparent');
+        hazeGrad.addColorStop(0.7, addAlpha('#D2691E', 0.2));
+        hazeGrad.addColorStop(1, addAlpha('#8B4513', 0.4));
+        ctx.fillStyle = hazeGrad;
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+        // 甲烷湖
+        for (let i = 0; i < 3; i++) {
+          const lakeX = x + Math.sin(planetIndex * 8 + i * 2) * radius * 0.3;
+          const lakeY = y + Math.cos(planetIndex * 6 + i * 3) * radius * 0.2;
+          const lakeGrad = ctx.createRadialGradient(lakeX, lakeY, 0, lakeX, lakeY, radius * 0.15);
+          lakeGrad.addColorStop(0, addAlpha('#87CEEB', 0.6));
+          lakeGrad.addColorStop(0.7, addAlpha('#4682B4', 0.4));
+          lakeGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = lakeGrad;
+          ctx.beginPath();
+          ctx.ellipse(lakeX, lakeY, radius * 0.18, radius * 0.1, planetIndex + i, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else {
+        // 冥王星风格：冰冻表面 + 氮冰 + 心形区域
+        // 冰冻平原
+        for (let i = 0; i < 5; i++) {
+          const patchX = x + Math.sin(planetIndex * 6 + i * 1.5) * radius * 0.4;
+          const patchY = y + Math.cos(planetIndex * 4 + i * 2) * radius * 0.3;
+          const patchGrad = ctx.createRadialGradient(patchX, patchY, 0, patchX, patchY, radius * 0.2);
+          patchGrad.addColorStop(0, addAlpha('#E8DAB8', 0.5));
+          patchGrad.addColorStop(0.5, addAlpha('#D4C4A8', 0.3));
+          patchGrad.addColorStop(1, 'transparent');
+          ctx.fillStyle = patchGrad;
+          ctx.beginPath();
+          ctx.arc(patchX, patchY, radius * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // 氮冰川
+        const glacierGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.5);
+        glacierGrad.addColorStop(0, addAlpha('#B8D4E8', 0.4));
+        glacierGrad.addColorStop(0.5, addAlpha('#87CEEB', 0.2));
+        glacierGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = glacierGrad;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        // 心的左半
+        ctx.fillStyle = addAlpha('#FFF5EE', 0.3);
+        ctx.beginPath();
+        ctx.arc(x - radius * 0.15, y - radius * 0.05, radius * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 添加表面细节噪点（模拟岩石纹理）
+      const seed = planetIndex * 12345;
+      const random = (i: number) => Math.sin(seed + i * 9999) * 10000 % 1;
+      for (let i = 0; i < radius * 2; i++) {
+        const noiseX = x + (random(i) - 0.5) * radius * 2;
+        const noiseY = y + (random(i + 1) - 0.5) * radius * 2;
+        const distFromCenter = Math.sqrt((noiseX - x) ** 2 + (noiseY - y) ** 2);
+        if (distFromCenter < radius * 0.95) {
+          ctx.fillStyle = addAlpha(random(i + 2) > 0.5 ? '#fff' : '#000', 0.03);
+          ctx.fillRect(noiseX, noiseY, 1, 1);
+        }
       }
 
       // 恢复上下文状态
       ctx.restore();
 
-      // 主高光
-      const highlightGrad = ctx.createRadialGradient(
-        x - radius * 0.3, y - radius * 0.3, 0,
-        x - radius * 0.3, y - radius * 0.3, radius * 0.5
+      // 添加3D高光效果（模拟光源在左上方）
+      const highlightX = x - radius * 0.35;
+      const highlightY = y - radius * 0.35;
+      const highlightGradient = ctx.createRadialGradient(
+        highlightX, highlightY, 0,
+        highlightX, highlightY, radius * 0.7
       );
-      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-      highlightGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
-      highlightGrad.addColorStop(1, 'transparent');
+      highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      highlightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.2)');
+      highlightGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.05)');
+      highlightGradient.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = highlightGrad;
-      ctx.globalAlpha = opacity;
-      ctx.fill();
-
-      // 边缘暗边
-      const edgeGrad = ctx.createRadialGradient(
-        x, y, radius * 0.65,
-        x, y, radius
-      );
-      edgeGrad.addColorStop(0, 'transparent');
-      edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = edgeGrad;
+      ctx.fillStyle = highlightGradient;
       ctx.globalAlpha = opacity;
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // 部分球体添加土星光环效果
-      if ((planetIndex % 4) === 0) {
-        // 光环（半透明椭圆形）
-        ctx.save();
-        ctx.globalAlpha = opacity * 0.5;
-        
-        // 外层光环
-        ctx.strokeStyle = addAlpha(adjustBrightness(color, 35), 0.6);
-        ctx.lineWidth = radius * 0.07;
-        ctx.beginPath();
-        ctx.ellipse(x, y, radius * 1.5, radius * 0.12, 0.15, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // 中层光环
-        ctx.strokeStyle = addAlpha(adjustBrightness(color, 20), 0.5);
-        ctx.lineWidth = radius * 0.045;
-        ctx.beginPath();
-        ctx.ellipse(x, y, radius * 1.35, radius * 0.1, 0.15, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // 内层光环
-        ctx.strokeStyle = addAlpha('#fff', 0.4);
-        ctx.lineWidth = radius * 0.03;
-        ctx.beginPath();
-        ctx.ellipse(x, y, radius * 1.55, radius * 0.14, 0.15, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        ctx.restore();
-      }
+      // 球体边缘阴影（模拟背光面）
+      const shadowGradient = ctx.createRadialGradient(
+        x + radius * 0.3, y + radius * 0.3, radius * 0.5,
+        x + radius * 0.3, y + radius * 0.3, radius * 1.1
+      );
+      shadowGradient.addColorStop(0, 'transparent');
+      shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.15)');
+      shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = shadowGradient;
+      ctx.globalAlpha = opacity;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // 边缘描边
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = adjustBrightness(color, -60);
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = opacity * 0.6;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
 
       // 外发光效果
       if (glow) {
-        const glowGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2);
-        glowGrad.addColorStop(0, addAlpha(color, 0.45));
-        glowGrad.addColorStop(0.5, addAlpha(color, 0.18));
-        glowGrad.addColorStop(1, 'transparent');
+        const outerGlowGradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2.5);
+        outerGlowGradient.addColorStop(0, addAlpha(color, 0.4));
+        outerGlowGradient.addColorStop(0.4, addAlpha(color, 0.15));
+        outerGlowGradient.addColorStop(0.7, addAlpha(color, 0.05));
+        outerGlowGradient.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
-        ctx.fillStyle = glowGrad;
-        ctx.globalAlpha = opacity * 0.7;
+        ctx.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = outerGlowGradient;
+        ctx.globalAlpha = opacity * 0.6;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -1176,89 +1412,7 @@ export default function ProfessionalSpiralTower() {
       ctx.stroke();
     };
 
-    // 绘制真实天体质感的3D球体（用于螺旋页面的年度球）
-    const drawCelestialSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean) => {
-      // 防止无效值
-      if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
-        return;
-      }
-
-      // 保存上下文状态
-      ctx.save();
-
-      // 创建圆形裁剪区域
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.clip();
-
-      // === 球体基础渐变（核心3D效果） ===
-      // 光源位置：左上方
-      const lightX = x - radius * 0.35;
-      const lightY = y - radius * 0.35;
-      
-      // 径向渐变模拟光照
-      const gradient = ctx.createRadialGradient(
-        lightX, lightY, radius * 0.1,
-        x, y, radius
-      );
-      gradient.addColorStop(0, adjustBrightness(color, 60));    // 高光区
-      gradient.addColorStop(0.3, adjustBrightness(color, 25)); // 亮区
-      gradient.addColorStop(0.6, color);                        // 正常色
-      gradient.addColorStop(0.85, adjustBrightness(color, -25)); // 阴影区
-      gradient.addColorStop(1, adjustBrightness(color, -50));    // 边缘暗
-
-      ctx.fillStyle = gradient;
-      ctx.globalAlpha = opacity;
-      ctx.fill();
-
-      // 恢复上下文状态
-      ctx.restore();
-
-      // === 简洁的高光反射 ===
-      // 主高光点
-      const highlightGrad = ctx.createRadialGradient(
-        x - radius * 0.3, y - radius * 0.3, 0,
-        x - radius * 0.3, y - radius * 0.3, radius * 0.5
-      );
-      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-      highlightGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.2)');
-      highlightGrad.addColorStop(1, 'transparent');
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = highlightGrad;
-      ctx.globalAlpha = opacity;
-      ctx.fill();
-
-      // 边缘柔和暗边（增加立体感）
-      const edgeGrad = ctx.createRadialGradient(
-        x, y, radius * 0.7,
-        x, y, radius
-      );
-      edgeGrad.addColorStop(0, 'transparent');
-      edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = edgeGrad;
-      ctx.globalAlpha = opacity;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // === 外发光效果 ===
-      if (glow) {
-        const glowGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2);
-        glowGrad.addColorStop(0, addAlpha(color, 0.4));
-        glowGrad.addColorStop(0.5, addAlpha(color, 0.15));
-        glowGrad.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
-        ctx.fillStyle = glowGrad;
-        ctx.globalAlpha = opacity * 0.7;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-    };
-
-    // 绘制球体（用于其他场景，保留原有函数）
+    // 绘制球体（保留原函数用于其他场景）
     const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
@@ -1739,9 +1893,9 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光，使用真实天体3D质感
+          // 所有年度球都发光，显示3D效果
           const shouldGlow = true;
-          drawCelestialSphere(node.x, node.y, size, color, opacity, shouldGlow);
+          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, true);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           // 当是关键事件或鼠标悬停在该年份时，显示详细信息
