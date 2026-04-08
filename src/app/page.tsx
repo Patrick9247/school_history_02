@@ -2679,16 +2679,11 @@ export default function ProfessionalSpiralTower() {
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
       <div className="relative w-full h-screen overflow-hidden">
-        {/* 深空渐变背景 */}
+        {/* 深空纯色背景 */}
         <div 
           className="absolute inset-0"
           style={{
-            background: `
-              radial-gradient(ellipse 120% 100% at 50% 100%, rgba(20, 10, 40, 0.8) 0%, transparent 60%),
-              radial-gradient(ellipse 100% 80% at 30% 30%, rgba(40, 20, 80, 0.5) 0%, transparent 50%),
-              radial-gradient(ellipse 80% 60% at 70% 70%, rgba(60, 30, 100, 0.4) 0%, transparent 40%),
-              radial-gradient(circle at 50% 50%, rgba(30, 20, 50, 0.6) 0%, rgba(10, 5, 20, 1) 100%)
-            `
+            background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 50%, #050510 100%)'
           }}
         />
         {/* 遮罩层 */}
