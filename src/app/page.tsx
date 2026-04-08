@@ -1252,16 +1252,26 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
-      const clickedNode = data.find((item, index) => {
-        const progress = index / projection.totalYears;
+      // 检测双击的球体（使用与触摸相同的范围）
+      let clickedNode: any = null;
+
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const progress = i / projection.totalYears;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-        return distance < 20 * proj.scale;
-      });
+
+        const clickThreshold = Math.max(50, 24 * proj.scale * 2);
+
+        if (distance < clickThreshold) {
+          clickedNode = item;
+          break;
+        }
+      }
 
       if (clickedNode) {
         setSelectedYear(clickedNode.year); // 设置选中年份
@@ -1393,17 +1403,28 @@ export default function ProfessionalSpiralTower() {
         const projection = spiralProjectionRef.current;
         if (!projection) return;
 
-        // 检测是否触摸到球
-        const touchedNode = data.find((item, index) => {
-          const progress = index / projection.totalYears;
+        // 检测是否触摸到球（使用较大的固定触摸范围）
+        let touchedNode: any = null;
+
+        // 遍历所有球体，找到触摸范围内的球体
+        for (let i = 0; i < data.length; i++) {
+          const item = data[i];
+          const progress = i / projection.totalYears;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
           const lz = Math.sin(angle) * projection.baseRadius;
           const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-          return distance < 30 * proj.scale; // 增加触摸范围
-        });
+
+          // 触摸范围：至少 50px，如果球体较大则使用球体尺寸的 2 倍
+          const touchThreshold = Math.max(50, 24 * proj.scale * 2);
+
+          if (distance < touchThreshold) {
+            touchedNode = item;
+            break;
+          }
+        }
 
         isTouchingNodeRef.current = !!touchedNode;
 
