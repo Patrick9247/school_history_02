@@ -666,8 +666,8 @@ export default function ProfessionalSpiralTower() {
       animationTimeRef.current += 0.016;
 
       if (currentView === 'spiral') {
-        // 更新旋转
-        if (!isDraggingRef.current) {
+        // 更新旋转（如果没有拖动且没有触摸操作）
+        if (!isDraggingRef.current && !isTouchDraggingRef.current) {
           rotationRef.current += 0.002;
         }
 
@@ -1364,6 +1364,12 @@ export default function ProfessionalSpiralTower() {
         lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         initialTouchDistanceRef.current = null;
       }
+    } else if (currentView === 'spiral') {
+      // 螺旋视图：单指拖拽旋转
+      if (e.touches.length === 1) {
+        isTouchDraggingRef.current = true;
+        lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
     }
   };
 
@@ -1396,6 +1402,14 @@ export default function ProfessionalSpiralTower() {
         // 垂直拖拽 → 绕 X 轴旋转
         solarRotXRef.current += deltaY * 0.005;
 
+        lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    } else if (currentView === 'spiral') {
+      // 螺旋视图：单指拖拽旋转
+      if (e.touches.length === 1 && isTouchDraggingRef.current && lastTouchPosRef.current) {
+        e.preventDefault();
+        const deltaX = e.touches[0].clientX - lastTouchPosRef.current.x;
+        rotationRef.current += deltaX * 0.005;
         lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     }
