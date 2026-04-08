@@ -1169,15 +1169,15 @@ export default function ProfessionalSpiralTower() {
       // 初始化星空粒子（只在第一次或窗口大小变化时）
       if (starsRef.current.length === 0 || starsRef.current[0].x !== canvas.width) {
         starsRef.current = [];
-        // 只生成50颗星星，随机分布，不闪烁
-        for (let i = 0; i < 50; i++) {
+        // 只生成60颗星星，随机分布
+        for (let i = 0; i < 60; i++) {
           starsRef.current.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
             size: Math.random() * 1.5 + 0.5,
-            brightness: Math.random() * 0.3 + 0.2,
-            twinkleSpeed: 0, // 不闪烁
-            twinkleOffset: 0,
+            brightness: Math.random() * 0.25 + 0.15,
+            twinkleSpeed: Math.random() * 0.5 + 0.2, // 缓慢的呼吸效果
+            twinkleOffset: Math.random() * Math.PI * 2,
             color: Math.random() > 0.7 ? '#aaccff' : '#ffffff'
           });
         }
@@ -1223,12 +1223,14 @@ export default function ProfessionalSpiralTower() {
         if (nebula.y > canvas.height + nebula.radius) nebula.y = -nebula.radius;
       });
 
-      // 绘制星空粒子（不闪烁，静态分布）
+      // 绘制星空粒子（缓慢呼吸效果）
       starsRef.current.forEach(star => {
+        const breathe = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset) * 0.15 + 0.85;
+        const alpha = star.brightness * breathe;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fillStyle = star.color;
-        ctx.globalAlpha = star.brightness;
+        ctx.globalAlpha = alpha;
         ctx.fill();
         ctx.globalAlpha = 1;
       });
