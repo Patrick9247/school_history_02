@@ -44,12 +44,12 @@ const generateBandData = (index: number, baseColor: string): { bands: boolean; b
   // 随机条纹角度（-30到30度）
   const bandAngle = randomBetween(-30, 30, index + 100);
   
-  // 生成条纹颜色（深浅交替）
+  // 生成条纹颜色（深浅交替，更大对比度让纹理更清晰）
   const bandColors: string[] = [];
   for (let i = 0; i < bandCount; i++) {
-    // 深浅交替
+    // 奇数条纹亮，偶数条纹暗（更大对比度）
     const isLight = i % 2 === 0;
-    const colorVar = randomBetween(-15, 15, index * 100 + i);
+    const colorVar = isLight ? randomBetween(20, 35, index * 100 + i) : randomBetween(-35, -20, index * 100 + i);
     const adjustedColor = adjustBrightnessValue(baseColor, colorVar);
     bandColors.push(adjustedColor);
   }
@@ -940,60 +940,62 @@ export default function ProfessionalSpiralTower() {
       ctx.clip();
 
       if (planetData?.bands && planetData.bandColors) {
-        // 绘制带状纹理（Google Earth 风格，支持随机角度）
+        // 绘制带状纹理（清晰条纹）
         const bandColors = planetData.bandColors;
         const bandCount = bandColors.length;
         const bandAngle = (planetData.bandAngle || 0) * Math.PI / 180; // 转换为弧度
 
-        // 先绘制基础颜色
+        // 先绘制基础颜色（降低基础色的影响，让条纹更突出）
         const baseGradient = ctx.createRadialGradient(
           x - radius * 0.3, y - radius * 0.3, 0,
           x, y, radius
         );
         baseGradient.addColorStop(0, color);
-        baseGradient.addColorStop(1, adjustBrightness(color, -20));
+        baseGradient.addColorStop(1, adjustBrightness(color, -10));
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = baseGradient;
-        ctx.globalAlpha = opacity;
+        ctx.globalAlpha = opacity * 0.3; // 降低基础色透明度，让条纹更清晰
         ctx.fill();
+        ctx.globalAlpha = opacity;
 
-        // 绘制每条条纹（带角度旋转）
+        // 绘制每条条纹（带角度旋转，更清晰的条纹）
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(bandAngle);
         
-        // 条纹Y偏移（考虑旋转后的偏移）
+        // 条纹Y偏移
         const totalHeight = radius * 2;
         const bandHeight = totalHeight / bandCount;
         
+        // 绘制条纹（减少波浪，更清晰）
         bandColors.forEach((bandColor, i) => {
           const normalizedY = (i / bandCount) * 2 - 1; // -1 到 1
           const bandY = normalizedY * radius;
           
-          // 添加轻微波浪效果
-          const waveOffset = Math.sin(normalizedY * 4 + rot) * radius * 0.03;
+          // 轻微波浪效果
+          const waveOffset = Math.sin(normalizedY * 3 + rot) * radius * 0.015;
           
           ctx.beginPath();
-          // 绘制椭圆形条纹带
-          ctx.ellipse(waveOffset, bandY, radius * 1.3, bandHeight * 0.7, 0, 0, Math.PI * 2);
+          // 绘制椭圆形条纹带（增加覆盖范围，更清晰）
+          ctx.ellipse(waveOffset, bandY, radius * 1.4, bandHeight * 0.8, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColor;
-          ctx.globalAlpha = opacity * 0.9;
+          ctx.globalAlpha = opacity; // 完全不透明，纹理更清晰
           ctx.fill();
         });
         
         ctx.restore();
 
-        // 添加 Google Earth 风格的3D阴影覆盖（调亮）
+        // 添加3D阴影覆盖（调整阴影强度，让纹理更清晰）
         const shadowGradient = ctx.createRadialGradient(
-          x - radius * 0.4, y - radius * 0.4, 0,
-          x, y, radius * 1.2
+          x - radius * 0.35, y - radius * 0.35, 0,
+          x, y, radius * 1.1
         );
-        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-        shadowGradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.12)');
+        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        shadowGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.1)');
         shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
-        shadowGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.12)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+        shadowGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.08)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
