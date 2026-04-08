@@ -2,6 +2,39 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
+// 行星颜色配置（太阳系行星颜色）
+const PLANET_COLORS = [
+  { name: '水星', color: '#B5B5B5', gradient: ['#D4D4D4', '#8A8A8A'] },     // 灰色
+  { name: '金星', color: '#E6C87A', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
+  { name: '地球', color: '#4A90D9', gradient: ['#87CEEB', '#2E8B57'] },     // 蓝绿色
+  { name: '火星', color: '#CD5C5C', gradient: ['#E9967A', '#8B4513'] },     // 红褐色
+  { name: '木星', color: '#D4A574', gradient: ['#F4A460', '#CD853F'] },     // 橙褐色
+  { name: '土星', color: '#F4D03F', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
+  { name: '天王星', color: '#72D5E8', gradient: ['#87CEEB', '#4169E1'] },   // 青蓝色
+  { name: '海王星', color: '#4169E1', gradient: ['#6495ED', '#00008B'] },   // 深蓝色
+  { name: '冥王星', color: '#D2B48C', gradient: ['#DEB887', '#A0522D'] },   // 棕褐色
+  { name: '月球', color: '#C0C0C0', gradient: ['#D3D3D3', '#808080'] },    // 银灰色
+  { name: '太阳', color: '#FFD700', gradient: ['#FFA500', '#FF4500'] },    // 金橙色
+  { name: '金星2', color: '#F5DEB3', gradient: ['#FFE4B5', '#D2691E'] },   // 浅金色
+  { name: '火星2', color: '#FF6347', gradient: ['#FF7F50', '#B22222'] },   // 番茄红
+  { name: '木星2', color: '#FF8C00', gradient: ['#FFA07A', '#8B0000'] },   // 暗橙红
+  { name: '土星2', color: '#FFB6C1', gradient: ['#FFC0CB', '#DB7093'] },  // 粉金色
+  { name: '彗星', color: '#9370DB', gradient: ['#E6E6FA', '#8A2BE2'] },    // 紫罗兰
+  { name: '流星', color: '#FF69B4', gradient: ['#FFB6C1', '#FF1493'] },   // 热粉红
+  { name: '星云', color: '#00CED1', gradient: ['#40E0D0', '#008B8B'] },   // 深青色
+  { name: '星际', color: '#FF1493', gradient: ['#FF69B4', '#C71585'] },   // 深粉红
+  { name: '银河', color: '#9400D3', gradient: ['#DA70D6', '#4B0082'] },    // 暗紫罗兰
+  { name: '极光', color: '#00FA9A', gradient: ['#98FB98', '#006400'] },   // 春绿色
+  { name: '日食', color: '#FF4500', gradient: ['#FF6347', '#DC143C'] },   // 橙红色
+  { name: '月食', color: '#8B0000', gradient: ['#A52A2A', '#4A0000'] },    // 暗红色
+  { name: '极光2', color: '#7FFF00', gradient: ['#ADFF2F', '#556B2F'] },   // 黄绿色
+];
+
+// 获取学院球颜色（使用行星颜色）
+const getPlanetColor = (index: number) => {
+  return PLANET_COLORS[index % PLANET_COLORS.length];
+};
+
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
 const SPECIAL_YEAR_COLORS: Record<number, string> = {
   1956: '#FF6B6B',
@@ -445,12 +478,12 @@ export default function ProfessionalSpiralTower() {
       });
     });
 
-    // 生成院系节点，使用 HSL 颜色
+    // 生成院系节点，使用行星颜色
     const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
-      const hue = (index * 137.5) % 360; // 黄金角度分布
+      const planetColor = getPlanetColor(index);
       return {
         name: deptName,
-        color: `hsl(${hue}, 70%, 55%)`,
+        color: planetColor.color,
         majors: data.majors,
         college: data.college
       };
@@ -497,12 +530,12 @@ export default function ProfessionalSpiralTower() {
       });
     });
 
-    // 生成院系节点，使用 HSL 颜色
+    // 生成院系节点，使用行星颜色
     const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
-      const hue = (index * 137.5) % 360;
+      const planetColor = getPlanetColor(index);
       return {
         name: deptName,
-        color: `hsl(${hue}, 70%, 55%)`,
+        color: planetColor.color,
         majors: data.majors,
         college: data.college
       };
