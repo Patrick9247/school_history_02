@@ -2121,9 +2121,9 @@ export default function ProfessionalSpiralTower() {
             ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            // 学院球自转：1秒1圈，自转轴固定（不随公转改变方向）
+            // 学院球自转：3秒1圈，自转轴固定（不随公转改变方向）
             // 自转轴保持23.5度倾斜，像地球一样
-            const planetRotation = animationTimeRef.current * Math.PI * 2;
+            const planetRotation = animationTimeRef.current * Math.PI * 2 / 3;
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
