@@ -1006,23 +1006,87 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 步骤2: 表面纹理层（淡化，不抢球体感）
+        // 步骤2: 表面纹理层 - 条纹和漩涡
         ctx.save();
-        ctx.globalCompositeOperation = 'soft-light';
         ctx.translate(x, y);
         ctx.rotate(bandAngle);
-        for (let i = 0; i < Math.min(bandCount, 6); i++) {
+        
+        // 绘制主条纹带（水平环绕）
+        for (let i = 0; i < bandCount; i++) {
           const normalizedY = (i / (bandCount - 1)) * 2 - 1;
           const bandY = normalizedY * radius;
-          const bandHeight = (radius * 0.35 / bandCount) * (1 - Math.abs(normalizedY) * 0.5);
-          const waveOffset = Math.sin(normalizedY * 3 + rot) * radius * swirl * 0.5;
+          const widthFactor = 1 - Math.abs(normalizedY) * 0.4;
+          const bandHeight = (radius * 0.5 / bandCount) * widthFactor;
+          
+          // 漩涡弯曲效果 - 多层正弦波叠加
+          const waveOffset = 
+            Math.sin(normalizedY * 4 + rot) * radius * swirl +
+            Math.sin(normalizedY * 7 - rot * 1.3) * radius * turbulence * 0.8 +
+            Math.cos(normalizedY * 10 + rot * 1.8) * radius * swirl * 0.4;
+          
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.2, bandHeight, 0, 0, Math.PI * 2);
+          ctx.ellipse(waveOffset, bandY, radius * 1.4, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i];
+          ctx.globalAlpha = opacity * 0.55;
+          ctx.fill();
+        }
+        
+        // 绘制细条纹（高纬度细节）
+        for (let i = 0; i < bandCount - 1; i++) {
+          const y1 = ((i + 0.3) / (bandCount - 1)) * 2 - 1;
+          const y2 = ((i + 0.7) / (bandCount - 1)) * 2 - 1;
+          const bandY = ((y1 + y2) / 2) * radius;
+          const bandHeight = radius * 0.08 / bandCount;
+          
+          const waveOffset = 
+            Math.sin(y1 * 5 + rot * 1.2) * radius * swirl * 0.6 +
+            Math.sin(y1 * 8 - rot * 0.9) * radius * turbulence * 0.5;
+          
+          ctx.beginPath();
+          ctx.ellipse(waveOffset, bandY, radius * 1.3, bandHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(bandColors[i], -10);
+          ctx.globalAlpha = opacity * 0.35;
+          ctx.fill();
+        }
+        
+        // 绘制漩涡斑块（模拟大红斑）
+        const vortexCount = 3;
+        for (let i = 0; i < vortexCount; i++) {
+          const vortexY = ((i + 1) / (vortexCount + 1)) * 2 - 1;
+          const vortexX = Math.sin(vortexY * 6 + rot * 0.8) * radius * swirl * 1.5;
+          const vortexWidth = radius * 0.15 * (1 - Math.abs(vortexY) * 0.3);
+          const vortexHeight = vortexWidth * 0.6;
+          
+          ctx.beginPath();
+          ctx.ellipse(vortexX, vortexY * radius, vortexWidth, vortexHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], -15);
+          ctx.globalAlpha = opacity * 0.45;
+          ctx.fill();
+          
+          // 漩涡内部高光
+          ctx.beginPath();
+          ctx.ellipse(vortexX, vortexY * radius, vortexWidth * 0.5, vortexHeight * 0.5, 0, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], 10);
+          ctx.globalAlpha = opacity * 0.25;
+          ctx.fill();
+        }
+        
+        // 绘制云带（亮色横向条纹）
+        const cloudBandCount = 4;
+        for (let i = 0; i < cloudBandCount; i++) {
+          const cloudY = (Math.sin(i * 1.7 + rot * 0.3) * 0.7) * radius;
+          const cloudWidth = radius * (0.8 + Math.cos(i * 2.1) * 0.3);
+          const cloudHeight = radius * 0.04 + Math.sin(i * 3.2) * radius * 0.02;
+          
+          const cloudOffset = Math.sin(cloudY / radius * 4 + rot) * radius * swirl * 0.8;
+          
+          ctx.beginPath();
+          ctx.ellipse(cloudOffset, cloudY, cloudWidth, cloudHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
           ctx.globalAlpha = opacity * 0.4;
           ctx.fill();
         }
-        ctx.globalCompositeOperation = 'source-over';
+        
         ctx.restore();
 
         // 步骤3: 极地冰盖
