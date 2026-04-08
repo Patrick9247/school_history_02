@@ -2678,9 +2678,9 @@ export default function ProfessionalSpiralTower() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
-      <div className="relative w-full h-screen overflow-hidden" style={{ backgroundImage: 'url(/background.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="relative w-full h-screen overflow-hidden bg-[#0a0f1a]">
         {/* 遮罩层 */}
-        <div className="absolute inset-0 bg-black/60"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
         {/* 校徽背景层 - 填充整个屏幕 */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
