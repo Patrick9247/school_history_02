@@ -1689,7 +1689,7 @@ export default function ProfessionalSpiralTower() {
           }
         });
 
-        // 绘制节点
+        // 绘制节点 - 增强版3D球体
         const sortedNodes = [...projectedNodes].sort((a, b) => b.z - a.z);
 
         sortedNodes.forEach(node => {
@@ -1699,46 +1699,88 @@ export default function ProfessionalSpiralTower() {
           if (node.specialColor) {
             color = node.specialColor;
           } else {
-            // 使用与节点位置计算相同的分母
-            const progressDivisor = totalYears - 1; // endYear - startYear = 69
+            const progressDivisor = totalYears - 1;
             const hue = 200 + ((node.year - startYear) / progressDivisor) * 60;
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光，显示3D效果（太阳般的均匀渐变）
           const shouldGlow = true;
           
-          // 外层柔和光晕
-          const outerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.4, node.x, node.y, size * 2.2);
-          outerSunGlow.addColorStop(0, addAlpha(color, opacity * 0.5));
-          outerSunGlow.addColorStop(0.5, addAlpha(color, opacity * 0.25));
+          // 第一层：外层大气光晕（蓝色冷光）
+          const atmosGlow = ctx.createRadialGradient(node.x, node.y, size * 0.8, node.x, node.y, size * 3);
+          atmosGlow.addColorStop(0, addAlpha(color, opacity * 0.3));
+          atmosGlow.addColorStop(0.4, addAlpha('rgba(100, 150, 255, 0.15)', opacity));
+          atmosGlow.addColorStop(1, addAlpha('rgba(100, 150, 255, 0)'));
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size * 3, 0, Math.PI * 2);
+          ctx.fillStyle = atmosGlow;
+          ctx.fill();
+          
+          // 第二层：外层柔和光晕
+          const outerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.3, node.x, node.y, size * 2);
+          outerSunGlow.addColorStop(0, addAlpha(color, opacity * 0.6));
+          outerSunGlow.addColorStop(0.5, addAlpha(color, opacity * 0.3));
           outerSunGlow.addColorStop(1, addAlpha(color, 0));
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size * 2.2, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, size * 2, 0, Math.PI * 2);
           ctx.fillStyle = outerSunGlow;
           ctx.fill();
           
-          // 内层光晕
-          const innerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.25, node.x, node.y, size * 1.2);
+          // 第三层：内层光晕（边缘光）
+          const innerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.15, node.x, node.y, size * 1.1);
           innerSunGlow.addColorStop(0, addAlpha('#ffffff', opacity * 0.95));
-          innerSunGlow.addColorStop(0.2, addAlpha(color, opacity * 0.9));
-          innerSunGlow.addColorStop(0.6, addAlpha(color, opacity * 0.75));
-          innerSunGlow.addColorStop(1, addAlpha(color, opacity * 0.4));
+          innerSunGlow.addColorStop(0.25, addAlpha(color, opacity * 0.9));
+          innerSunGlow.addColorStop(0.6, addAlpha(color, opacity * 0.8));
+          innerSunGlow.addColorStop(1, addAlpha(adjustBrightness(color, -20), opacity * 0.5));
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size * 1.2, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, size * 1.1, 0, Math.PI * 2);
           ctx.fillStyle = innerSunGlow;
           ctx.fill();
           
-          // 核心球体（3D渐变）
-          const sunCore = ctx.createRadialGradient(node.x - size * 0.3, node.y - size * 0.3, 0, node.x, node.y, size);
+          // 第四层：3D球体核心（强烈的高光和阴影）
+          // 计算高光位置（假设光源在左上方）
+          const highlightX = node.x - size * 0.35;
+          const highlightY = node.y - size * 0.35;
+          
+          // 球体基础渐变
+          const sunCore = ctx.createRadialGradient(highlightX, highlightY, 0, node.x, node.y, size);
           sunCore.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-          sunCore.addColorStop(0.4, color);
-          sunCore.addColorStop(0.8, adjustBrightness(color, -12));
-          sunCore.addColorStop(1, adjustBrightness(color, -28));
+          sunCore.addColorStop(0.15, `rgba(255, 255, 255, ${opacity * 0.9})`);
+          sunCore.addColorStop(0.3, color);
+          sunCore.addColorStop(0.6, adjustBrightness(color, -15));
+          sunCore.addColorStop(0.85, adjustBrightness(color, -30));
+          sunCore.addColorStop(1, adjustBrightness(color, -45));
           ctx.beginPath();
           ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
           ctx.fillStyle = sunCore;
           ctx.fill();
+          
+          // 第五层：顶部高光斑（镜面反射效果）
+          const highlightGrad = ctx.createRadialGradient(highlightX, highlightY, 0, highlightX, highlightY, size * 0.4);
+          highlightGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity * 0.85})`);
+          highlightGrad.addColorStop(0.4, `rgba(255, 255, 255, ${opacity * 0.4})`);
+          highlightGrad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = highlightGrad;
+          ctx.fill();
+          
+          // 第六层：底部边缘冷光（边缘反射）
+          const rimLight = ctx.createRadialGradient(node.x + size * 0.3, node.y + size * 0.5, size * 0.5, node.x, node.y, size);
+          rimLight.addColorStop(0, 'rgba(100, 150, 255, 0)');
+          rimLight.addColorStop(0.7, 'rgba(100, 150, 255, 0)');
+          rimLight.addColorStop(1, `rgba(100, 150, 255, ${opacity * 0.25})`);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = rimLight;
+          ctx.fill();
+          
+          // 第七层：边缘描边（增强立体感）
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 0, 0, ${opacity * 0.2})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           if (keyEvent) {
