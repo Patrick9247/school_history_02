@@ -1458,16 +1458,16 @@ export default function ProfessionalSpiralTower() {
             const isCollegeHighlighted = highlightedParentIndex !== undefined && obj.index === highlightedParentIndex;
             const collegeGlowIntensity = isCollegeHighlighted ? (0.5 + Math.sin(animationTimeRef.current * 6) * 0.5) : 0;
             
-            // 如果学院被高亮，绘制多层发光效果
+            // 如果学院被高亮，绘制多层发光效果（发光范围缩小三分之二）
             if (isCollegeHighlighted) {
-              // 最外层大光晕
-              const outerGlowRadius = obj.radius * (2 + collegeGlowIntensity * 1);
+              // 最外层大光晕（缩小到原来的1/3）
+              const outerGlowRadius = obj.radius * (0.8 + collegeGlowIntensity * 0.3);
               drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.25 * collegeGlowIntensity, true);
               // 中层光晕
-              const midGlowRadius = obj.radius * (1.6 + collegeGlowIntensity * 0.5);
+              const midGlowRadius = obj.radius * (0.6 + collegeGlowIntensity * 0.2);
               drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * collegeGlowIntensity, true);
               // 内层光晕
-              const innerGlowRadius = obj.radius * (1.25 + collegeGlowIntensity * 0.3);
+              const innerGlowRadius = obj.radius * (0.45 + collegeGlowIntensity * 0.15);
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true);
             }
             
