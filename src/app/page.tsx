@@ -1645,18 +1645,19 @@ export default function ProfessionalSpiralTower() {
           color: '#3b82f6'
         });
 
-        // 院系（原所在院系）
+        // 院系（原所在院系）- 增加球体大小和透视效果
         currentDepartmentsRef.current.forEach((dept: DepartmentNode, i: number) => {
           const angle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
-          const lz = 0;
+          // 添加 z 轴偏移，形成椭圆轨道面，产生透视感
+          const lz = Math.sin(angle * 2) * orbitRadiusX * 0.15;
 
           renderObjects.push({
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: (isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14)) * Math.sqrt(zoomLevelRef.current),
+            radius: (isMobileSolar ? 14 : (isTabletSolar ? 16 : 18)) * Math.sqrt(zoomLevelRef.current), // 增大球体
             color: dept.color,
             name: dept.name,
             collegeName: dept.college,
