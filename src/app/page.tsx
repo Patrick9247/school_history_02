@@ -1062,15 +1062,16 @@ export default function ProfessionalSpiralTower() {
           cloudRandoms.push([rand(300 + i * 6, -0.7, 0.7), rand(300 + i * 6 + 1, 0.1, 0.3)]);
         }
         
-        // 步骤1: 基础球体（简化渐变）
+        // 步骤1: 基础球体（增强立体感 - 更强对比度）
         const baseGradient = ctx.createRadialGradient(
           x - radius * 0.4, y - radius * 0.4, 0,
           x + radius * 0.3, y + radius * 0.3, radius * 1.2
         );
-        baseGradient.addColorStop(0, adjustBrightness(color, 25));
-        baseGradient.addColorStop(0.4, adjustBrightness(color, 10));
-        baseGradient.addColorStop(0.7, color);
-        baseGradient.addColorStop(1, adjustBrightness(color, -40));
+        baseGradient.addColorStop(0, adjustBrightness(color, 40));  // 更亮的高光
+        baseGradient.addColorStop(0.3, adjustBrightness(color, 20)); // 中间调更亮
+        baseGradient.addColorStop(0.5, color);                        // 保持原色
+        baseGradient.addColorStop(0.75, adjustBrightness(color, -20));// 过渡到暗
+        baseGradient.addColorStop(1, adjustBrightness(color, -50));   // 更深的阴影
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = baseGradient;
@@ -1262,55 +1263,55 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity * 0.85;
         ctx.fill();
 
-        // 步骤4: 晨昏线阴影（背光面）
+        // 步骤4: 晨昏线阴影（增强立体感 - 更强对比）
         ctx.save();
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         const nightGradient = ctx.createLinearGradient(x - radius, y, x + radius, y);
         nightGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        nightGradient.addColorStop(0.35, 'rgba(0, 0, 0, 0)');
-        nightGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.08)');
-        nightGradient.addColorStop(0.65, 'rgba(0, 0, 0, 0.25)');
-        nightGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.45)');
-        nightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+        nightGradient.addColorStop(0.3, 'rgba(0, 0, 0, 0)');
+        nightGradient.addColorStop(0.45, 'rgba(0, 0, 0, 0.15)');
+        nightGradient.addColorStop(0.55, 'rgba(0, 0, 0, 0.4)');   // 晨昏线更明显
+        nightGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.55)');  // 暗面更深
+        nightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.75)');    // 边缘最暗
         ctx.fillStyle = nightGradient;
         ctx.globalAlpha = opacity;
         ctx.fill();
         ctx.restore();
 
-        // 步骤5: 大气辉光（边缘发光）- 这是行星最标志的效果
+        // 步骤5: 大气辉光（增强立体感 - 更强的边缘发光）
         ctx.save();
         // 外层大气辉光
-        const outerAtmos = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.25);
+        const outerAtmos = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.3);
         outerAtmos.addColorStop(0, 'rgba(130, 180, 255, 0)');
-        outerAtmos.addColorStop(0.5, 'rgba(130, 180, 255, 0.08)');
-        outerAtmos.addColorStop(0.8, 'rgba(150, 195, 255, 0.18)');
-        outerAtmos.addColorStop(1, 'rgba(180, 215, 255, 0.28)');
+        outerAtmos.addColorStop(0.4, 'rgba(130, 180, 255, 0.12)');
+        outerAtmos.addColorStop(0.7, 'rgba(150, 195, 255, 0.25)');  // 更亮
+        outerAtmos.addColorStop(1, 'rgba(180, 215, 255, 0.4)');    // 更明显
         ctx.beginPath();
-        ctx.arc(x, y, radius * 1.25, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 1.3, 0, Math.PI * 2);
         ctx.fillStyle = outerAtmos;
         ctx.globalAlpha = opacity;
         ctx.fill();
 
         // 内层大气辉光（更亮）
-        const innerAtmos = ctx.createRadialGradient(x, y, radius * 0.9, x, y, radius * 1.08);
+        const innerAtmos = ctx.createRadialGradient(x, y, radius * 0.88, x, y, radius * 1.12);
         innerAtmos.addColorStop(0, 'rgba(180, 210, 255, 0)');
-        innerAtmos.addColorStop(0.4, 'rgba(180, 210, 255, 0.12)');
-        innerAtmos.addColorStop(1, 'rgba(200, 225, 255, 0.22)');
+        innerAtmos.addColorStop(0.35, 'rgba(180, 210, 255, 0.18)'); // 更亮
+        innerAtmos.addColorStop(1, 'rgba(200, 225, 255, 0.35)');   // 更明显
         ctx.beginPath();
-        ctx.arc(x, y, radius * 1.08, 0, Math.PI * 2);
+        ctx.arc(x, y, radius * 1.12, 0, Math.PI * 2);
         ctx.fillStyle = innerAtmos;
         ctx.globalAlpha = opacity * 0.9;
         ctx.fill();
         ctx.restore();
 
-        // 步骤6: 向光面微弱高光
+        // 步骤6: 向光面高光（增强立体感 - 更亮的高光）
         const sunlit = ctx.createRadialGradient(
           x - radius * 0.4, y - radius * 0.4, 0,
-          x - radius * 0.2, y - radius * 0.2, radius * 0.8
+          x - radius * 0.15, y - radius * 0.15, radius * 0.9
         );
-        sunlit.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-        sunlit.addColorStop(0.5, 'rgba(255, 255, 255, 0.06)');
+        sunlit.addColorStop(0, 'rgba(255, 255, 255, 0.35)');   // 更亮的高光中心
+        sunlit.addColorStop(0.4, 'rgba(255, 255, 255, 0.12)'); // 中间调
         sunlit.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1318,18 +1319,18 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity * 0.7;
         ctx.fill();
       } else if (enable3D) {
-        // Google Earth 风格的 3D 渐变效果（调亮）
+        // Google Earth 风格的 3D 渐变效果（增强立体感）
         // 创建多层渐变实现更真实的 3D 效果
         const gradient = ctx.createRadialGradient(
-          x - radius * 0.35, y - radius * 0.35, radius * 0.05,
-          x, y, radius * 1.1
+          x - radius * 0.3, y - radius * 0.3, radius * 0.02,
+          x, y, radius * 1.15
         );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-        gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.2)');
-        gradient.addColorStop(0.3, color);
-        gradient.addColorStop(0.7, color);
-        gradient.addColorStop(0.85, adjustBrightness(color, -8));
-        gradient.addColorStop(1, adjustBrightness(color, -25));
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');    // 更亮的高光
+        gradient.addColorStop(0.12, 'rgba(255, 255, 255, 0.35)'); // 高光过渡
+        gradient.addColorStop(0.25, color);                        // 保持原色
+        gradient.addColorStop(0.65, color);                        // 保持原色
+        gradient.addColorStop(0.82, adjustBrightness(color, -15)); // 更深的过渡
+        gradient.addColorStop(1, adjustBrightness(color, -40));    // 更深的阴影
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1337,14 +1338,14 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 添加边缘高光（调亮）
+        // 添加边缘高光（增强立体感）
         const edgeGradient = ctx.createLinearGradient(
           x - radius, y - radius,
           x + radius, y + radius
         );
-        edgeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-        edgeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0)');
-        edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
+        edgeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');   // 更亮的边缘高光
+        edgeGradient.addColorStop(0.35, 'rgba(255, 255, 255, 0.05)'); // 过渡
+        edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');          // 更深的边缘阴影
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1353,12 +1354,12 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
         ctx.globalAlpha = 1;
 
-        // 绘制球体轮廓（调亮）
+        // 绘制球体轮廓（增强对比度）
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = adjustBrightness(color, -20);
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = opacity * 0.5;
+        ctx.strokeStyle = adjustBrightness(color, -35);  // 更深的轮廓
+        ctx.lineWidth = 1.5;                              // 略粗的轮廓
+        ctx.globalAlpha = opacity * 0.6;
         ctx.stroke();
         ctx.globalAlpha = 1;
       } else {
