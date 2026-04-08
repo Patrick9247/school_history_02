@@ -683,8 +683,8 @@ export default function ProfessionalSpiralTower() {
       const hasData = dataItem !== undefined;
       const isEmptyYear = !hasData; // 1966-1971等无数据年份
       
-      // 无数据的年份显示灰球
-      const specialColor = isEmptyYear ? '#888888' : (SPECIAL_YEAR_COLORS[year] || null);
+      // 无数据的年份显示浅灰色球（更明显）
+      const specialColor = isEmptyYear ? '#aaaaaa' : (SPECIAL_YEAR_COLORS[year] || null);
       
       console.log('node:', { year, progress, angle, majorCount: dataItem?.majorCount || 0, isEmptyYear });
       return {
@@ -1212,7 +1212,10 @@ export default function ProfessionalSpiralTower() {
 
         sortedNodes.forEach(node => {
           const size = node.size * node.scale;
-          const opacity = Math.max(0.5, Math.min(1, (1 - node.z / 600)));
+          // 无数据年份透明度稍高，确保可见
+          const opacity = node.hasData 
+            ? Math.max(0.5, Math.min(1, (1 - node.z / 600)))
+            : Math.max(0.7, Math.min(1, (1 - node.z / 600)));
           let color: string;
           if (node.specialColor) {
             color = node.specialColor;
@@ -1251,10 +1254,10 @@ export default function ProfessionalSpiralTower() {
             const isDecadeYear = node.year % 10 === 0;
             
             if (isKeyYear || isDecadeYear || hoveredYear === node.year || !node.hasData) {
-              ctx.font = `${9 * node.scale}px sans-serif`;
+              ctx.font = `${10 * node.scale}px sans-serif`;
               ctx.fillStyle = node.hasData 
                 ? `rgba(255, 255, 255, ${opacity * 0.85})` 
-                : `rgba(150, 150, 150, ${opacity * 0.5})`; // 无数据年份用灰色
+                : `rgba(180, 180, 180, ${opacity * 0.8})`; // 无数据年份用浅灰色，更清晰
               ctx.textAlign = 'center';
               ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
             }
