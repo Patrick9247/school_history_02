@@ -1509,7 +1509,7 @@ export default function ProfessionalSpiralTower() {
         <div className="absolute inset-0 bg-black/60"></div>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0"
+        className="absolute inset-0 touch-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
