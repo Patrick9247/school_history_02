@@ -516,6 +516,10 @@ export default function ProfessionalSpiralTower() {
     userLightBallsRef.current.push(newLightBall);
   };
 
+  // 太阳系视图搜索功能
+  const [searchKeyword, setSearchKeyword] = useState<string>(''); // 搜索关键词
+  const [searchOpen, setSearchOpen] = useState(false); // 搜索框打开状态
+
   // 点击外部关闭下拉列表
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -523,16 +527,19 @@ export default function ProfessionalSpiralTower() {
       if (!target.closest('.major-input-container')) {
         setPopoverOpen(false);
       }
+      if (!target.closest('.search-container')) {
+        setSearchOpen(false);
+      }
     };
 
-    if (popoverOpen) {
+    if (popoverOpen || searchOpen) {
       document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [popoverOpen]);
+  }, [popoverOpen, searchOpen]);
 
   // Canvas 绘制
   useEffect(() => {
@@ -1250,13 +1257,26 @@ export default function ProfessionalSpiralTower() {
           // 学院球不透明，固定透明度为1
           const opacity = 1;
 
+          // 检查是否匹配搜索关键词
+          const searchMatch = searchKeyword.trim() !== '' &&
+            ((obj.type === 'department' || obj.type === 'college') &&
+             obj.name.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+            (obj.type === 'major' &&
+             obj.majorData?.name.toLowerCase().includes(searchKeyword.toLowerCase()));
+
+          // 搜索匹配时添加闪闪发光效果
+          const shouldGlow = searchMatch ? true :
+                             (obj.type === 'major') ? false :
+                             (obj.type === 'sun') ? true :
+                             false;
+
           if (obj.type === 'major') {
             const tailLength = 3;
             for (let t = tailLength; t >= 0; t--) {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
-              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, false);
+              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, shouldGlow);
             }
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false);
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
 
@@ -1270,12 +1290,12 @@ export default function ProfessionalSpiralTower() {
               ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
             ctx.font = `${deptFontSize * (obj.scale || 1)}px sans-serif`;
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
+            ctx.fillStyle = searchMatch ? '#FFD700' : `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
             // 对于院系，显示完整的名称（包括"系"或"学院"）
             const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
@@ -1295,7 +1315,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, currentDepartments, keyEvents]);
+  }, [data, currentView, currentDepartments, keyEvents, searchKeyword]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1796,24 +1816,69 @@ export default function ProfessionalSpiralTower() {
       {/* 缩放控制（只在太阳系视图中显示） */}
       {currentView === 'solar' && (
         <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
-          <button
-            onClick={zoomIn}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
-          >
-            +
-          </button>
-          <button
-            onClick={zoomOut}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
-          >
-            −
-          </button>
-          <button
-            onClick={resetView}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-[10px] md:text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
-          >
-            ↻
-          </button>
+          {/* 太阳系视图搜索框 */}
+          <div className="relative w-36 md:w-40 search-container">
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              placeholder="搜索专业..."
+              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
+            />
+            {searchOpen && searchKeyword && (
+              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
+                <div className="max-h-64 overflow-y-auto p-1">
+                  {currentDepartments
+                    .flatMap(dept => dept.majors)
+                    .filter(major =>
+                      major.name.toLowerCase().includes(searchKeyword.toLowerCase())
+                    )
+                    .length === 0 ? (
+                    <div className="text-[11px] text-white/50 py-6 text-center">
+                      未找到匹配的专业
+                    </div>
+                  ) : (
+                    currentDepartments
+                      .flatMap(dept => dept.majors)
+                      .filter(major =>
+                        major.name.toLowerCase().includes(searchKeyword.toLowerCase())
+                      )
+                      .map((major, index) => (
+                        <div
+                          key={`${major.name}-${index}`}
+                          className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex flex-col"
+                        >
+                          <span className="font-medium">{major.name}</span>
+                          <span className="text-[10px] text-white/60 mt-1">{major.degree}</span>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          {/* 缩放按钮 */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={zoomIn}
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+            >
+              +
+            </button>
+            <button
+              onClick={zoomOut}
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+            >
+              −
+            </button>
+            <button
+              onClick={resetView}
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-[10px] md:text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
+            >
+              ↻
+            </button>
+          </div>
         </div>
       )}
 
