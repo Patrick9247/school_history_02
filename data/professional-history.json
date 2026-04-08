@@ -133,14 +133,14 @@
   },
   {
     "id": 13,
-    "year": 2000,
+    "year": 2020,
     "major": "人工智能",
-    "category": "信息科学与技术学院",
+    "category": "计算机与网络安全学院（示范性软件学院）",
     "description": "AI",
     "level": "四年",
     "department": "人工智能系",
     "createdAt": "2026-04-07T08:54:24.737Z",
-    "updatedAt": "2026-04-07T08:54:24.737Z"
+    "updatedAt": "2026-04-08T03:33:00.000Z"
   },
   {
     "id": 14,
