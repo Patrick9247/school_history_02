@@ -59,12 +59,12 @@ const generateBandData = (index: number, baseColor: string): { bands: boolean; b
     // 条纹亮度变化更柔和
     const isLight = i % 2 === 0;
     const colorVar = isLight ? randomBetween(15, 35, index * 100 + i) : randomBetween(-30, -15, index * 100 + i);
-    const adjustedColor = adjustBrightnessValue(baseColor, colorVar);
+    const adjustedColor = adjustBrightness(baseColor, colorVar);
     bandColors.push(adjustedColor);
   }
   
   // 云层颜色（基于基础色，添加一点蓝/白色调）
-  const cloudColor = adjustBrightnessValue(baseColor, randomBetween(20, 35, index + 400));
+  const cloudColor = adjustBrightness(baseColor, randomBetween(20, 35, index + 400));
   
   // 生成不规则的椭圆云斑（模拟木星大红斑等）
   const ovalBands: { offset: number; width: number; color: string }[] = [];
@@ -73,20 +73,20 @@ const generateBandData = (index: number, baseColor: string): { bands: boolean; b
     ovalBands.push({
       offset: randomBetween(-0.5, 0.5, index * 10 + i),
       width: randomBetween(0.08, 0.2, index * 10 + i + 100),
-      color: adjustBrightnessValue(baseColor, randomBetween(10, 25, index * 10 + i + 200))
+      color: adjustBrightness(baseColor, randomBetween(10, 25, index * 10 + i + 200))
     });
   }
   
   return { bands: true, bandColors, bandAngle, bandCount, swirlStrength, cloudColor, bandWidthVar, turbulence, ovalBands };
 };
 
-// 调整颜色亮度
-const adjustBrightnessValue = (hexColor: string, percent: number): string => {
+// 合并 adjustBrightness 到 adjustBrightness
+const adjustBrightness = (hexColor: string, percent: number): string => {
   const num = parseInt(hexColor.replace('#', ''), 16);
   const r = Math.min(255, Math.max(0, (num >> 16) + percent));
   const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
   const b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
-  return `rgb(${r}, ${g}, ${b})`;
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
 };
 
 // 获取学院球颜色（使用行星颜色，随机带状纹理，更自然的参数）
@@ -190,12 +190,25 @@ interface College {
   majors: Major[];
 }
 
+// 行星数据类型
+interface PlanetData {
+  name: string;
+  bands: boolean;
+  bandColors?: string[];
+  bandAngle?: number;
+  swirlStrength?: number;
+  cloudColor?: string;
+  bandWidthVar?: number;
+  turbulence?: number;
+  ovalBands?: { offset: number; width: number; color: string }[];
+}
+
 interface DepartmentNode {
   name: string;
   color: string;
   majors: Major[];
-  college: string; // 归属学院
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
+  college: string;
+  planetData?: PlanetData;
 }
 
 interface PathPoint {
@@ -223,7 +236,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
+  planetData?: PlanetData;
 }
 
 export default function ProfessionalSpiralTower() {
@@ -922,7 +935,7 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }, rotation?: number) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: PlanetData, rotation?: number) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
@@ -1136,15 +1149,14 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 优化：创建学院轨道的角度缓存
-    const orbitSteps = 315; // 0.02 精度，约 315 个点
+    const orbitSteps = 315;
     const orbitAngleCache = createAngleCache(orbitSteps);
 
     // 初始化光点队列（只执行一次）
     if (!lightParticlesInitializedRef.current) {
       lightParticlesInitializedRef.current = true;
-      // 创建第一个光点，初始位置在第一圈结束处（progress = 1/6）
       lightParticlesRef.current.push({
-        progress: 1 / rings, // 第一圈结束，第二圈开始
+        progress: 1 / rings,
         color: getRandomLightColor(),
         createdAt: animationTimeRef.current
       });
@@ -1153,12 +1165,9 @@ export default function ProfessionalSpiralTower() {
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 更新动画时间
       animationTimeRef.current += 0.016;
 
       if (currentView === 'spiral') {
-        // 更新旋转（如果没有拖动、没有触摸操作、且鼠标不在螺旋体上）
         if (!isDraggingRef.current && !isTouchDraggingRef.current && !isTouchingNodeRef.current && !isHoveringSpiralRef.current) {
           rotationRef.current += 0.002;
         }
@@ -1172,13 +1181,9 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints: PathPoint[] = [];
-        // 在1956年之前增加半圈，在2025年之后也增加半圈
-        // 从进度 -0.5/rings 开始，到 1 + 0.5/rings 结束
-        // -0.5/rings = -0.083 (1956年前半圈), +0.5/rings = +0.083 (2025年后半圈)
         const startProgress = -0.5 / rings;
         const endProgress = 1 + 0.5 / rings;
         const totalProgress = endProgress - startProgress;
-        // 计算需要绘制的点数（每0.2年一个点）
         const totalDrawYears = totalYears * totalProgress;
         for (let i = 0; i <= totalDrawYears; i += 0.2) {
           const progress = startProgress + (i / totalDrawYears) * totalProgress;
@@ -1194,10 +1199,10 @@ export default function ProfessionalSpiralTower() {
         // 绘制基础线条
         for (let i = 1; i < pathPoints.length; i++) {
           const avgZ = (pathPoints[i - 1].z + pathPoints[i].z) / 2;
-          const opacity = Math.max(0.15, Math.min(0.5, (1 - avgZ / 600) * 0.5));
+          const lineOpacity = Math.max(0.15, Math.min(0.5, (1 - avgZ / 600) * 0.5));
 
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(96, 165, 250, ${opacity})`;
+          ctx.strokeStyle = `rgba(96, 165, 250, ${lineOpacity})`;
           ctx.lineWidth = 2.5 * Math.min(pathPoints[i - 1].scale, pathPoints[i].scale);
           ctx.moveTo(pathPoints[i - 1].x, pathPoints[i - 1].y);
           ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
@@ -1207,8 +1212,6 @@ export default function ProfessionalSpiralTower() {
         // 绘制灯带效果（流动的光点）
         const time = animationTimeRef.current;
 
-        // 使用外部定义的 LIGHT_COLORS 常量，避免每次渲染创建新数组
-
         // 计算螺旋线末端的飞出方向（切线方向）
         const lastPointIndex = pathPoints.length - 1;
         const secondLastPointIndex = pathPoints.length - 2;
@@ -1217,10 +1220,8 @@ export default function ProfessionalSpiralTower() {
         if (lastPointIndex > 0 && secondLastPointIndex >= 0) {
           const lastPoint = pathPoints[lastPointIndex];
           const secondLastPoint = pathPoints[secondLastPointIndex];
-          // 飞出方向：沿螺旋线末端的切线
           const flyOutX = lastPoint.x - secondLastPoint.x;
           const flyOutY = lastPoint.y - secondLastPoint.y;
-          // 归一化
           const flyOutLength = Math.sqrt(flyOutX * flyOutX + flyOutY * flyOutY);
           if (flyOutLength > 0) {
             flyOutDirX = flyOutX / flyOutLength;
@@ -1239,23 +1240,18 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 更新和绘制光点
-        const lightSpeed = 0.0005; // 光点移动速度（慢5倍，从0.0025降至0.0005）
+        const lightSpeed = 0.0005;
         lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
-          // 更新进度
           particle.progress += lightSpeed;
 
-          // 如果进度超过2，移除该光点
           if (particle.progress >= 2) {
             return false;
           }
-
-          // 计算光点位置
           let x: number | undefined, y: number | undefined, z: number | undefined, scale: number = 1, lightOpacity: number = 1;
           let isFlyingOut = false;
           const colorRGB = particle.color;
 
           if (particle.progress < 1) {
-            // 在螺旋线上
             const segmentProgress = particle.progress;
             const lightPointIndex = Math.floor(segmentProgress * pathPoints.length);
             const nextLightPointIndex = (lightPointIndex + 1) % pathPoints.length;
@@ -1264,28 +1260,20 @@ export default function ProfessionalSpiralTower() {
               const p1 = pathPoints[lightPointIndex];
               const p2 = pathPoints[nextLightPointIndex];
 
-              // 插值计算光点位置
               x = p1.x + (p2.x - p1.x) * segmentProgress;
               y = p1.y + (p2.y - p1.y) * segmentProgress;
               z = p1.z + (p2.z - p1.z) * segmentProgress;
               scale = p1.scale + (p2.scale - p1.scale) * segmentProgress;
-
-              // 计算光点透明度（前方更亮）
               lightOpacity = Math.max(0.6, Math.min(1, (1 - z / 600)));
             }
           } else {
-            // 飞出螺旋线
             isFlyingOut = true;
-            const flyOutProgress = particle.progress - 1; // 0-1之间（飞出进度）
+            const flyOutProgress = particle.progress - 1;
 
-            // 增加飞出时间，让飞出效果更明显（从0.5秒增加到0.8秒）
             if (flyOutProgress < 0.8) {
-              const flyOutDistance = flyOutProgress * 600; // 增加飞出距离（从400增加到600）
-
-              // 获取末端位置和缩放
+              const flyOutDistance = flyOutProgress * 600;
               const lastP = pathPoints[lastPointIndex];
 
-              // 如果是飞出的第一帧，记录固定的起始位置和方向
               if (!particle.flyOutStart) {
                 particle.flyOutStart = {
                   x: lastP.x,
@@ -1298,29 +1286,25 @@ export default function ProfessionalSpiralTower() {
                 };
               }
 
-              // 使用固定的起始位置计算当前位置，不随螺旋旋转变化
+              // 使用固定的起始位置计算当前位置
               const startPos = particle.flyOutStart;
               x = startPos.x + startPos.dirX * flyOutDistance;
-              y = startPos.y + startPos.dirY * flyOutDistance - flyOutDistance * 0.4; // 增加向上飞的角度
-              z = startPos.z + flyOutDistance * 0.6; // 增加向前的距离
-              scale = startPos.scale * (1 - flyOutProgress * 0.4); // 减慢变小的速度
+              y = startPos.y + startPos.dirY * flyOutDistance - flyOutDistance * 0.4;
+              z = startPos.z + flyOutDistance * 0.6;
+              scale = startPos.scale * (1 - flyOutProgress * 0.4);
 
-              // 透明度随飞行距离降低（减慢消失速度）
               lightOpacity = Math.max(0, 1 - flyOutProgress * 1.25);
 
               // 绘制飞出时的彗星拖尾效果
               const flyTailSteps = 8;
-              const flyTailLength = 80; // 飞出时的拖尾长度
-              // 使用固定的初始缩放和透明度，不随螺旋旋转变化
+              const flyTailLength = 80;
               for (let t = 0; t < flyTailSteps; t++) {
                 const tailProgress = t / flyTailSteps;
-                // 拖尾应该沿着飞出方向的逆方向（使用固定的方向）
                 const tailX = x - startPos.dirX * tailProgress * flyTailLength;
-                const tailY = y - (startPos.dirY - 0.4) * tailProgress * flyTailLength; // 沿飞出方向反向
-                const tailZ = z - 0.6 * tailProgress * flyTailLength; // 沿飞出方向反向
-                // 使用固定值，不随位置变化
+                const tailY = y - (startPos.dirY - 0.4) * tailProgress * flyTailLength;
+                const tailZ = z - 0.6 * tailProgress * flyTailLength;
                 const tailOpacity = startPos.opacity * (1 - tailProgress) * 0.6;
-                const tailRadius = (10 - tailProgress * 7) * startPos.scale; // 从10逐渐减小到3，使用初始缩放
+                const tailRadius = (10 - tailProgress * 7) * startPos.scale;
 
                 const tailGradient = ctx.createRadialGradient(tailX, tailY, 0, tailX, tailY, tailRadius);
                 tailGradient.addColorStop(0, `rgba(${colorRGB}, ${tailOpacity * 0.8})`);
@@ -1332,12 +1316,10 @@ export default function ProfessionalSpiralTower() {
                 ctx.fill();
               }
             } else {
-              // 飞出结束，移除该光点
               return false;
             }
           }
 
-          // 如果变量未定义，跳过此光点的绘制
           if (x === undefined || y === undefined) {
             return true;
           }
@@ -1349,7 +1331,7 @@ export default function ProfessionalSpiralTower() {
             const coreRadius = isFlyingOut ? 2 * scale : 3 * scale; // 增加核心半径
 
             const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`); // 增加核心亮度
+            lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
             lightGlowGradient.addColorStop(0.15, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
             lightGlowGradient.addColorStop(0.4, `rgba(${colorRGB}, ${lightOpacity * 0.6})`);
             lightGlowGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
@@ -1359,10 +1341,9 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = lightGlowGradient;
             ctx.fill();
 
-            // 绘制光点中间层（增加亮度）
             const midGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, midRadius);
             midGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
-            midGlowGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 1.0})`); // 增加亮度
+            midGlowGradient.addColorStop(0.3, `rgba(${colorRGB}, ${lightOpacity * 1.0})`);
             midGlowGradient.addColorStop(0.7, `rgba(${colorRGB}, ${lightOpacity * 0.8})`);
             midGlowGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.5})`);
 
@@ -1371,9 +1352,8 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = midGlowGradient;
             ctx.fill();
 
-            // 绘制光点核心（增加亮度）
             const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, coreRadius);
-            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`); // 核心最亮
+            coreGradient.addColorStop(0, `rgba(255, 255, 255, ${lightOpacity * 1.0})`);
             coreGradient.addColorStop(0.2, `rgba(${colorRGB}, ${lightOpacity * 1.0})`);
             coreGradient.addColorStop(0.5, `rgba(${colorRGB}, ${lightOpacity * 0.95})`);
             coreGradient.addColorStop(1, `rgba(${colorRGB}, ${lightOpacity * 0.9})`);
@@ -1389,19 +1369,14 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制用户发送的光球
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
-          // 更新进度（从0到1表示从firstAppearYear到endYear，1到1.5表示飞出）
-          ball.progress += lightSpeed * 4; // 用户光球速度快4倍
+          ball.progress += lightSpeed * 4;
 
-          // 如果进度超过1.5，移除该光球
           if (ball.progress >= 1.5) {
             return false;
           }
-
-          // 计算光球在螺旋线上的实际位置
           const projection = spiralProjectionRef.current;
           if (!projection) return false;
 
-          // 计算该专业第一次出现年份对应的 progress（起始点）
           const startProgress = (ball.firstAppearYear - projection.startYear) / (projection.totalYears - 1);
           const colorRGB = ball.color;
 
@@ -1409,10 +1384,8 @@ export default function ProfessionalSpiralTower() {
           let isFlyingOut = ball.progress > 1;
 
           if (!isFlyingOut) {
-            // 在螺旋线上：从 firstAppearYear 到 endYear
             const actualProgress = startProgress + ball.progress * (1 - startProgress);
 
-            // 计算光球位置
             const angle = actualProgress * projection.rings * Math.PI * 2;
             const lx = Math.cos(angle) * projection.baseRadius;
             const ly = (1 - actualProgress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1424,9 +1397,7 @@ export default function ProfessionalSpiralTower() {
             z = proj.z;
             scale = proj.scale;
           } else {
-            // 飞出螺旋线
             if (!ball.flyOutStart) {
-              // 计算螺旋线末端的位置作为飞出起点
               const endAngle = 1 * projection.rings * Math.PI * 2;
               ball.flyOutStart = {
                 x: Math.cos(endAngle) * projection.baseRadius,
@@ -1456,13 +1427,11 @@ export default function ProfessionalSpiralTower() {
             scale = ball.flyOutStart.scale * (1 - flyOutProgress * 0.4);
           }
 
-          // 绘制用户光球
           const glowRadius = isFlyingOut ? 12 * scale : 18 * scale;
           const midRadius = isFlyingOut ? 6 * scale : 10 * scale;
           const coreRadius = isFlyingOut ? 3 * scale : 5 * scale;
           const opacity = isFlyingOut ? Math.max(0, 1 - (ball.progress - 1) * 2) : 1;
 
-          // 外层光晕
           const lightGlowGradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
           lightGlowGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
           lightGlowGradient.addColorStop(0.15, `rgba(${colorRGB}, ${opacity * 0.95})`);
