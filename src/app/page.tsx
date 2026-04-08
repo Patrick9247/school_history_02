@@ -496,8 +496,9 @@ export default function ProfessionalSpiralTower() {
     const isMobile = rect.width < 768;
     const isTablet = rect.width >= 768 && rect.width < 1024;
 
-    const spiralHeight = isMobile ? 600 : (isTablet ? 700 : 800);
-    const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18));
+    // 螺旋线视图参数（支持缩放）
+    const spiralHeight = (isMobile ? 600 : (isTablet ? 700 : 800)) * zoomLevelRef.current;
+    const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18)) * zoomLevelRef.current;
 
     // 生成螺旋节点
     const spiralNodes = data.map((item, index) => {
@@ -510,7 +511,7 @@ export default function ProfessionalSpiralTower() {
         localZ: Math.sin(angle) * baseRadius,
         year: item.year,
         count: item.majorCount,
-        size: 12,
+        size: 12 * zoomLevelRef.current, // 节点大小随缩放比例变化
         specialColor: SPECIAL_YEAR_COLORS[year] || null
       };
     });
@@ -1313,21 +1314,19 @@ export default function ProfessionalSpiralTower() {
     zoomLevelRef.current = 1;
   };
 
-  // 鼠标滚轮缩放
+  // 鼠标滚轮缩放（在两个视图中都生效）
   const handleWheel = (e: React.WheelEvent) => {
-    if (currentView === 'solar') {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      zoomLevelRef.current = Math.max(0.5, Math.min(2, zoomLevelRef.current * delta));
-    }
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    zoomLevelRef.current = Math.max(0.5, Math.min(2, zoomLevelRef.current * delta));
   };
 
-  // 触摸事件处理（用于双指缩放）
+  // 触摸事件处理（用于双指缩放，在两个视图中都生效）
   const initialTouchDistanceRef = useRef<number | null>(null);
   const initialZoomRef = useRef<number>(1);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (currentView === 'solar' && e.touches.length === 2) {
+    if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const distance = Math.hypot(
@@ -1340,7 +1339,7 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (currentView === 'solar' && e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
+    if (e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -1465,29 +1464,27 @@ export default function ProfessionalSpiralTower() {
         )}
       </div>
 
-      {/* 缩放控制 */}
-      {currentView === 'solar' && (
-        <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
-          <button
-            onClick={zoomIn}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
-          >
-            +
-          </button>
-          <button
-            onClick={zoomOut}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
-          >
-            −
-          </button>
-          <button
-            onClick={resetView}
-            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-[10px] md:text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
-          >
-            ↻
-          </button>
-        </div>
-      )}
+      {/* 缩放控制（在两个视图中都显示） */}
+      <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
+        <button
+          onClick={zoomIn}
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+        >
+          +
+        </button>
+        <button
+          onClick={zoomOut}
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-400/30 border border-blue-400/50 text-white text-lg md:text-xl flex items-center justify-center hover:bg-blue-400/40 transition-colors"
+        >
+          −
+        </button>
+        <button
+          onClick={resetView}
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-purple-400/30 border border-purple-400/50 text-white text-[10px] md:text-xs flex items-center justify-center hover:bg-purple-400/40 transition-colors"
+        >
+          ↻
+        </button>
+      </div>
 
       {/* 提示文字 */}
       <div className="fixed bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-10">
