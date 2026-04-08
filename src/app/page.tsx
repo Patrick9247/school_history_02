@@ -1577,8 +1577,8 @@ export default function ProfessionalSpiralTower() {
                 type: 'major',
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
-                radius: (isMobileSolar ? 3 : (isTabletSolar ? 3.5 : 4)) * Math.sqrt(zoomLevelRef.current),
-                color: dept.color,
+                radius: (isMobileSolar ? 2 : (isTabletSolar ? 2.3 : 2.7)) * Math.sqrt(zoomLevelRef.current), // 缩小到2/3
+                color: dept.color, // 与学院球主色调一致
                 majorData: major,
                 collegeName: dept.name,
                 angle: majorAngle
@@ -1650,7 +1650,8 @@ export default function ProfessionalSpiralTower() {
             
             for (let t = tailLength; t >= 0; t--) {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
-              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow, true);
+              // 专业球使用单色，不带纹理，enable3D: false
+              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow, false);
             }
             
             // 绘制球体
@@ -1665,8 +1666,8 @@ export default function ProfessionalSpiralTower() {
               // 内层光晕
               const innerGlowRadius = obj.radius * (1.3 + glowIntensity * 0.4);
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF6600', 0.45 * glowIntensity, true, false);
-              // 核心球体
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, '#FFD700', opacity, true, true, undefined, animationTimeRef.current * 0.5);
+              // 核心球体：单色，与学院球主色调一致
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, false);
               
               // 显示专业名称（带发光背景）
               const majorFontSize = isMobileSolar ? 8 : 9;
@@ -1687,8 +1688,8 @@ export default function ProfessionalSpiralTower() {
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
               ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
-              // 普通专业球：使用 Google Earth 风格的 3D 效果
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow, true);
+              // 普通专业球：单色，与学院球主色调一致，无纹理
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false, false);
             }
           } else if (obj.type === 'sun') {
             drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, true, undefined, animationTimeRef.current * 0.3);
