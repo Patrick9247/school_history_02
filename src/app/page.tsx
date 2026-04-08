@@ -2,49 +2,85 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
-// 行星主题类型
-type PlanetTheme = 'banded' | 'ringed' | 'cratered' | 'stormy' | 'icy' | 'volcanic' | 'cloudy' | 'nebula';
-
-// 行星颜色配置（明亮色系，带专属主题特征）
+// 行星颜色配置（明亮色系，全部带状纹理，条纹随机）
 const PLANET_COLORS = [
-  // 带状纹理行星（木星风格）
-  { name: '木星', color: '#C49A4E', gradient: ['#D4AA5E', '#A48A3E'], baseBandColor: '#B49A4E', theme: 'banded' as PlanetTheme },
-  { name: '木星II', color: '#C48040', gradient: ['#D49050', '#A47030'], baseBandColor: '#B48040', theme: 'banded' as PlanetTheme },
-  
-  // 土星环行星
-  { name: '土星', color: '#C4A850', gradient: ['#D4B860', '#A49840'], baseBandColor: '#B4A850', theme: 'ringed' as PlanetTheme },
-  { name: '土星II', color: '#B89850', gradient: ['#C8A860', '#A88840'], baseBandColor: '#A89850', theme: 'ringed' as PlanetTheme },
-  
-  // 陨石坑行星（月球/水星风格）
-  { name: '水星', color: '#9A9A9A', gradient: ['#BABABA', '#7A7A7A'], baseBandColor: '#AAAAAA', theme: 'cratered' as PlanetTheme },
-  { name: '月球', color: '#8A8A8A', gradient: ['#9A9A9A', '#7A7A7A'], baseBandColor: '#8A8A8A', theme: 'cratered' as PlanetTheme },
-  
-  // 风暴行星（海王星风格）
-  { name: '海王星', color: '#5A7A9A', gradient: ['#7A8AAA', '#4A6A8A'], baseBandColor: '#6A7A9A', theme: 'stormy' as PlanetTheme },
-  { name: '风暴星', color: '#4A6A8A', gradient: ['#6A7A9A', '#3A5A7A'], baseBandColor: '#5A6A8A', theme: 'stormy' as PlanetTheme },
-  
-  // 冰行星（天王星风格）
-  { name: '天王星', color: '#6ACCC0', gradient: ['#8ADDD0', '#5ABDB0'], baseBandColor: '#7ACDC0', theme: 'icy' as PlanetTheme },
-  { name: '冰星', color: '#8ADCE0', gradient: ['#AAEEF0', '#7ACCD0'], baseBandColor: '#9ADED0', theme: 'icy' as PlanetTheme },
-  
-  // 火山行星（火星风格）
-  { name: '火星', color: '#C45C5C', gradient: ['#D46C6C', '#A44C4C'], baseBandColor: '#B45C5C', theme: 'volcanic' as PlanetTheme },
-  { name: '火山星', color: '#B44C4C', gradient: ['#C45C5C', '#A43C3C'], baseBandColor: '#A44C4C', theme: 'volcanic' as PlanetTheme },
-  
-  // 云层行星（金星/地球风格）
-  { name: '金星', color: '#C9A96E', gradient: ['#D9B97E', '#A98A5E'], baseBandColor: '#B9A97E', theme: 'cloudy' as PlanetTheme },
-  { name: '地球', color: '#5A8A8A', gradient: ['#6A9A9A', '#4A7A7A'], baseBandColor: '#6A8A8A', theme: 'cloudy' as PlanetTheme },
-  
-  // 星云行星
-  { name: '星云', color: '#8A5AAA', gradient: ['#9A6ABA', '#7A4A9A'], baseBandColor: '#8A5AAA', theme: 'nebula' as PlanetTheme },
-  { name: '极光', color: '#5AAA8A', gradient: ['#7ACA9A', '#4A8A7A'], baseBandColor: '#6A9A8A', theme: 'nebula' as PlanetTheme },
-  
-  // 更多变体
-  { name: '彗星', color: '#8A6A9A', gradient: ['#9A7AAA', '#7A5A8A'], baseBandColor: '#8A6A9A', theme: 'nebula' as PlanetTheme },
-  { name: '银河', color: '#7A5A8A', gradient: ['#8A6A9A', '#6A4A7A'], baseBandColor: '#7A5A8A', theme: 'nebula' as PlanetTheme },
+  // 所有行星都带状纹理，使用随机条纹，亮度提升
+  { name: '水星', color: '#9A9A9A', gradient: ['#BABABA', '#7A7A7A'], baseBandColor: '#AAAAAA' },
+  { name: '金星', color: '#C9A96E', gradient: ['#D9B97E', '#A98A5E'], baseBandColor: '#B9A97E' },
+  { name: '地球', color: '#5A8A8A', gradient: ['#6A9A9A', '#4A7A7A'], baseBandColor: '#6A8A8A' },
+  { name: '火星', color: '#C45C5C', gradient: ['#D46C6C', '#A44C4C'], baseBandColor: '#B45C5C' },
+  { name: '木星', color: '#C49A4E', gradient: ['#D4AA5E', '#A48A3E'], baseBandColor: '#B49A4E' },
+  { name: '土星', color: '#C4A850', gradient: ['#D4B860', '#A49840'], baseBandColor: '#B4A850' },
+  { name: '天王星', color: '#6A9A9A', gradient: ['#8AAAAA', '#5A8A8A'], baseBandColor: '#7A9A9A' },
+  { name: '海王星', color: '#5A7A9A', gradient: ['#7A8AAA', '#4A6A8A'], baseBandColor: '#6A7A9A' },
+  { name: '冥王星', color: '#9A856A', gradient: ['#AA957A', '#8A756A'], baseBandColor: '#9A857A' },
+  { name: '月球', color: '#8A8A8A', gradient: ['#9A9A9A', '#7A7A7A'], baseBandColor: '#8A8A8A' },
+  { name: '彗星', color: '#8A6A9A', gradient: ['#9A7AAA', '#7A5A8A'], baseBandColor: '#8A6A9A' },
+  { name: '星云', color: '#5A8A8A', gradient: ['#7A9A9A', '#4A7A7A'], baseBandColor: '#6A8A8A' },
+  { name: '银河', color: '#7A5A8A', gradient: ['#8A6A9A', '#6A4A7A'], baseBandColor: '#7A5A8A' },
+  { name: '极光', color: '#5A8A5A', gradient: ['#7A9A7A', '#4A7A4A'], baseBandColor: '#6A8A6A' },
+  { name: '亮星1', color: '#8A7A6A', gradient: ['#9A8A7A', '#7A6A5A'], baseBandColor: '#8A7A7A' },
+  { name: '亮星2', color: '#6A8A9A', gradient: ['#8A9AAA', '#5A7A8A'], baseBandColor: '#7A8A9A' },
+  { name: '亮星3', color: '#9A6A8A', gradient: ['#AA7A9A', '#8A5A7A'], baseBandColor: '#9A6A8A' },
+  { name: '亮星4', color: '#6A9A8A', gradient: ['#8AAA9A', '#5A8A7A'], baseBandColor: '#7A9A8A' },
+  { name: '亮星5', color: '#8A8A6A', gradient: ['#9A9A7A', '#7A7A5A'], baseBandColor: '#8A8A7A' },
+  { name: '亮星6', color: '#9A8A6A', gradient: ['#AA9A7A', '#8A7A5A'], baseBandColor: '#9A8A7A' },
+  { name: '亮星7', color: '#8A6A6A', gradient: ['#9A7A7A', '#7A5A5A'], baseBandColor: '#8A7A7A' },
+  { name: '亮星8', color: '#6A6A8A', gradient: ['#8A7A9A', '#5A5A7A'], baseBandColor: '#7A6A8A' },
 ];
 
-// 调整颜色亮度（移到前面，避免函数提升问题）
+// 生成带状纹理数据（条纹角度随机，数量3-8条，带宽度变化和云层效果）
+const generateBandData = (index: number, baseColor: string): { bands: boolean; bandColors: string[]; bandAngle: number; bandCount: number; swirlStrength: number; cloudColor: string; bandWidthVar: number; turbulence: number; ovalBands: { offset: number; width: number; color: string }[] } => {
+  // 使用索引生成确定性随机数，确保每次渲染一致
+  const seed = index * 12345;
+  const randomBetween = (min: number, max: number, seedOffset: number) => {
+    const x = Math.sin(seed + seedOffset) * 10000;
+    return min + (x - Math.floor(x)) * (max - min);
+  };
+  
+  // 随机条纹数量（5-8条，更丰富的层次）
+  const bandCount = Math.floor(randomBetween(5, 9, index)) as 5 | 6 | 7 | 8;
+  
+  // 随机条纹角度（-20到20度，更柔和的倾斜）
+  const bandAngle = randomBetween(-20, 20, index + 100);
+  
+  // 漩涡强度（增加，让条纹更弯曲）
+  const swirlStrength = randomBetween(0.1, 0.25, index + 200);
+  
+  // 湍流强度（新增，影响条纹的不规则性）
+  const turbulence = randomBetween(0.05, 0.15, index + 250);
+  
+  // 条纹宽度变化（0.4-1.5，影响条纹厚度不均匀）
+  const bandWidthVar = randomBetween(0.4, 1.5, index + 300);
+  
+  // 生成条纹颜色（更柔和的深浅交替，自然过渡）
+  const bandColors: string[] = [];
+  for (let i = 0; i < bandCount; i++) {
+    // 条纹亮度变化更柔和
+    const isLight = i % 2 === 0;
+    const colorVar = isLight ? randomBetween(15, 35, index * 100 + i) : randomBetween(-30, -15, index * 100 + i);
+    const adjustedColor = adjustBrightnessValue(baseColor, colorVar);
+    bandColors.push(adjustedColor);
+  }
+  
+  // 云层颜色（基于基础色，添加一点蓝/白色调）
+  const cloudColor = adjustBrightnessValue(baseColor, randomBetween(20, 35, index + 400));
+  
+  // 生成不规则的椭圆云斑（模拟木星大红斑等）
+  const ovalBands: { offset: number; width: number; color: string }[] = [];
+  const ovalCount = Math.floor(randomBetween(2, 4, index + 500));
+  for (let i = 0; i < ovalCount; i++) {
+    ovalBands.push({
+      offset: randomBetween(-0.5, 0.5, index * 10 + i),
+      width: randomBetween(0.08, 0.2, index * 10 + i + 100),
+      color: adjustBrightnessValue(baseColor, randomBetween(10, 25, index * 10 + i + 200))
+    });
+  }
+  
+  return { bands: true, bandColors, bandAngle, bandCount, swirlStrength, cloudColor, bandWidthVar, turbulence, ovalBands };
+};
+
+// 调整颜色亮度
 const adjustBrightnessValue = (hexColor: string, percent: number): string => {
   const num = parseInt(hexColor.replace('#', ''), 16);
   const r = Math.min(255, Math.max(0, (num >> 16) + percent));
@@ -53,171 +89,10 @@ const adjustBrightnessValue = (hexColor: string, percent: number): string => {
   return `rgb(${r}, ${g}, ${b})`;
 };
 
-// 生成带状纹理数据（根据行星主题生成不同纹理）
-const generateBandData = (index: number, baseColor: string, theme: PlanetTheme = 'banded'): { bands: boolean; bandColors: string[]; bandAngle: number; bandCount: number; swirlStrength: number; cloudColor: string; bandWidthVar: number; turbulence: number; ovalBands: { offset: number; width: number; color: string }[]; theme: PlanetTheme; ringColor?: string; craterColor?: string; stormColors?: string[] } => {
-  // 使用索引生成确定性随机数，确保每次渲染一致
-  const seed = index * 12345;
-  const randomBetween = (min: number, max: number, seedOffset: number) => {
-    const x = Math.sin(seed + seedOffset) * 10000;
-    return min + (x - Math.floor(x)) * (max - min);
-  };
-  
-  let bandCount: number, bandAngle: number, swirlStrength: number, turbulence: number, bandWidthVar: number;
-  let bandColors: string[] = [];
-  let cloudColor = adjustBrightnessValue(baseColor, 20);
-  let ovalBands: { offset: number; width: number; color: string }[] = [];
-  let ringColor: string | undefined;
-  let craterColor: string | undefined;
-  let stormColors: string[] | undefined;
-  
-  switch (theme) {
-    case 'ringed': // 土星环
-      bandCount = Math.floor(randomBetween(3, 5, index)) as 3 | 4 | 5;
-      bandAngle = randomBetween(-5, 5, index + 100);
-      swirlStrength = randomBetween(0.02, 0.08, index + 200);
-      turbulence = randomBetween(0.02, 0.08, index + 250);
-      bandWidthVar = randomBetween(0.3, 0.8, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(10, 25, index * 100 + i) : randomBetween(-20, -10, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      ringColor = adjustBrightnessValue(baseColor, randomBetween(15, 30, index + 400));
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(10, 20, index + 500));
-      break;
-      
-    case 'cratered': // 陨石坑（月球）
-      bandCount = 1;
-      bandAngle = 0;
-      swirlStrength = 0;
-      turbulence = randomBetween(0.02, 0.05, index + 250);
-      bandWidthVar = 1;
-      bandColors = [baseColor];
-      const craterCount = Math.floor(randomBetween(3, 6, index + 600));
-      ovalBands = Array.from({ length: craterCount }, (_, i) => ({
-        offset: randomBetween(-0.6, 0.6, index * 10 + i + 700),
-        width: randomBetween(0.1, 0.25, index * 10 + i + 800),
-        color: adjustBrightnessValue(baseColor, randomBetween(-15, 5, index * 10 + i + 900))
-      }));
-      craterColor = adjustBrightnessValue(baseColor, randomBetween(-20, -5, index + 1000));
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(5, 15, index + 1100));
-      break;
-      
-    case 'stormy': // 风暴（海王星）
-      bandCount = Math.floor(randomBetween(4, 6, index)) as 4 | 5 | 6;
-      bandAngle = randomBetween(-15, 15, index + 100);
-      swirlStrength = randomBetween(0.2, 0.35, index + 200);
-      turbulence = randomBetween(0.15, 0.25, index + 250);
-      bandWidthVar = randomBetween(0.5, 1.2, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(15, 30, index * 100 + i) : randomBetween(-25, -10, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      stormColors = [
-        adjustBrightnessValue(baseColor, randomBetween(20, 35, index + 1200)),
-        adjustBrightnessValue(baseColor, randomBetween(-15, 0, index + 1300))
-      ];
-      ovalBands = [{
-        offset: randomBetween(-0.3, 0.3, index + 1400),
-        width: randomBetween(0.15, 0.3, index + 1500),
-        color: stormColors[0]
-      }];
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(15, 25, index + 500));
-      break;
-      
-    case 'icy': // 冰行星
-      bandCount = Math.floor(randomBetween(2, 4, index)) as 2 | 3 | 4;
-      bandAngle = randomBetween(-10, 10, index + 100);
-      swirlStrength = randomBetween(0.05, 0.12, index + 200);
-      turbulence = randomBetween(0.03, 0.1, index + 250);
-      bandWidthVar = randomBetween(0.4, 1, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(20, 40, index * 100 + i) : randomBetween(-15, 0, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      cloudColor = 'rgba(255, 255, 255, 0.4)';
-      break;
-      
-    case 'volcanic': // 火山（火星）
-      bandCount = Math.floor(randomBetween(5, 8, index)) as 5 | 6 | 7 | 8;
-      bandAngle = randomBetween(-20, 20, index + 100);
-      swirlStrength = randomBetween(0.15, 0.3, index + 200);
-      turbulence = randomBetween(0.1, 0.2, index + 250);
-      bandWidthVar = randomBetween(0.5, 1.3, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(20, 40, index * 100 + i) : randomBetween(-30, -15, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      const volcanicCount = Math.floor(randomBetween(2, 4, index + 1600));
-      ovalBands = Array.from({ length: volcanicCount }, (_, i) => ({
-        offset: randomBetween(-0.5, 0.5, index * 10 + i + 1700),
-        width: randomBetween(0.08, 0.2, index * 10 + i + 1800),
-        color: adjustBrightnessValue(baseColor, randomBetween(-10, 15, index * 10 + i + 1900))
-      }));
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(15, 30, index + 500));
-      break;
-      
-    case 'cloudy': // 云层（金星/地球）
-      bandCount = Math.floor(randomBetween(3, 5, index)) as 3 | 4 | 5;
-      bandAngle = randomBetween(-10, 10, index + 100);
-      swirlStrength = randomBetween(0.08, 0.15, index + 200);
-      turbulence = randomBetween(0.08, 0.15, index + 250);
-      bandWidthVar = randomBetween(0.6, 1.3, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(15, 30, index * 100 + i) : randomBetween(-20, -5, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(20, 35, index + 500));
-      break;
-      
-    case 'nebula': // 星云
-      bandCount = Math.floor(randomBetween(4, 7, index)) as 4 | 5 | 6 | 7;
-      bandAngle = randomBetween(-25, 25, index + 100);
-      swirlStrength = randomBetween(0.2, 0.35, index + 200);
-      turbulence = randomBetween(0.15, 0.25, index + 250);
-      bandWidthVar = randomBetween(0.5, 1.4, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(20, 40, index * 100 + i) : randomBetween(-25, -10, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(25, 40, index + 500));
-      break;
-      
-    case 'banded': // 带状（木星）
-    default:
-      bandCount = Math.floor(randomBetween(5, 9, index)) as 5 | 6 | 7 | 8;
-      bandAngle = randomBetween(-20, 20, index + 100);
-      swirlStrength = randomBetween(0.1, 0.25, index + 200);
-      turbulence = randomBetween(0.05, 0.15, index + 250);
-      bandWidthVar = randomBetween(0.4, 1.5, index + 300);
-      for (let i = 0; i < bandCount; i++) {
-        const isLight = i % 2 === 0;
-        const colorVar = isLight ? randomBetween(15, 35, index * 100 + i) : randomBetween(-30, -15, index * 100 + i);
-        bandColors.push(adjustBrightnessValue(baseColor, colorVar));
-      }
-      cloudColor = adjustBrightnessValue(baseColor, randomBetween(15, 25, index + 400));
-      const spotCount = Math.floor(randomBetween(1, 3, index + 2000));
-      ovalBands = Array.from({ length: spotCount }, (_, i) => ({
-        offset: randomBetween(-0.4, 0.4, index * 10 + i + 2100),
-        width: randomBetween(0.1, 0.25, index * 10 + i + 2200),
-        color: adjustBrightnessValue(baseColor, randomBetween(-5, 15, index * 10 + i + 2300))
-      }));
-      break;
-  }
-  
-  return { bands: true, bandColors, bandAngle, bandCount, swirlStrength, cloudColor, bandWidthVar, turbulence, ovalBands, theme, ringColor, craterColor, stormColors };
-};
-
-// 获取学院球颜色（使用行星颜色，随机带状纹理，根据主题生成不同效果）
+// 获取学院球颜色（使用行星颜色，随机带状纹理，更自然的参数）
 const getPlanetColor = (index: number) => {
   const planet = PLANET_COLORS[index % PLANET_COLORS.length];
-  const theme = planet.theme || 'banded';
-  const bandData = generateBandData(index, planet.baseBandColor || planet.color, theme);
+  const bandData = generateBandData(index, planet.baseBandColor || planet.color);
   return {
     ...planet,
     ...bandData
@@ -320,7 +195,7 @@ interface DepartmentNode {
   color: string;
   majors: Major[];
   college: string; // 归属学院
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[]; theme?: PlanetTheme; ringColor?: string; craterColor?: string; stormColors?: string[] }; // 行星数据（自然纹理）
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
 }
 
 interface PathPoint {
@@ -348,7 +223,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[]; theme?: PlanetTheme; ringColor?: string; craterColor?: string; stormColors?: string[] }; // 行星数据（自然纹理）
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
 }
 
 export default function ProfessionalSpiralTower() {
@@ -402,16 +277,6 @@ export default function ProfessionalSpiralTower() {
     startYear: number;
     rings: number;
   } | null>(null);
-  
-  // 星空粒子系统
-  const starFieldRef = useRef<Array<{
-    x: number; y: number; z: number;
-    size: number;
-    brightness: number;
-    twinkleSpeed: number;
-    twinklePhase: number;
-    color: string;
-  }>>([]);
 
   // 光点队列（用于连续产生流星效果）
   const lightParticlesRef = useRef<Array<{
@@ -1056,7 +921,7 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[]; theme?: PlanetTheme; ringColor?: string; craterColor?: string; stormColors?: string[] }, rotation?: number) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }, rotation?: number) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
@@ -1290,82 +1155,6 @@ export default function ProfessionalSpiralTower() {
 
       // 更新动画时间
       animationTimeRef.current += 0.016;
-
-      // 绘制星空背景（太阳系视图）
-      if (currentView === 'solar') {
-        // 初始化星空粒子（如果未初始化或画布大小改变）
-        if (starFieldRef.current.length === 0) {
-          const starCount = Math.floor((canvas.width * canvas.height) / 3000); // 根据画布大小调整星星数量
-          starFieldRef.current = Array.from({ length: starCount }, () => {
-            const brightness = 0.3 + Math.random() * 0.7;
-            const starColors = [
-              `rgba(255, 255, 255, ${brightness})`,
-              `rgba(200, 220, 255, ${brightness})`, // 蓝白色
-              `rgba(255, 240, 220, ${brightness})`, // 黄白色
-              `rgba(255, 200, 180, ${brightness})`, // 橙红色
-            ];
-            return {
-              x: Math.random() * canvas.width,
-              y: Math.random() * canvas.height,
-              z: Math.random() * 1000, // 深度用于视差效果
-              size: Math.random() * 2 + 0.5,
-              brightness,
-              twinkleSpeed: Math.random() * 2 + 1,
-              twinklePhase: Math.random() * Math.PI * 2,
-              color: starColors[Math.floor(Math.random() * starColors.length)]
-            };
-          });
-        }
-        
-        // 绘制深空星云渐变背景
-        const nebulaGradient = ctx.createRadialGradient(
-          canvas.width * 0.3, canvas.height * 0.4, 0,
-          canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.8
-        );
-        nebulaGradient.addColorStop(0, 'rgba(30, 20, 50, 0.3)');
-        nebulaGradient.addColorStop(0.3, 'rgba(20, 15, 40, 0.2)');
-        nebulaGradient.addColorStop(0.6, 'rgba(10, 10, 30, 0.15)');
-        nebulaGradient.addColorStop(1, 'rgba(5, 5, 20, 0.1)');
-        ctx.fillStyle = nebulaGradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 添加第二个星云（右侧）
-        const nebulaGradient2 = ctx.createRadialGradient(
-          canvas.width * 0.8, canvas.height * 0.3, 0,
-          canvas.width * 0.7, canvas.height * 0.4, canvas.width * 0.5
-        );
-        nebulaGradient2.addColorStop(0, 'rgba(50, 30, 60, 0.2)');
-        nebulaGradient2.addColorStop(0.5, 'rgba(30, 20, 50, 0.1)');
-        nebulaGradient2.addColorStop(1, 'rgba(10, 10, 30, 0)');
-        ctx.fillStyle = nebulaGradient2;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 绘制星星（带闪烁效果）
-        const time = animationTimeRef.current;
-        starFieldRef.current.forEach(star => {
-          // 闪烁效果
-          const twinkle = 0.7 + Math.sin(time * star.twinkleSpeed + star.twinklePhase) * 0.3;
-          ctx.globalAlpha = twinkle;
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-          ctx.fillStyle = star.color;
-          ctx.fill();
-          
-          // 大星星添加十字光芒
-          if (star.size > 1.5) {
-            ctx.strokeStyle = star.color;
-            ctx.lineWidth = 0.5;
-            const glowSize = star.size * 3;
-            ctx.beginPath();
-            ctx.moveTo(star.x - glowSize, star.y);
-            ctx.lineTo(star.x + glowSize, star.y);
-            ctx.moveTo(star.x, star.y - glowSize);
-            ctx.lineTo(star.x, star.y + glowSize);
-            ctx.stroke();
-          }
-        });
-        ctx.globalAlpha = 1;
-      }
 
       if (currentView === 'spiral') {
         // 更新旋转（如果没有拖动、没有触摸操作、且鼠标不在螺旋体上）
@@ -1914,23 +1703,7 @@ export default function ProfessionalSpiralTower() {
         // 保存渲染对象到 ref，用于点击检测
         renderObjectsRef.current = renderObjects;
 
-        // LOD 辅助函数：根据 z 值计算细节层次
-        const getLODLevel = (z: number | undefined): { level: 'high' | 'medium' | 'low', scale: number } => {
-          if (z === undefined) return { level: 'high', scale: 1 };
-          const maxZ = 1;
-          const minZ = -1;
-          const normalizedZ = Math.max(minZ, Math.min(maxZ, z));
-          const zFactor = (normalizedZ - minZ) / (maxZ - minZ); // 0-1, 1表示最近
-          
-          if (zFactor > 0.6) return { level: 'high', scale: 1 };
-          if (zFactor > 0.3) return { level: 'medium', scale: 0.6 };
-          return { level: 'low', scale: 0.3 };
-        };
-
-        // 绘制学院轨道线（椭圆）- 多层光晕 + 流动虚线效果
-        const time = animationTimeRef.current;
-        
-        ctx.save();
+        // 绘制学院轨道线（椭圆）- 优化：使用角度缓存
         ctx.beginPath();
         for (let i = 0; i <= orbitSteps; i++) {
           const angleCacheItem = orbitAngleCache[i];
@@ -1944,104 +1717,9 @@ export default function ProfessionalSpiralTower() {
           }
         }
         ctx.closePath();
-        
-        // 最外层大光晕（柔和蓝色光晕）
-        ctx.strokeStyle = 'rgba(60, 140, 255, 0.12)';
-        ctx.lineWidth = 24;
+        ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+        ctx.lineWidth = 4;
         ctx.stroke();
-        
-        // 外层光晕（蓝色）
-        ctx.strokeStyle = 'rgba(80, 160, 255, 0.2)';
-        ctx.lineWidth = 16;
-        ctx.stroke();
-        
-        // 中层光晕（亮蓝色）
-        ctx.strokeStyle = 'rgba(100, 180, 255, 0.3)';
-        ctx.lineWidth = 10;
-        ctx.stroke();
-        
-        // 内层光晕（白色）
-        ctx.strokeStyle = 'rgba(200, 220, 255, 0.4)';
-        ctx.lineWidth = 5;
-        ctx.stroke();
-        
-        // 主轨道线（白色实线 + 蓝色虚线叠加）
-        ctx.strokeStyle = 'rgba(220, 240, 255, 0.7)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        
-        // 流动的虚线光点效果
-        ctx.setLineDash([8, 16]); // 短虚线
-        ctx.lineDashOffset = -time * 30; // 快速流动效果
-        ctx.strokeStyle = 'rgba(150, 200, 255, 0.8)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // 第二层流动虚线（错位产生更多光点）
-        ctx.setLineDash([12, 24]);
-        ctx.lineDashOffset = -time * 30 + 12;
-        ctx.strokeStyle = 'rgba(200, 230, 255, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        ctx.restore();
-
-        // 绘制专业次级轨道（每个学院的专业小轨道）- 发光连接线
-        renderObjects.filter(obj => obj.type === 'major').forEach(obj => {
-          if (obj.parentIndex === undefined) return;
-          const parentObj = renderObjects.find(o => o.type === 'department' && o.index === obj.parentIndex);
-          if (!parentObj || parentObj.x === undefined || parentObj.y === undefined) return;
-          // LOD: 只在中等以上细节层次绘制专业轨道线
-          const lod = getLODLevel(parentObj.z);
-          if (lod.level === 'low') return;
-          
-          // 绘制专业到学院的连接线 - 多层光晕效果
-          ctx.save();
-          
-          // 外层光晕
-          ctx.beginPath();
-          ctx.moveTo(parentObj.x, parentObj.y);
-          ctx.lineTo(obj.x || 0, obj.y || 0);
-          ctx.strokeStyle = 'rgba(100, 180, 255, 0.15)';
-          ctx.lineWidth = lod.level === 'medium' ? 3 : 5;
-          ctx.stroke();
-          
-          // 中层光晕
-          ctx.beginPath();
-          ctx.moveTo(parentObj.x, parentObj.y);
-          ctx.lineTo(obj.x || 0, obj.y || 0);
-          ctx.strokeStyle = 'rgba(150, 200, 255, 0.25)';
-          ctx.lineWidth = lod.level === 'medium' ? 1.5 : 2.5;
-          ctx.stroke();
-          
-          // 核心线（渐变）
-          ctx.beginPath();
-          ctx.moveTo(parentObj.x, parentObj.y);
-          ctx.lineTo(obj.x || 0, obj.y || 0);
-          const lineGradient = ctx.createLinearGradient(parentObj.x, parentObj.y, obj.x || 0, obj.y || 0);
-          lineGradient.addColorStop(0, 'rgba(200, 220, 255, 0.6)');
-          lineGradient.addColorStop(0.5, 'rgba(150, 190, 255, 0.35)');
-          lineGradient.addColorStop(1, 'rgba(100, 170, 255, 0.15)');
-          ctx.strokeStyle = lineGradient;
-          ctx.lineWidth = lod.level === 'medium' ? 0.5 : 1;
-          ctx.stroke();
-          
-          // 流动光点
-          const dist = Math.sqrt(Math.pow((obj.x || 0) - parentObj.x, 2) + Math.pow((obj.y || 0) - parentObj.y, 2));
-          const dotPos = (time * 40) % (dist * 2);
-          if (dotPos < dist) {
-            const dotX = parentObj.x + ((obj.x || 0) - parentObj.x) * (dotPos / dist);
-            const dotY = parentObj.y + ((obj.y || 0) - parentObj.y) * (dotPos / dist);
-            ctx.beginPath();
-            ctx.arc(dotX, dotY, lod.level === 'medium' ? 1.5 : 2, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(200, 230, 255, 0.8)';
-            ctx.fill();
-          }
-          
-          ctx.restore();
-        });
 
         // 找到高亮专业所属的学院索引
         const highlightedParentIndex = highlightedMajor
@@ -2050,9 +1728,6 @@ export default function ProfessionalSpiralTower() {
 
         // 绘制球体
         renderObjects.forEach(obj => {
-          // 计算 LOD 细节层次
-          const lod = getLODLevel(obj.z);
-          
           // 学院球不透明，固定透明度为1
           const opacity = 1;
 
@@ -2071,19 +1746,9 @@ export default function ProfessionalSpiralTower() {
 
           // 检查是否是高亮显示的专业
           const isHighlighted = obj.type === 'major' && obj.majorData?.name === highlightedMajor;
-          const objAngle = obj.angle || 0; // 获取该专业在轨道上的角度
           
           if (obj.type === 'major') {
-            // LOD: 低细节只显示小圆点，无特效
-            if (lod.level === 'low') {
-              ctx.beginPath();
-              ctx.arc(obj.x || 0, obj.y || 0, obj.radius, 0, Math.PI * 2);
-              ctx.fillStyle = obj.color;
-              ctx.fill();
-              return; // 跳过当前对象，继续下一个
-            }
-            
-            const tailLength = lod.level === 'high' ? 3 : 1;
+            const tailLength = 3;
             // 如果是高亮的专业，增加发光效果
             const glowIntensity = isHighlighted ? (0.6 + Math.sin(animationTimeRef.current * 8) * 0.4) : 0;
             const highlightGlow = isHighlighted;
@@ -2092,7 +1757,6 @@ export default function ProfessionalSpiralTower() {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
               // 专业球使用单色，不带纹理，enable3D: false
               drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow, false);
-
             }
             
             // 绘制球体
@@ -2110,114 +1774,55 @@ export default function ProfessionalSpiralTower() {
               // 核心球体：单色，与学院球主色调一致
               drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, false);
               
-              // 显示专业名称（沿轨道切线方向弧形排列）
+              // 显示专业名称（带发光背景）
               const majorFontSize = isMobileSolar ? 8 : 9;
-              const majorName = obj.majorData?.name || '';
-              const textRadius = obj.radius + 18; // 文字距球心的半径
-              const charSpacing = 5; // 字符间距
-              
-              // 计算文字起始角度（沿轨道切线方向）
-              const tangentAngle = objAngle + Math.PI / 2; // 切线方向
-              const textLength = majorName.length * charSpacing;
-              const startAngle = tangentAngle - (textLength / textRadius) / 2;
-              
-              // 绘制弧形文字
-              ctx.save();
-              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
+              const textX = obj.x || 0;
+              const textY = (obj.y || 0) + obj.radius + 14;
+              // 文字背景发光
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1) + 2}px sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              
-              // 为每个字符单独绘制，形成弧形效果
-              const centerX = obj.x || 0;
-              const centerY = obj.y || 0;
-              
-              for (let i = 0; i < majorName.length; i++) {
-                const charAngle = startAngle + (i * charSpacing / textRadius);
-                const charX = centerX + Math.cos(charAngle) * textRadius;
-                const charY = centerY + Math.sin(charAngle) * textRadius;
-                
-                // 计算字符旋转角度（指向球心）
-                const rotation = charAngle + Math.PI / 2;
-                
-                ctx.save();
-                ctx.translate(charX, charY);
-                ctx.rotate(rotation);
-                ctx.fillText(majorName[i], 0, 0);
-                ctx.restore();
-              }
-              ctx.restore();
+              const textMetrics = ctx.measureText(obj.majorData?.name || '');
+              const textWidth = textMetrics.width;
+              const textHeight = majorFontSize * (obj.scale || 1);
+              // 绘制文字背景
+              ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * glowIntensity})`;
+              ctx.fillRect(textX - textWidth / 2 - 4, textY - textHeight / 2 - 2, textWidth + 8, textHeight + 4);
+              // 绘制文字
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
+              ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
               // 普通专业球：单色，与学院球主色调一致，无纹理
               drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false, false);
-              
-              // 普通专业名称（根据 LOD 决定是否显示）
-              // LOD: 只有高细节才显示专业名称，中等细节只显示高亮专业的名称
-              if (lod.level === 'high' && obj.scale && obj.scale > 0.5) {
-                const minorFontSize = isMobileSolar ? 6 : 7;
-                const textX = obj.x || 0;
-                const textY = (obj.y || 0) - obj.radius - 8;
-                
-                ctx.font = `${minorFontSize * obj.scale}px sans-serif`;
-                ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.7})`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                
-                // 文字描边效果
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.lineWidth = 1.5;
-                ctx.strokeText(obj.majorData?.name || '', textX, textY);
-                ctx.fillText(obj.majorData?.name || '', textX, textY);
-              }
             }
           } else if (obj.type === 'sun') {
-            // LOD: 低细节只显示核心太阳，无光晕
-            if (lod.level === 'low') {
-              const x = obj.x || 0;
-              const y = obj.y || 0;
-              const r = obj.radius;
-              
-              const sunCore = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 0, x, y, r);
-              sunCore.addColorStop(0, `rgba(255, 255, 230, 1)`);
-              sunCore.addColorStop(0.5, `rgba(255, 230, 150, 1)`);
-              sunCore.addColorStop(1, `rgba(255, 200, 100, 1)`);
-              ctx.beginPath();
-              ctx.arc(x, y, r, 0, Math.PI * 2);
-              ctx.fillStyle = sunCore;
-              ctx.fill();
-              return; // 跳过当前对象，继续下一个
-            }
-            
             // Google Earth 太阳效果：均匀的径向渐变，无纹理
             const x = obj.x || 0;
             const y = obj.y || 0;
             const r = obj.radius;
             
-            // 最外层大光晕（柔和淡出）- LOD: 只有高细节才显示
-            if (lod.level === 'high') {
-              const outerGlow = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 3);
-              outerGlow.addColorStop(0, `rgba(255, 200, 100, 0.5)`);
-              outerGlow.addColorStop(0.4, `rgba(255, 180, 80, 0.25)`);
-              outerGlow.addColorStop(0.7, `rgba(255, 150, 50, 0.1)`);
-              outerGlow.addColorStop(1, `rgba(255, 120, 30, 0)`);
-              ctx.beginPath();
-              ctx.arc(x, y, r * 3, 0, Math.PI * 2);
-              ctx.fillStyle = outerGlow;
-              ctx.fill();
-            }
+            // 最外层大光晕（柔和淡出）
+            const outerGlow = ctx.createRadialGradient(x, y, r * 0.8, x, y, r * 3);
+            outerGlow.addColorStop(0, `rgba(255, 200, 100, 0.5)`);
+            outerGlow.addColorStop(0.4, `rgba(255, 180, 80, 0.25)`);
+            outerGlow.addColorStop(0.7, `rgba(255, 150, 50, 0.1)`);
+            outerGlow.addColorStop(1, `rgba(255, 120, 30, 0)`);
+            ctx.beginPath();
+            ctx.arc(x, y, r * 3, 0, Math.PI * 2);
+            ctx.fillStyle = outerGlow;
+            ctx.fill();
             
-            // 中层光晕 - LOD: 中等及以上细节显示
-            if (lod.level === 'medium' || lod.level === 'high') {
-              const midGlow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 1.8);
-              midGlow.addColorStop(0, `rgba(255, 255, 220, 0.9)`);
-              midGlow.addColorStop(0.3, `rgba(255, 230, 150, 0.8)`);
-              midGlow.addColorStop(0.6, `rgba(255, 200, 100, 0.7)`);
-              midGlow.addColorStop(1, `rgba(255, 180, 80, 0.4)`);
-              ctx.beginPath();
-              ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
-              ctx.fillStyle = midGlow;
-              ctx.fill();
-            }
+            // 中层光晕
+            const midGlow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 1.8);
+            midGlow.addColorStop(0, `rgba(255, 255, 220, 0.9)`);
+            midGlow.addColorStop(0.3, `rgba(255, 230, 150, 0.8)`);
+            midGlow.addColorStop(0.6, `rgba(255, 200, 100, 0.7)`);
+            midGlow.addColorStop(1, `rgba(255, 180, 80, 0.4)`);
+            ctx.beginPath();
+            ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
+            ctx.fillStyle = midGlow;
+            ctx.fill();
             
             // 核心球体（中心白、向外渐变到橙黄色）
             const sunCore = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, 0, x, y, r);
@@ -2231,8 +1836,8 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = sunCore;
             ctx.fill();
 
-            // 在太阳球下方绘制年份（只显示数字，响应式字体）- LOD: 高细节才显示
-            if (lod.level === 'high' && selectedYear) {
+            // 在太阳球下方绘制年份（只显示数字，响应式字体）
+            if (selectedYear) {
               const sunFontSize = isMobileSolar ? 13 : (isTabletSolar ? 14 : 15);
               const scale = obj.scale || 1;
               const yearText = selectedYear.toString();
@@ -2264,22 +1869,6 @@ export default function ProfessionalSpiralTower() {
             const isCollegeHighlighted = highlightedParentIndex !== undefined && obj.index === highlightedParentIndex;
             const collegeGlowIntensity = isCollegeHighlighted ? (0.5 + Math.sin(animationTimeRef.current * 6) * 0.5) : 0;
             
-            // LOD: 低细节只显示纯色球体，跳过所有特效
-            if (lod.level === 'low') {
-              ctx.beginPath();
-              ctx.arc(obj.x || 0, obj.y || 0, obj.radius, 0, Math.PI * 2);
-              ctx.fillStyle = obj.color;
-              ctx.fill();
-              // 低细节也显示学院名称（简化）
-              const deptFontSize = isMobileSolar ? 6 : 7;
-              ctx.font = `${deptFontSize}px sans-serif`;
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-              ctx.textAlign = 'center';
-              const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
-              ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + obj.radius + 8);
-              return; // 跳过当前对象，继续下一个
-            }
-            
             // 如果学院被高亮，绘制多层发光效果（发光范围缩小三分之二）
             if (isCollegeHighlighted) {
               // 最外层大光晕（缩小到原来的1/3）
@@ -2293,101 +1882,12 @@ export default function ProfessionalSpiralTower() {
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true, false);
             }
             
-            // 如果是土星环主题，先绘制土星环（在球体后面）- LOD: 只在高细节显示完整环
-            if (lod.level === 'high' && obj.planetData?.theme === 'ringed' && obj.planetData?.ringColor) {
-              const ringRadiusX = obj.radius * 2.2;
-              const ringRadiusY = obj.radius * 0.4;
-              const ringColor = obj.planetData.ringColor;
-              
-              ctx.save();
-              ctx.translate(obj.x || 0, obj.y || 0);
-              ctx.rotate(0.3); // 倾斜角度
-              
-              // 绘制环（多层效果）
-              // 外层淡环
-              ctx.beginPath();
-              ctx.ellipse(0, 0, ringRadiusX * 1.1, ringRadiusY * 1.1, 0, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(${parseInt(ringColor.slice(4, -1).split(',')[0])}, ${parseInt(ringColor.slice(4, -1).split(',')[1])}, ${parseInt(ringColor.slice(4, -1).split(',')[2])}, 0.15)`;
-              ctx.lineWidth = obj.radius * 0.15;
-              ctx.stroke();
-              
-              // 主环
-              ctx.beginPath();
-              ctx.ellipse(0, 0, ringRadiusX, ringRadiusY, 0, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(${parseInt(ringColor.slice(4, -1).split(',')[0])}, ${parseInt(ringColor.slice(4, -1).split(',')[1])}, ${parseInt(ringColor.slice(4, -1).split(',')[2])}, 0.35)`;
-              ctx.lineWidth = obj.radius * 0.2;
-              ctx.stroke();
-              
-              // 内层亮环
-              ctx.beginPath();
-              ctx.ellipse(0, 0, ringRadiusX * 0.85, ringRadiusY * 0.85, 0, 0, Math.PI * 2);
-              ctx.strokeStyle = `rgba(255, 255, 255, 0.25)`;
-              ctx.lineWidth = obj.radius * 0.08;
-              ctx.stroke();
-              
-              ctx.restore();
-            } else if (lod.level === 'medium' && obj.planetData?.theme === 'ringed' && obj.planetData?.ringColor) {
-              // 中等细节：只绘制简化的单环
-              const ringRadiusX = obj.radius * 2.2;
-              const ringRadiusY = obj.radius * 0.4;
-              
-              ctx.save();
-              ctx.translate(obj.x || 0, obj.y || 0);
-              ctx.rotate(0.3);
-              ctx.beginPath();
-              ctx.ellipse(0, 0, ringRadiusX, ringRadiusY, 0, 0, Math.PI * 2);
-              ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-              ctx.lineWidth = obj.radius * 0.15;
-              ctx.stroke();
-              ctx.restore();
-            }
-            
-            // 添加大气辉光效果（所有学院球）- LOD: 低细节不显示
-            if ((lod.level === 'medium' || lod.level === 'high') && (shouldGlow || isCollegeHighlighted)) {
-              const glowIntensity = isCollegeHighlighted ? 0.4 : 0.2;
-              const atmosRadius = obj.radius * (1.3 + Math.sin(animationTimeRef.current * 2 + (obj.index || 0)) * 0.05);
-              
-              ctx.save();
-              ctx.beginPath();
-              ctx.arc(obj.x || 0, obj.y || 0, atmosRadius, 0, Math.PI * 2);
-              const atmosGradient = ctx.createRadialGradient(obj.x || 0, obj.y || 0, obj.radius, obj.x || 0, obj.y || 0, atmosRadius);
-              atmosGradient.addColorStop(0, `rgba(${parseInt(obj.color.slice(1, 3), 16)}, ${parseInt(obj.color.slice(3, 5), 16)}, ${parseInt(obj.color.slice(5, 7), 16)}, ${glowIntensity})`);
-              atmosGradient.addColorStop(0.5, `rgba(${parseInt(obj.color.slice(1, 3), 16)}, ${parseInt(obj.color.slice(3, 5), 16)}, ${parseInt(obj.color.slice(5, 7), 16)}, ${glowIntensity * 0.5})`);
-              atmosGradient.addColorStop(1, `rgba(${parseInt(obj.color.slice(1, 3), 16)}, ${parseInt(obj.color.slice(3, 5), 16)}, ${parseInt(obj.color.slice(5, 7), 16)}, 0)`);
-              ctx.fillStyle = atmosGradient;
-              ctx.fill();
-              ctx.restore();
-            }
-            
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            // LOD: 中等细节简化纹理渲染
             const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
-            const enableTextures = (lod.level === 'medium' || lod.level === 'high');
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, enableTextures, obj.planetData, planetRotation);
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
-            // 如果是土星环主题，在球体前面再绘制一部分环 - LOD: 只在高细节显示
-            if (lod.level === 'high' && obj.planetData?.theme === 'ringed' && obj.planetData?.ringColor) {
-              const ringRadiusX = obj.radius * 2.2;
-              const ringRadiusY = obj.radius * 0.4;
-              
-              ctx.save();
-              ctx.translate(obj.x || 0, obj.y || 0);
-              ctx.rotate(0.3);
-              
-              // 只绘制下半部分环（创造3D穿越效果）
-              ctx.beginPath();
-              ctx.ellipse(0, 0, ringRadiusX, ringRadiusY, 0, Math.PI, Math.PI * 2);
-              ctx.strokeStyle = `rgba(${parseInt(obj.planetData.ringColor.slice(4, -1).split(',')[0])}, ${parseInt(obj.planetData.ringColor.slice(4, -1).split(',')[1])}, ${parseInt(obj.planetData.ringColor.slice(4, -1).split(',')[2])}, 0.25)`;
-              ctx.lineWidth = obj.radius * 0.12;
-              ctx.stroke();
-              
-              ctx.restore();
-            }
-
-            // 响应式字体大小 - LOD: 中等细节简化字体
-            const deptFontSize = lod.level === 'high' 
-              ? (isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9))
-              : (isMobileSolar ? 5 : 6);
+            // 响应式字体大小
+            const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
             ctx.font = `${deptFontSize * (obj.scale || 1)}px sans-serif`;
             ctx.fillStyle = searchMatch || isCollegeHighlighted ? '#FFD700' : `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
@@ -2916,33 +2416,6 @@ export default function ProfessionalSpiralTower() {
         font-size: 18px;
       }
     }
-
-    /* 时间轴滑块样式 */
-    .slider-blue::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: white;
-      cursor: pointer;
-      border: 2px solid #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .slider-blue::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
-    }
-    .slider-blue::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: white;
-      cursor: pointer;
-      border: 2px solid #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    }
   `;
 
   if (loading) {
@@ -3098,79 +2571,6 @@ export default function ProfessionalSpiralTower() {
           })()}
         </div>
       </div>
-
-      {/* 年份时间轴（太阳系视图） */}
-      {currentView === 'solar' && (
-        <div className="fixed bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-48px)] md:w-[calc(100%-64px)] max-w-lg">
-          <div className="bg-black/70 backdrop-blur-md border border-blue-400/40 rounded-xl px-4 py-3 shadow-xl">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[10px] text-white/60">1956</span>
-              <span className="text-[12px] md:text-[14px] font-bold text-blue-400">{selectedYear || 2025}年</span>
-              <span className="text-[10px] text-white/60">{maxYear}</span>
-            </div>
-            <div className="relative">
-              <input
-                type="range"
-                min="1956"
-                max={maxYear}
-                value={selectedYear || maxYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-700/50 rounded-full appearance-none cursor-pointer slider-blue"
-                style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)`
-                }}
-              />
-              {/* 时间轴标记点 */}
-              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-1 pointer-events-none">
-                {[1956, 1966, 1976, 1986, 1996, 2006, 2016, 2025].map(year => (
-                  <div
-                    key={year}
-                    className={`w-1.5 h-1.5 rounded-full ${(selectedYear || maxYear) >= year ? 'bg-blue-400' : 'bg-gray-500/50'}`}
-                    style={{
-                      position: 'absolute',
-                      left: `${((year - 1956) / (maxYear - 1956)) * 100}%`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-            {/* 快速跳转按钮 */}
-            <div className="flex justify-between mt-2">
-              <button
-                onClick={() => setSelectedYear(1956)}
-                className="text-[9px] text-white/50 hover:text-blue-400 transition-colors"
-              >
-                建校
-              </button>
-              <button
-                onClick={() => setSelectedYear(1965)}
-                className="text-[9px] text-white/50 hover:text-blue-400 transition-colors"
-              >
-                迁入
-              </button>
-              <button
-                onClick={() => setSelectedYear(2001)}
-                className="text-[9px] text-white/50 hover:text-blue-400 transition-colors"
-              >
-                合并
-              </button>
-              <button
-                onClick={() => setSelectedYear(2017)}
-                className="text-[9px] text-white/50 hover:text-blue-400 transition-colors"
-              >
-                双一流
-              </button>
-              <button
-                onClick={() => setSelectedYear(maxYear)}
-                className="text-[9px] text-white/50 hover:text-blue-400 transition-colors"
-              >
-                现今
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 螺旋视图年份提示框 */}
       {currentView === 'spiral' && tooltip.visible && (
