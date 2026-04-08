@@ -2047,20 +2047,6 @@ export default function ProfessionalSpiralTower() {
       {/* 缩放控制（只在太阳系视图中显示） */}
       {currentView === 'solar' && (
         <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
-          {/* 显示已选中的高亮专业名 */}
-          {highlightedMajor && (
-            <div className="relative w-36 md:w-40 bg-blue-500/30 border border-blue-400/50 rounded-md px-3 py-2 text-center">
-              <span className="text-[11px] md:text-[12px] text-white font-medium animate-pulse">
-                {highlightedMajor}
-              </span>
-              <button
-                onClick={() => setHighlightedMajor(null)}
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center hover:bg-red-600"
-              >
-                ×
-              </button>
-            </div>
-          )}
           {/* 太阳系视图搜索框 */}
           <div className="relative w-36 md:w-40 search-container">
             <input
@@ -2068,7 +2054,7 @@ export default function ProfessionalSpiralTower() {
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onFocus={() => setSearchOpen(true)}
-              placeholder={highlightedMajor ? "重新搜索..." : "搜索专业..."}
+              placeholder="搜索专业..."
               className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
             />
             {searchOpen && searchKeyword && (
