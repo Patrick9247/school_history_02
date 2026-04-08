@@ -1,20 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { CheckIcon, SearchIcon } from 'lucide-react';
 
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
 const SPECIAL_YEAR_COLORS: Record<number, string> = {
@@ -498,9 +484,8 @@ export default function ProfessionalSpiralTower() {
   }, [fetchData]);
 
   // 用户发送的光球状态
-  const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户在Select中选中的专业
-  const [popoverOpen, setPopoverOpen] = useState(false); // Popover 打开状态
-  const [searchTerm, setSearchTerm] = useState(''); // 搜索关键词
+  const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户选中的专业
+  const [popoverOpen, setPopoverOpen] = useState(false); // 下拉列表打开状态
   const userLightBallsRef = useRef<Array<{
     majorName: string;
     progress: number;
@@ -537,6 +522,24 @@ export default function ProfessionalSpiralTower() {
 
     userLightBallsRef.current.push(newLightBall);
   };
+
+  // 点击外部关闭下拉列表
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.major-input-container')) {
+        setPopoverOpen(false);
+      }
+    };
+
+    if (popoverOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [popoverOpen]);
 
   // Canvas 绘制
   useEffect(() => {
@@ -1824,66 +1827,51 @@ export default function ProfessionalSpiralTower() {
       {/* 用户发送光球选择框 */}
       <div className="absolute right-3 md:right-4 top-16 md:top-20 z-20">
         <div className="flex flex-col items-end gap-2">
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <button
-                className={`w-36 md:w-44 h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 transition-colors flex items-center justify-between ${!userSelectedMajor ? 'placeholder-white/30' : ''}`}
-                onClick={() => setPopoverOpen(!popoverOpen)}
-              >
-                <span className="truncate">
-                  {userSelectedMajor || "选择专业..."}
-                </span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-50">
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[calc(100vw-32px)] md:w-72 p-0 bg-[rgba(8,12,25,0.98)] border border-blue-400/40"
-              align="end"
-              side="bottom"
-            >
-              <Command className="rounded-lg border-0 shadow-md">
-                <div className="flex items-center border-b border-white/10 px-3">
-                  <SearchIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                  <input
-                    placeholder="搜索专业..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-hidden placeholder:text-white/30 text-white/90 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                </div>
-                <CommandList className="max-h-64">
-                  <CommandEmpty className="text-[11px] text-white/50 py-6">
-                    未找到匹配的专业
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {allMajors
+          <div className="relative w-36 md:w-44 major-input-container">
+            <input
+              type="text"
+              value={userSelectedMajor}
+              onChange={(e) => {
+                setUserSelectedMajor(e.target.value);
+                setPopoverOpen(true);
+              }}
+              onFocus={() => setPopoverOpen(true)}
+              placeholder=""
+              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-transparent"
+            />
+            {popoverOpen && (
+              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
+                <div className="max-h-64 overflow-y-auto p-1">
+                  {allMajors
+                    .filter(major =>
+                      major.toLowerCase().includes(userSelectedMajor.toLowerCase())
+                    )
+                    .length === 0 ? (
+                    <div className="text-[11px] text-white/50 py-6 text-center">
+                      未找到匹配的专业
+                    </div>
+                  ) : (
+                    allMajors
                       .filter(major =>
-                        major.toLowerCase().includes(searchTerm.toLowerCase())
+                        major.toLowerCase().includes(userSelectedMajor.toLowerCase())
                       )
                       .map((major) => (
-                        <CommandItem
+                        <div
                           key={major}
-                          value={major}
-                          onSelect={(value) => {
-                            setUserSelectedMajor(value);
+                          onClick={() => {
+                            setUserSelectedMajor(major);
                             setPopoverOpen(false);
-                            setSearchTerm('');
                           }}
-                          className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 focus:bg-blue-400/30 cursor-pointer"
+                          className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex items-center"
                         >
-                          <CheckIcon
-                            className={`mr-2 h-3 w-3 ${userSelectedMajor === major ? 'opacity-100' : 'opacity-0'}`}
-                          />
                           {major}
-                        </CommandItem>
-                      ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={sendLightBall}
             disabled={!userSelectedMajor}
