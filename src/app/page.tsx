@@ -1491,7 +1491,173 @@ export default function ProfessionalSpiralTower() {
       ctx.stroke();
     };
 
-    // 绘制球体（保留原函数用于其他场景）
+    // 绘制真实天体质感的3D球体（用于螺旋页面的年度球）
+    const drawCelestialSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean) => {
+      // 防止无效值
+      if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
+        return;
+      }
+
+      // 保存上下文状态
+      ctx.save();
+
+      // 创建圆形裁剪区域
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      // === 第一层：球体基础光照渐变 ===
+      // 光源位置：左上方45度
+      const lightAngle = -Math.PI / 4;
+      const lightX = x + Math.cos(lightAngle) * radius * 0.6;
+      const lightY = y + Math.sin(lightAngle) * radius * 0.6;
+      
+      // 强光照渐变（7层）
+      const baseGradient = ctx.createRadialGradient(
+        lightX, lightY, 0,
+        x, y, radius * 1.5
+      );
+      baseGradient.addColorStop(0, adjustBrightness(color, 90));    // 核心高光
+      baseGradient.addColorStop(0.1, adjustBrightness(color, 70));  // 强高光
+      baseGradient.addColorStop(0.25, adjustBrightness(color, 45)); // 中高光
+      baseGradient.addColorStop(0.45, adjustBrightness(color, 20));  // 过渡区
+      baseGradient.addColorStop(0.6, color);                         // 正常色
+      baseGradient.addColorStop(0.8, adjustBrightness(color, -30));// 阴影区
+      baseGradient.addColorStop(1, adjustBrightness(color, -55));   // 深阴影
+
+      ctx.fillStyle = baseGradient;
+      ctx.globalAlpha = opacity;
+      ctx.fill();
+
+      // === 第二层：表面纹理（米粒组织/表面细节）===
+      // 添加微小的表面起伏感
+      const textureSeed = Math.floor(x * 100 + y);
+      for (let i = 0; i < radius * 1.5; i++) {
+        const texX = x + ((Math.sin(textureSeed * 3.7 + i * 12.3) * 0.5 + 0.5) - 0.5) * radius * 2;
+        const texY = y + ((Math.cos(textureSeed * 5.1 + i * 8.7) * 0.5 + 0.5) - 0.5) * radius * 2;
+        const dist = Math.sqrt((texX - x) ** 2 + (texY - y) ** 2);
+        if (dist < radius * 0.95) {
+          const brightness = Math.sin(textureSeed + i * 7.3) > 0.5 ? 8 : -5;
+          ctx.fillStyle = addAlpha(brightness > 0 ? '#ffffff' : '#000000', 0.08);
+          ctx.fillRect(texX, texY, Math.max(0.5, radius * 0.08), Math.max(0.5, radius * 0.08));
+        }
+      }
+
+      // 恢复上下文状态
+      ctx.restore();
+
+      // === 第三层：主镜面高光（真实天体的高光反射）===
+      const highlightX = x - radius * 0.4;
+      const highlightY = y - radius * 0.4;
+      const highlightGrad = ctx.createRadialGradient(
+        highlightX, highlightY, 0,
+        highlightX, highlightY, radius * 0.7
+      );
+      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      highlightGrad.addColorStop(0.15, 'rgba(255, 255, 255, 0.7)');
+      highlightGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.3)');
+      highlightGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.08)');
+      highlightGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = highlightGrad;
+      ctx.globalAlpha = opacity;
+      ctx.fill();
+
+      // === 第四层：次高光区域 ===
+      const secondaryX = x - radius * 0.25;
+      const secondaryY = y - radius * 0.3;
+      const secondaryGrad = ctx.createRadialGradient(
+        secondaryX, secondaryY, 0,
+        secondaryX, secondaryY, radius * 0.5
+      );
+      secondaryGrad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      secondaryGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)');
+      secondaryGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = secondaryGrad;
+      ctx.globalAlpha = opacity * 0.8;
+      ctx.fill();
+
+      // === 第五层：背光阴影 ===
+      const shadowX = x + radius * 0.45;
+      const shadowY = y + radius * 0.45;
+      const shadowGrad = ctx.createRadialGradient(
+        shadowX, shadowY, radius * 0.3,
+        shadowX, shadowY, radius * 1.4
+      );
+      shadowGrad.addColorStop(0, 'transparent');
+      shadowGrad.addColorStop(0.5, 'rgba(0, 0, 20, 0.15)');
+      shadowGrad.addColorStop(1, 'rgba(0, 0, 20, 0.35)');
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = shadowGrad;
+      ctx.globalAlpha = opacity;
+      ctx.fill();
+
+      // === 第六层：边缘大气光晕 ===
+      const atmosphereGrad = ctx.createRadialGradient(
+        x, y, radius * 0.82,
+        x, y, radius * 1.2
+      );
+      atmosphereGrad.addColorStop(0, 'transparent');
+      atmosphereGrad.addColorStop(0.4, addAlpha(adjustBrightness(color, 40), 0.12));
+      atmosphereGrad.addColorStop(0.7, addAlpha(adjustBrightness(color, 20), 0.08));
+      atmosphereGrad.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(x, y, radius * 1.2, 0, Math.PI * 2);
+      ctx.fillStyle = atmosphereGrad;
+      ctx.globalAlpha = opacity * 0.7;
+      ctx.fill();
+
+      // === 第七层：边缘轮廓线 ===
+      // 内边缘高光
+      ctx.beginPath();
+      ctx.arc(x, y, radius - 0.3, 0, Math.PI * 2);
+      ctx.strokeStyle = addAlpha('#ffffff', 0.25);
+      ctx.lineWidth = 0.5;
+      ctx.globalAlpha = opacity;
+      ctx.stroke();
+      // 外边缘暗线
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = adjustBrightness(color, -65);
+      ctx.lineWidth = 1.2;
+      ctx.globalAlpha = opacity * 0.8;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // === 外发光效果 ===
+      if (glow) {
+        // 内层辉光
+        const innerGlowGrad = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius * 1.6);
+        innerGlowGrad.addColorStop(0, addAlpha(color, 0.5));
+        innerGlowGrad.addColorStop(0.35, addAlpha(color, 0.25));
+        innerGlowGrad.addColorStop(0.65, addAlpha(color, 0.1));
+        innerGlowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.6, 0, Math.PI * 2);
+        ctx.fillStyle = innerGlowGrad;
+        ctx.globalAlpha = opacity * 0.85;
+        ctx.fill();
+
+        // 外层大气辉光
+        const outerGlowGrad = ctx.createRadialGradient(x, y, radius * 1.4, x, y, radius * 3);
+        outerGlowGrad.addColorStop(0, addAlpha(color, 0.25));
+        outerGlowGrad.addColorStop(0.3, addAlpha(color, 0.1));
+        outerGlowGrad.addColorStop(0.6, addAlpha(color, 0.04));
+        outerGlowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = outerGlowGrad;
+        ctx.globalAlpha = opacity * 0.5;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    };
+
+    // 绘制球体（用于其他场景，保留原有函数）
     const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
@@ -1972,9 +2138,9 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光，显示3D效果
+          // 所有年度球都发光，使用真实天体3D质感
           const shouldGlow = true;
-          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, true);
+          drawCelestialSphere(node.x, node.y, size, color, opacity, shouldGlow);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           // 当是关键事件或鼠标悬停在该年份时，显示详细信息
