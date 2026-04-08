@@ -1,6 +1,13 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
 const SPECIAL_YEAR_COLORS: Record<number, string> = {
@@ -234,6 +241,17 @@ export default function ProfessionalSpiralTower() {
   const colleges = useMemo((): College[] => {
     return collegesWithMajors.length > 0 ? collegesWithMajors : baseColleges;
   }, [collegesWithMajors, baseColleges]);
+
+  // 提取所有专业列表（去重）
+  const allMajors = useMemo(() => {
+    const majorSet = new Set<string>();
+    colleges.forEach(college => {
+      college.majors.forEach(major => {
+        majorSet.add(major.name);
+      });
+    });
+    return Array.from(majorSet).sort();
+  }, [colleges]);
 
   // 优化：缓存最大年份，避免重复计算
   const maxYear = useMemo(() => {
@@ -473,7 +491,7 @@ export default function ProfessionalSpiralTower() {
   }, [fetchData]);
 
   // 用户发送的光球状态
-  const [userMajorName, setUserMajorName] = useState('');
+  const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户在Select中选中的专业
   const userLightBallsRef = useRef<Array<{
     majorName: string;
     progress: number;
@@ -490,19 +508,25 @@ export default function ProfessionalSpiralTower() {
     };
   }>>([]);
 
+  // 初始化默认选中第一个专业
+  useEffect(() => {
+    if (allMajors.length > 0 && !userSelectedMajor) {
+      setUserSelectedMajor(allMajors[0]);
+    }
+  }, [allMajors, userSelectedMajor]);
+
   // 发送光球
   const sendLightBall = () => {
-    if (!userMajorName.trim()) return;
+    if (!userSelectedMajor) return;
 
     const newLightBall = {
-      majorName: userMajorName,
+      majorName: userSelectedMajor,
       progress: 0,
       color: getRandomLightColor(),
       createdAt: animationTimeRef.current
     };
 
     userLightBallsRef.current.push(newLightBall);
-    setUserMajorName(''); // 清空输入框
   };
 
   // Canvas 绘制
@@ -1788,26 +1812,32 @@ export default function ProfessionalSpiralTower() {
         </div>
       )}
 
-      {/* 用户发送光球输入框 */}
-      <div className="fixed bottom-20 md:bottom-24 left-1/2 -translate-x-1/2 z-20">
-        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm px-3 py-2 rounded-full border border-white/10 shadow-lg">
-          <input
-            type="text"
-            value={userMajorName}
-            onChange={(e) => setUserMajorName(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                sendLightBall();
-              }
-            }}
-            placeholder="输入专业名字..."
-            className="bg-transparent text-white/90 text-[11px] md:text-[12px] placeholder-white/30 outline-none w-32 md:w-40"
-            maxLength={20}
-          />
+      {/* 用户发送光球选择框 */}
+      <div className="absolute right-3 md:right-4 top-16 md:top-20 z-20">
+        <div className="flex flex-col items-end gap-2">
+          <Select
+            value={userSelectedMajor}
+            onValueChange={setUserSelectedMajor}
+          >
+            <SelectTrigger className="w-36 md:w-44 h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px]">
+              <SelectValue placeholder="选择专业..." />
+            </SelectTrigger>
+            <SelectContent className="bg-[rgba(8,12,25,0.95)] border border-blue-400/40 max-h-64 overflow-y-auto">
+              {allMajors.map((major) => (
+                <SelectItem
+                  key={major}
+                  value={major}
+                  className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 focus:bg-blue-400/30"
+                >
+                  {major}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             onClick={sendLightBall}
-            disabled={!userMajorName.trim()}
-            className="w-8 h-8 rounded-full bg-blue-500/80 hover:bg-blue-500 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+            disabled={!userSelectedMajor}
+            className="w-9 h-9 rounded-full bg-blue-500/80 hover:bg-blue-500 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg"
             title="发送光球"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
