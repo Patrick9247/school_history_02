@@ -1934,7 +1934,7 @@ export default function ProfessionalSpiralTower() {
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: (isMobileSolar ? 5 : (isTabletSolar ? 8 : 14)) * Math.sqrt(zoomLevelRef.current),
+            radius: (isMobileSolar ? 8 : (isTabletSolar ? 8 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
             collegeName: dept.college,
