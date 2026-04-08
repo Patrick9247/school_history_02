@@ -917,21 +917,35 @@ export default function ProfessionalSpiralTower() {
 
     // 将颜色转换为带透明度的格式
     const addAlpha = (color: string, alpha: number): string => {
+      // 确保 alpha 是有效数字
+      const safeAlpha = typeof alpha === 'number' && isFinite(alpha) ? alpha : 0;
+      
+      // 如果已经是 rgba 格式，只替换 alpha 值
+      if (color.startsWith('rgba(')) {
+        const match = color.match(/rgba\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*[\d.]+\s*\)/);
+        if (match) {
+          return `rgba(${match[1]}, ${match[2]}, ${match[3]}, ${safeAlpha})`;
+        }
+      }
       if (color.startsWith('hsl(')) {
-        const match = color.match(/hsl\(([\d.]+),\s*([\d.]+)%,\s*([\d.]+)%\)/);
+        const match = color.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/);
         if (match) {
           const h = parseFloat(match[1]);
           const s = parseFloat(match[2]);
           const l = parseFloat(match[3]);
-          return `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
+          return `hsla(${h}, ${s}%, ${l}%, ${safeAlpha})`;
         }
       }
       // hex 格式转换为 rgba
-      const num = parseInt(color.slice(1), 16);
-      const r = num >> 16;
-      const g = (num >> 8) & 0x00FF;
-      const b = num & 0x0000FF;
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      if (color.startsWith('#')) {
+        const num = parseInt(color.slice(1), 16);
+        const r = num >> 16;
+        const g = (num >> 8) & 0x00FF;
+        const b = num & 0x0000FF;
+        return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+      }
+      // 兜底：返回安全值
+      return `rgba(128, 128, 128, ${safeAlpha})`;
     };
 
     // 绘制球体
