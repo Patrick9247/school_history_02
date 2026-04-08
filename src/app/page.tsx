@@ -66,9 +66,16 @@ const PLANET_COLORS = [
   { name: '黑曜石', color: '#505060', gradient: ['#606070', '#404050'] },
 ];
 
-// 获取学院球颜色（使用行星颜色）
-const getPlanetColor = (index: number) => {
-  return PLANET_COLORS[index % PLANET_COLORS.length];
+// 获取学院球颜色（使用行星颜色，根据年份和学院索引生成独特颜色）
+const getPlanetColor = (index: number, year: number) => {
+  // 结合学院索引和年份，让同学院在不同年份有不同的颜色
+  const combinedIndex = (index + year * 7) % PLANET_COLORS.length;
+  return PLANET_COLORS[combinedIndex];
+};
+
+// 获取行星纹理类型（也根据年份变化）
+const getPlanetTextureType = (index: number, year: number) => {
+  return (index + year * 3) % 8;
 };
 
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
@@ -167,6 +174,7 @@ interface DepartmentNode {
   color: string;
   majors: Major[];
   college: string; // 归属学院
+  textureType?: number; // 行星纹理类型
 }
 
 interface PathPoint {
@@ -194,6 +202,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
+  textureType?: number; // 行星纹理类型
 }
 
 export default function ProfessionalSpiralTower() {
@@ -514,14 +523,15 @@ export default function ProfessionalSpiralTower() {
       });
     });
 
-    // 生成院系节点，使用行星颜色
+    // 生成院系节点，使用行星颜色（根据年份变化颜色）
     const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
-      const planetColor = getPlanetColor(index);
+      const planetColor = getPlanetColor(index, year);
       return {
         name: deptName,
         color: planetColor.color,
         majors: data.majors,
-        college: data.college
+        college: data.college,
+        textureType: getPlanetTextureType(index, year)
       };
     });
 
@@ -566,14 +576,15 @@ export default function ProfessionalSpiralTower() {
       });
     });
 
-    // 生成院系节点，使用行星颜色
+    // 生成院系节点，使用行星颜色（根据年份变化颜色）
     const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
-      const planetColor = getPlanetColor(index);
+      const planetColor = getPlanetColor(index, selectedYear);
       return {
         name: deptName,
         color: planetColor.color,
         majors: data.majors,
-        college: data.college
+        college: data.college,
+        textureType: getPlanetTextureType(index, selectedYear)
       };
     });
 
@@ -1962,7 +1973,8 @@ export default function ProfessionalSpiralTower() {
             radius: (isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
-            collegeName: dept.college
+            collegeName: dept.college,
+            textureType: dept.textureType
           });
 
           // 专业
@@ -2127,8 +2139,8 @@ export default function ProfessionalSpiralTower() {
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true);
             }
             
-            // 使用行星纹理绘制学院球
-            drawPlanetSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, obj.index || 0, shouldGlow || isCollegeHighlighted);
+            // 使用行星纹理绘制学院球（使用department的textureType）
+            drawPlanetSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, obj.textureType ?? obj.index ?? 0, shouldGlow || isCollegeHighlighted);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
