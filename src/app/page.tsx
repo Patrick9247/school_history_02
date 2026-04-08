@@ -425,6 +425,10 @@ export default function ProfessionalSpiralTower() {
     return [];
   }, [currentView, selectedYear, getDepartmentsByYear]);
 
+  // 使用 ref 存储 currentDepartments 的最新值，避免依赖项数组大小变化问题
+  const currentDepartmentsRef = useRef<DepartmentNode[]>([]);
+  currentDepartmentsRef.current = currentDepartments;
+
   const transformData = (apiData: ApiDataItem[]): YearData[] => {
     const yearMap = new Map<number, ApiDataItem[]>();
 
@@ -1177,8 +1181,8 @@ export default function ProfessionalSpiralTower() {
         });
 
         // 院系（原所在院系）
-        currentDepartments.forEach((dept: DepartmentNode, i: number) => {
-          const angle = (i / currentDepartments.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
+        currentDepartmentsRef.current.forEach((dept: DepartmentNode, i: number) => {
+          const angle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
           const lz = 0;
@@ -1315,7 +1319,7 @@ export default function ProfessionalSpiralTower() {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [data, currentView, currentDepartments, keyEvents, searchKeyword]);
+  }, [data, currentView, keyEvents, searchKeyword]);
 
   // 鼠标事件处理
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1513,7 +1517,7 @@ export default function ProfessionalSpiralTower() {
       if (clickedObject) {
         if (clickedObject.type === 'department' && clickedObject.name) {
           // 双击学院，显示该学院的所有专业
-          const deptNode = currentDepartments.find(d => d.name === clickedObject.name);
+          const deptNode = currentDepartmentsRef.current.find(d => d.name === clickedObject.name);
           if (deptNode && deptNode.majors.length > 0) {
             setSelectedCollege({
               name: clickedObject.name,
