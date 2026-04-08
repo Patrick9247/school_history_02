@@ -2678,80 +2678,20 @@ export default function ProfessionalSpiralTower() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
-      {/* 深空背景 */}
       <div className="relative w-full h-screen overflow-hidden">
-        {/* 星空背景层 */}
+        {/* 校徽背景层 */}
         <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse at 30% 20%, rgba(20, 40, 80, 0.8) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 80%, rgba(30, 20, 60, 0.6) 0%, transparent 40%),
-              radial-gradient(ellipse at 50% 50%, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 20, 1) 100%)
-            `
-          }}
-        />
-        
-        {/* 星空粒子层 */}
-        <div className="absolute inset-0 overflow-hidden">
-          {Array.from({ length: 150 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                width: `${Math.random() < 0.8 ? 1 : (Math.random() < 0.5 ? 2 : 3)}px`,
-                height: `${Math.random() < 0.8 ? 1 : (Math.random() < 0.5 ? 2 : 3)}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.3 + Math.random() * 0.7,
-                animation: Math.random() > 0.5 ? `twinkle ${2 + Math.random() * 3}s ease-in-out infinite` : undefined,
-                animationDelay: `${Math.random() * 2}s`
-              }}
-            />
-          ))}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ opacity: 0.3 }}
+        >
+          <img 
+            src="/college-logo.png" 
+            alt="校徽" 
+            className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain"
+          />
         </div>
-        
-        {/* 地球经纬网格纹理（半透明） */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              /* 竖直的经线 */
-              radial-gradient(ellipse 80% 30% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.15) 50%, transparent 50.5%),
-              radial-gradient(ellipse 70% 28% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.12) 50%, transparent 50.5%),
-              radial-gradient(ellipse 60% 26% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.1) 50%, transparent 50.5%),
-              radial-gradient(ellipse 50% 24% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.12) 50%, transparent 50.5%),
-              radial-gradient(ellipse 40% 22% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.1) 50%, transparent 50.5%),
-              radial-gradient(ellipse 30% 20% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.12) 50%, transparent 50.5%),
-              /* 水平的纬线 */
-              radial-gradient(ellipse 100% 4% at 50% 30%, transparent 49.5%, rgba(80, 140, 200, 0.15) 50%, transparent 50.5%),
-              radial-gradient(ellipse 100% 4% at 50% 40%, transparent 49.5%, rgba(80, 140, 200, 0.12) 50%, transparent 50.5%),
-              radial-gradient(ellipse 100% 4% at 50% 50%, transparent 49.5%, rgba(80, 140, 200, 0.15) 50%, transparent 50.5%),
-              radial-gradient(ellipse 100% 4% at 50% 60%, transparent 49.5%, rgba(80, 140, 200, 0.12) 50%, transparent 50.5%),
-              radial-gradient(ellipse 100% 4% at 50% 70%, transparent 49.5%, rgba(80, 140, 200, 0.15) 50%, transparent 50.5%),
-              /* 圆形边框 */
-              radial-gradient(circle at 50% 50%, transparent 34%, rgba(80, 120, 180, 0.2) 35%, rgba(80, 120, 180, 0.25) 35.5%, transparent 36%),
-              radial-gradient(circle at 50% 50%, transparent 44%, rgba(80, 120, 180, 0.15) 45%, transparent 45.5%)
-            `,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center'
-          }}
-        />
-        
-        {/* 星云效果 */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `
-              radial-gradient(ellipse at 20% 30%, rgba(100, 50, 120, 0.15) 0%, transparent 40%),
-              radial-gradient(ellipse at 80% 70%, rgba(40, 60, 120, 0.12) 0%, transparent 35%),
-              radial-gradient(ellipse at 50% 20%, rgba(60, 80, 140, 0.1) 0%, transparent 30%)
-            `
-          }}
-        />
-        
         {/* 遮罩层 */}
-        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="absolute inset-0 bg-black/60"></div>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
