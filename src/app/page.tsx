@@ -1030,61 +1030,48 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 步骤2: 表面纹理层（增强自转可见性）
+        // 步骤2: 表面纹理层（优化绘制次数）
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(bandAngle + rot * 0.5); // 纹理层整体旋转，体现自转
+        ctx.rotate(bandAngle);
         
-        // 主条纹带（更宽、更明显）
-        for (let i = 0; i < bandCount + 3; i++) {
+        // 主条纹带（简化计算）
+        for (let i = 0; i < bandCount + 2; i++) {
           const [baseY, widthVar, phase] = bandRandoms[i] || [0, 1, 0];
           const bandY = baseY * radius;
-          // 增加条纹高度，让自转更明显
-          const bandHeight = (radius * 0.6 / bandCount) * widthVar;
-          // 减少漩涡弯曲，让条纹更水平
-          const waveOffset = Math.sin(baseY * 2 + rot) * radius * swirl * 0.3;
+          const bandHeight = (radius * 0.4 / bandCount) * widthVar;
+          const waveOffset = (Math.sin(baseY * 4 + rot + phase) * radius * swirl + Math.sin(baseY * 6 - rot * 1.2) * radius * turbulence * 0.7);
           
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.5, bandHeight, 0, 0, Math.PI * 2);
+          ctx.ellipse(waveOffset, bandY, radius * 1.4, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i % bandCount];
-          // 增加透明度，让纹理更明显
-          ctx.globalAlpha = opacity * 0.75;
+          ctx.globalAlpha = opacity * 0.5;
           ctx.fill();
         }
         
-        // 水平参考线（增强自转感知）
-        ctx.globalAlpha = opacity * 0.15;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < 3; i++) {
-          const lineY = (i - 1) * radius * 0.3;
-          ctx.beginPath();
-          ctx.moveTo(-radius * 1.2, lineY);
-          ctx.lineTo(radius * 1.2, lineY);
-          ctx.stroke();
-        }
-        
-        // 中轴线（更明显的自转参考）
-        ctx.globalAlpha = opacity * 0.25;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, -radius * 1.1);
-        ctx.lineTo(0, radius * 1.1);
-        ctx.stroke();
-        
-        // 漩涡斑块（随自转移动）
+        // 漩涡斑块（减少数量）
         for (let i = 0; i < 2; i++) {
           const [vortexYRatio, colorOffset] = vortexRandoms[i] || [0, -10];
           const vortexY = vortexYRatio * radius;
-          // 漩涡位置随自转变化
-          const vortexX = Math.sin(vortexYRatio * 3 + rot) * radius * swirl * 0.5;
-          const vortexWidth = radius * 0.18;
+          const vortexX = Math.sin(vortexYRatio * 5 + rot) * radius * swirl;
+          const vortexWidth = radius * 0.15;
           
           ctx.beginPath();
           ctx.ellipse(vortexX, vortexY, vortexWidth, vortexWidth * 0.6, 0, 0, Math.PI * 2);
           ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], colorOffset);
-          ctx.globalAlpha = opacity * 0.5;
+          ctx.globalAlpha = opacity * 0.4;
+          ctx.fill();
+        }
+        
+        // 云带（简化）
+        for (let i = 0; i < 3; i++) {
+          const [cloudYRatio, cloudAlpha] = cloudRandoms[i] || [0, 0.2];
+          const cloudY = cloudYRatio * radius;
+          
+          ctx.beginPath();
+          ctx.ellipse(0, cloudY, radius * 0.8, radius * 0.03, 0, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${cloudAlpha})`;
+          ctx.globalAlpha = opacity;
           ctx.fill();
         }
         
