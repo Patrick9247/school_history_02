@@ -553,6 +553,23 @@ export default function ProfessionalSpiralTower() {
     };
   }>>([]);
 
+  // 获取可用于发送光球的专业列表
+  // 在太阳系视图中，只显示当前选中年份的专业
+  // 在螺旋视图中，显示所有专业
+  const selectableMajors = useMemo(() => {
+    // 如果在太阳系视图且有选中年份，使用当前年份的专业
+    if (currentView === 'solar' && selectedYear !== null) {
+      const yearData = rawApiData.filter(item => item.year === selectedYear);
+      const majorSet = new Set<string>();
+      yearData.forEach(item => {
+        majorSet.add(item.major);
+      });
+      return Array.from(majorSet).sort();
+    }
+    // 否则使用所有专业（螺旋视图）
+    return allMajors;
+  }, [currentView, selectedYear, rawApiData, allMajors]);
+
   // 发送光球
   const sendLightBall = () => {
     if (!userSelectedMajor) return;
@@ -2124,13 +2141,13 @@ export default function ProfessionalSpiralTower() {
                 setPopoverOpen(true);
               }}
               onFocus={() => setPopoverOpen(true)}
-              placeholder="输入专业名称..."
+              placeholder={currentView === 'solar' && selectedYear !== null ? `${selectedYear}年专业...` : '输入专业名称...'}
               className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
             />
             {popoverOpen && (
               <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
                 <div className="max-h-64 overflow-y-auto p-1">
-                  {allMajors
+                  {selectableMajors
                     .filter(major =>
                       major.toLowerCase().includes(userSelectedMajor.toLowerCase())
                     )
@@ -2139,7 +2156,7 @@ export default function ProfessionalSpiralTower() {
                       未找到匹配的专业
                     </div>
                   ) : (
-                    allMajors
+                    selectableMajors
                       .filter(major =>
                         major.toLowerCase().includes(userSelectedMajor.toLowerCase())
                       )
