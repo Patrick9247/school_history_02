@@ -1965,21 +1965,22 @@ export default function ProfessionalSpiralTower() {
             
             // 如果学院被高亮，绘制多层发光效果（发光范围缩小三分之二）
             if (isCollegeHighlighted) {
+              const scaledRadius = obj.radius * (obj.scale || 1);
               // 最外层大光晕（缩小到原来的1/3）
-              const outerGlowRadius = obj.radius * (0.8 + collegeGlowIntensity * 0.3);
+              const outerGlowRadius = scaledRadius * (0.8 + collegeGlowIntensity * 0.3);
               drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.25 * collegeGlowIntensity, true, false);
               // 中层光晕
-              const midGlowRadius = obj.radius * (0.6 + collegeGlowIntensity * 0.2);
+              const midGlowRadius = scaledRadius * (0.6 + collegeGlowIntensity * 0.2);
               drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * collegeGlowIntensity, true, false);
               // 内层光晕
-              const innerGlowRadius = obj.radius * (0.45 + collegeGlowIntensity * 0.15);
+              const innerGlowRadius = scaledRadius * (0.45 + collegeGlowIntensity * 0.15);
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true, false);
             }
             
             // 绘制学院球大气层光晕效果
-            const atmRadius = obj.radius * 1.4;
+            const atmRadius = obj.radius * (obj.scale || 1) * 1.4;
             const atmGradient = ctx.createRadialGradient(
-              obj.x || 0, obj.y || 0, obj.radius * 0.9,
+              obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1) * 0.9,
               obj.x || 0, obj.y || 0, atmRadius
             );
             atmGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
@@ -1995,7 +1996,7 @@ export default function ProfessionalSpiralTower() {
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
             const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
@@ -2004,7 +2005,8 @@ export default function ProfessionalSpiralTower() {
             ctx.textAlign = 'center';
             // 对于院系，显示完整的名称（包括"系"或"学院"）
             const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
-            ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + obj.radius + 12);
+            const textYOffset = obj.radius * (obj.scale || 1) + 12;
+            ctx.fillText(displayName || '', obj.x || 0, (obj.y || 0) + textYOffset);
           }
         });
 
