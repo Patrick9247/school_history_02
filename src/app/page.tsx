@@ -231,6 +231,7 @@ export default function ProfessionalSpiralTower() {
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const selectedYearRef = useRef<number | null>(null); // 用于 canvas 实时读取
   const [rawApiData, setRawApiData] = useState<ApiDataItem[]>([]); // 保存原始 API 数据
   const [departmentsByYear, setDepartmentsByYear] = useState<Map<number, DepartmentNode[]>>(new Map()); // 按年份缓存的院系数据
   const [tooltip, setTooltip] = useState<{
@@ -2001,10 +2002,11 @@ export default function ProfessionalSpiralTower() {
             ctx.fill();
 
             // 在太阳球下方绘制年份（只显示数字，响应式字体）
-            if (selectedYear) {
+            const currentYear = selectedYearRef.current;
+            if (currentYear) {
               const sunFontSize = isMobileSolar ? 13 : (isTabletSolar ? 14 : 15);
               const scale = obj.scale || 1;
-              const yearText = selectedYear.toString();
+              const yearText = currentYear.toString();
               const textY = y + r + sunFontSize * scale * 0.8; // 字体在球体下方
               
               // 绘制文字阴影（让年份更清晰）
@@ -2271,6 +2273,7 @@ export default function ProfessionalSpiralTower() {
 
       if (clickedYear !== null) {
         // 单击年份球，显示年份菜单
+        selectedYearRef.current = clickedYear;
         setSelectedYear(clickedYear);
         setYearMenuPosition({ x: e.clientX, y: e.clientY });
         setShowYearMenu(true);
@@ -2351,6 +2354,7 @@ export default function ProfessionalSpiralTower() {
         // 双击空白区域，清除选中状态并返回螺旋塔视图
         setSelectedCollege(null);
         setSelectedMajor(null);
+        selectedYearRef.current = null;
         setSelectedYear(null);
         setYearStats(null);
         setCurrentView('spiral');
@@ -2945,7 +2949,11 @@ export default function ProfessionalSpiralTower() {
               min="1956"
               max="2025"
               value={selectedYear || 1956}
-              onInput={(e) => setSelectedYear(parseInt((e.target as HTMLInputElement).value))}
+              onInput={(e) => {
+                const val = parseInt((e.target as HTMLInputElement).value);
+                selectedYearRef.current = val;
+                setSelectedYear(val);
+              }}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="absolute w-full h-8 appearance-none bg-transparent cursor-pointer z-10
                 [&::-webkit-slider-thumb]:appearance-none
@@ -2976,6 +2984,7 @@ export default function ProfessionalSpiralTower() {
             onClick={() => {
               setCurrentView('spiral');
               setYearStats(null);
+              selectedYearRef.current = null;
               setSelectedYear(null);
             }}
             className="bg-blue-400/25 border border-blue-400/50 text-white px-4 py-1.5 rounded-full text-[11px] md:text-[12px] cursor-pointer active:scale-95 transition-transform"
