@@ -943,7 +943,7 @@ export default function ProfessionalSpiralTower() {
         }
 
         // 更新和绘制光点
-        const lightSpeed = 0.0025; // 光点移动速度（减少两倍，从0.005降至0.0025）
+        const lightSpeed = 0.0005; // 光点移动速度（慢5倍，从0.0025降至0.0005）
         lightParticlesRef.current = lightParticlesRef.current.filter(particle => {
           // 更新进度
           particle.progress += lightSpeed;
@@ -1094,7 +1094,7 @@ export default function ProfessionalSpiralTower() {
         // 绘制用户发送的光球
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
           // 更新进度
-          ball.progress += lightSpeed * 1.5; // 用户光球速度稍快
+          ball.progress += lightSpeed * 0.3; // 用户光球速度与自动光球一致
 
           // 如果进度超过2，移除该光球
           if (ball.progress >= 2) {
