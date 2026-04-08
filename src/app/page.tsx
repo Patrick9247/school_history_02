@@ -1506,57 +1506,37 @@ export default function ProfessionalSpiralTower() {
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.clip();
 
-      // === 第一层：球体基础光照渐变 ===
-      // 光源位置：左上方45度
-      const lightAngle = -Math.PI / 4;
-      const lightX = x + Math.cos(lightAngle) * radius * 0.6;
-      const lightY = y + Math.sin(lightAngle) * radius * 0.6;
+      // === 球体基础渐变（核心3D效果） ===
+      // 光源位置：左上方
+      const lightX = x - radius * 0.35;
+      const lightY = y - radius * 0.35;
       
-      // 强光照渐变（7层）
-      const baseGradient = ctx.createRadialGradient(
-        lightX, lightY, 0,
-        x, y, radius * 1.5
+      // 径向渐变模拟光照
+      const gradient = ctx.createRadialGradient(
+        lightX, lightY, radius * 0.1,
+        x, y, radius
       );
-      baseGradient.addColorStop(0, adjustBrightness(color, 90));    // 核心高光
-      baseGradient.addColorStop(0.1, adjustBrightness(color, 70));  // 强高光
-      baseGradient.addColorStop(0.25, adjustBrightness(color, 45)); // 中高光
-      baseGradient.addColorStop(0.45, adjustBrightness(color, 20));  // 过渡区
-      baseGradient.addColorStop(0.6, color);                         // 正常色
-      baseGradient.addColorStop(0.8, adjustBrightness(color, -30));// 阴影区
-      baseGradient.addColorStop(1, adjustBrightness(color, -55));   // 深阴影
+      gradient.addColorStop(0, adjustBrightness(color, 60));    // 高光区
+      gradient.addColorStop(0.3, adjustBrightness(color, 25)); // 亮区
+      gradient.addColorStop(0.6, color);                        // 正常色
+      gradient.addColorStop(0.85, adjustBrightness(color, -25)); // 阴影区
+      gradient.addColorStop(1, adjustBrightness(color, -50));    // 边缘暗
 
-      ctx.fillStyle = baseGradient;
+      ctx.fillStyle = gradient;
       ctx.globalAlpha = opacity;
       ctx.fill();
-
-      // === 第二层：表面纹理（米粒组织/表面细节）===
-      // 添加微小的表面起伏感
-      const textureSeed = Math.floor(x * 100 + y);
-      for (let i = 0; i < radius * 1.5; i++) {
-        const texX = x + ((Math.sin(textureSeed * 3.7 + i * 12.3) * 0.5 + 0.5) - 0.5) * radius * 2;
-        const texY = y + ((Math.cos(textureSeed * 5.1 + i * 8.7) * 0.5 + 0.5) - 0.5) * radius * 2;
-        const dist = Math.sqrt((texX - x) ** 2 + (texY - y) ** 2);
-        if (dist < radius * 0.95) {
-          const brightness = Math.sin(textureSeed + i * 7.3) > 0.5 ? 8 : -5;
-          ctx.fillStyle = addAlpha(brightness > 0 ? '#ffffff' : '#000000', 0.08);
-          ctx.fillRect(texX, texY, Math.max(0.5, radius * 0.08), Math.max(0.5, radius * 0.08));
-        }
-      }
 
       // 恢复上下文状态
       ctx.restore();
 
-      // === 第三层：主镜面高光（真实天体的高光反射）===
-      const highlightX = x - radius * 0.4;
-      const highlightY = y - radius * 0.4;
+      // === 简洁的高光反射 ===
+      // 主高光点
       const highlightGrad = ctx.createRadialGradient(
-        highlightX, highlightY, 0,
-        highlightX, highlightY, radius * 0.7
+        x - radius * 0.3, y - radius * 0.3, 0,
+        x - radius * 0.3, y - radius * 0.3, radius * 0.5
       );
-      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      highlightGrad.addColorStop(0.15, 'rgba(255, 255, 255, 0.7)');
-      highlightGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.3)');
-      highlightGrad.addColorStop(0.6, 'rgba(255, 255, 255, 0.08)');
+      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+      highlightGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.2)');
       highlightGrad.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1564,94 +1544,30 @@ export default function ProfessionalSpiralTower() {
       ctx.globalAlpha = opacity;
       ctx.fill();
 
-      // === 第四层：次高光区域 ===
-      const secondaryX = x - radius * 0.25;
-      const secondaryY = y - radius * 0.3;
-      const secondaryGrad = ctx.createRadialGradient(
-        secondaryX, secondaryY, 0,
-        secondaryX, secondaryY, radius * 0.5
+      // 边缘柔和暗边（增加立体感）
+      const edgeGrad = ctx.createRadialGradient(
+        x, y, radius * 0.7,
+        x, y, radius
       );
-      secondaryGrad.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-      secondaryGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)');
-      secondaryGrad.addColorStop(1, 'transparent');
+      edgeGrad.addColorStop(0, 'transparent');
+      edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = secondaryGrad;
-      ctx.globalAlpha = opacity * 0.8;
-      ctx.fill();
-
-      // === 第五层：背光阴影 ===
-      const shadowX = x + radius * 0.45;
-      const shadowY = y + radius * 0.45;
-      const shadowGrad = ctx.createRadialGradient(
-        shadowX, shadowY, radius * 0.3,
-        shadowX, shadowY, radius * 1.4
-      );
-      shadowGrad.addColorStop(0, 'transparent');
-      shadowGrad.addColorStop(0.5, 'rgba(0, 0, 20, 0.15)');
-      shadowGrad.addColorStop(1, 'rgba(0, 0, 20, 0.35)');
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = shadowGrad;
+      ctx.fillStyle = edgeGrad;
       ctx.globalAlpha = opacity;
       ctx.fill();
-
-      // === 第六层：边缘大气光晕 ===
-      const atmosphereGrad = ctx.createRadialGradient(
-        x, y, radius * 0.82,
-        x, y, radius * 1.2
-      );
-      atmosphereGrad.addColorStop(0, 'transparent');
-      atmosphereGrad.addColorStop(0.4, addAlpha(adjustBrightness(color, 40), 0.12));
-      atmosphereGrad.addColorStop(0.7, addAlpha(adjustBrightness(color, 20), 0.08));
-      atmosphereGrad.addColorStop(1, 'transparent');
-      ctx.beginPath();
-      ctx.arc(x, y, radius * 1.2, 0, Math.PI * 2);
-      ctx.fillStyle = atmosphereGrad;
-      ctx.globalAlpha = opacity * 0.7;
-      ctx.fill();
-
-      // === 第七层：边缘轮廓线 ===
-      // 内边缘高光
-      ctx.beginPath();
-      ctx.arc(x, y, radius - 0.3, 0, Math.PI * 2);
-      ctx.strokeStyle = addAlpha('#ffffff', 0.25);
-      ctx.lineWidth = 0.5;
-      ctx.globalAlpha = opacity;
-      ctx.stroke();
-      // 外边缘暗线
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = adjustBrightness(color, -65);
-      ctx.lineWidth = 1.2;
-      ctx.globalAlpha = opacity * 0.8;
-      ctx.stroke();
       ctx.globalAlpha = 1;
 
       // === 外发光效果 ===
       if (glow) {
-        // 内层辉光
-        const innerGlowGrad = ctx.createRadialGradient(x, y, radius * 0.85, x, y, radius * 1.6);
-        innerGlowGrad.addColorStop(0, addAlpha(color, 0.5));
-        innerGlowGrad.addColorStop(0.35, addAlpha(color, 0.25));
-        innerGlowGrad.addColorStop(0.65, addAlpha(color, 0.1));
-        innerGlowGrad.addColorStop(1, 'transparent');
+        const glowGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2);
+        glowGrad.addColorStop(0, addAlpha(color, 0.4));
+        glowGrad.addColorStop(0.5, addAlpha(color, 0.15));
+        glowGrad.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(x, y, radius * 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = innerGlowGrad;
-        ctx.globalAlpha = opacity * 0.85;
-        ctx.fill();
-
-        // 外层大气辉光
-        const outerGlowGrad = ctx.createRadialGradient(x, y, radius * 1.4, x, y, radius * 3);
-        outerGlowGrad.addColorStop(0, addAlpha(color, 0.25));
-        outerGlowGrad.addColorStop(0.3, addAlpha(color, 0.1));
-        outerGlowGrad.addColorStop(0.6, addAlpha(color, 0.04));
-        outerGlowGrad.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
-        ctx.fillStyle = outerGlowGrad;
-        ctx.globalAlpha = opacity * 0.5;
+        ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.globalAlpha = opacity * 0.7;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
