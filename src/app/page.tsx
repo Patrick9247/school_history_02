@@ -2682,27 +2682,16 @@ export default function ProfessionalSpiralTower() {
         {/* 校徽背景层 */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: 0.35 }}
+          style={{ opacity: 0.3 }}
         >
-          <div className="relative">
-            {/* 深色圆形背景层 */}
-            <div 
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(10, 20, 40, 0.95) 0%, rgba(5, 15, 30, 0.98) 100%)',
-                transform: 'scale(0.85)'
-              }}
-            />
-            {/* 校徽图片 */}
-            <img 
-              src="https://coze-coding-project.tos.coze.site/coze_storage_7625930770414141459/image/generate_image_f5db4f3f-d77e-4f3d-aebb-9fb64852ecc9.jpeg" 
-              alt="校徽" 
-              className="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain"
-            />
-          </div>
+          <img 
+            src="/college-logo.png" 
+            alt="校徽" 
+            className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain"
+          />
         </div>
         {/* 遮罩层 */}
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/60"></div>
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
