@@ -932,8 +932,8 @@ export default function ProfessionalSpiralTower() {
           }
         }
 
-        // 定期产生新的光点
-        if (time - lastLightCreateTimeRef.current > LIGHT_CREATE_INTERVAL) {
+        // 定期产生新的光点（限制最多6个）
+        if (time - lastLightCreateTimeRef.current > LIGHT_CREATE_INTERVAL && lightParticlesRef.current.length < 6) {
           lastLightCreateTimeRef.current = time;
           lightParticlesRef.current.push({
             progress: 0,
