@@ -2737,7 +2737,7 @@ export default function ProfessionalSpiralTower() {
       {/* 用户发送光球选择框 */}
       <div className="absolute right-3 md:right-4 top-16 md:top-20 z-20">
         <div className="flex flex-col items-end gap-2">
-          <div className="relative w-36 md:w-44 major-input-container">
+          <div className="relative w-48 md:w-56 major-input-container">
             <input
               type="text"
               value={userSelectedMajor}
@@ -2747,17 +2747,17 @@ export default function ProfessionalSpiralTower() {
               }}
               onFocus={() => setPopoverOpen(true)}
               placeholder={currentView === 'solar' && selectedYear !== null ? `${selectedYear}年专业...` : '输入专业名称...'}
-              className="w-full h-9 bg-black/60 backdrop-blur-sm border border-blue-400/50 text-white text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/70 focus:bg-black/70 focus:outline-none focus:border-blue-400/80 transition-colors placeholder-white/40 shadow-lg shadow-blue-500/20"
+              className="w-full h-10 bg-black/60 backdrop-blur-sm border border-blue-400/50 text-white text-[12px] md:text-[13px] rounded-lg px-4 py-2.5 text-left hover:bg-black/70 focus:bg-black/70 focus:outline-none focus:border-blue-400/80 transition-colors placeholder-white/40 shadow-lg shadow-blue-500/20"
             />
             {popoverOpen && (
-              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-black/90 backdrop-blur-sm border border-blue-400/60 rounded-lg shadow-xl shadow-blue-500/30 overflow-hidden z-50">
-                <div className="max-h-64 overflow-y-auto p-1">
+              <div className="absolute top-full right-0 mt-2 w-64 md:w-80 bg-black/90 backdrop-blur-sm border border-blue-400/60 rounded-lg shadow-xl shadow-blue-500/30 overflow-hidden z-50">
+                <div className="max-h-80 overflow-y-auto p-1.5">
                   {selectableMajors
                     .filter(major =>
                       major.toLowerCase().includes(userSelectedMajor.toLowerCase())
                     )
                     .length === 0 ? (
-                    <div className="text-[11px] text-white/50 py-6 text-center">
+                    <div className="text-[12px] text-white/50 py-8 text-center">
                       未找到匹配的专业
                     </div>
                   ) : (
@@ -2772,7 +2772,7 @@ export default function ProfessionalSpiralTower() {
                             setUserSelectedMajor(major);
                             setPopoverOpen(false);
                           }}
-                          className="text-[11px] md:text-[12px] text-white hover:bg-blue-500/30 cursor-pointer px-3 py-2 rounded-md flex items-center"
+                          className="text-[12px] md:text-[13px] text-white hover:bg-blue-500/30 cursor-pointer px-4 py-2.5 rounded-md flex items-center"
                         >
                           {major}
                         </div>
