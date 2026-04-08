@@ -989,114 +989,24 @@ export default function ProfessionalSpiralTower() {
         const bandWidthVar = planetData.bandWidthVar || 1;
         const ovalBands = planetData.ovalBands || [];
 
-        // 基础渐变背景（带极地效果）
-        const polarGradient = ctx.createRadialGradient(
-          x - radius * 0.3, y - radius * 0.3, 0,
-          x, y, radius * 1.1
-        );
-        polarGradient.addColorStop(0, adjustBrightness(color, 20));
-        polarGradient.addColorStop(0.25, adjustBrightness(color, 10));
-        polarGradient.addColorStop(0.5, color);
-        polarGradient.addColorStop(0.75, adjustBrightness(color, -5));
-        polarGradient.addColorStop(1, adjustBrightness(color, -25));
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = polarGradient;
-        ctx.globalAlpha = opacity;
-        ctx.fill();
-
-        // 石头星球3D立体效果（柔和漫反射）
-        // 1. 晨昏线效果 - 石头星球晨昏过渡更柔和
-        const terminatorGradient = ctx.createLinearGradient(
-          x - radius * 1.2, y, x + radius * 1.2, y
-        );
-        terminatorGradient.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
-        terminatorGradient.addColorStop(0.3, 'rgba(0, 0, 0, 0.35)');
-        terminatorGradient.addColorStop(0.42, 'rgba(0, 0, 0, 0.1)');
-        terminatorGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
-        terminatorGradient.addColorStop(0.58, 'rgba(80, 60, 40, 0.08)');
-        terminatorGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)');
-        terminatorGradient.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = terminatorGradient;
-        ctx.globalAlpha = opacity;
-        ctx.fill();
-
-        // 2. 柔和光照层 - 石头漫反射效果（无金属高光）
-        const sunlitGradient = ctx.createRadialGradient(
-          x - radius * 0.3, y - radius * 0.3, 0,
-          x - radius * 0.15, y - radius * 0.15, radius * 0.9
-        );
-        sunlitGradient.addColorStop(0, 'rgba(255, 250, 240, 0.25)');
-        sunlitGradient.addColorStop(0.3, 'rgba(255, 245, 230, 0.12)');
-        sunlitGradient.addColorStop(0.6, 'rgba(255, 240, 220, 0.05)');
-        sunlitGradient.addColorStop(1, 'rgba(255, 235, 210, 0)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = sunlitGradient;
-        ctx.globalAlpha = opacity * 0.6;
-        ctx.fill();
-
-        // 3. 边缘微弱辉光 - 石头星球大气层很薄，边缘辉光很弱
-        const atmosGlow = ctx.createRadialGradient(
-          x, y, radius * 0.88,
-          x, y, radius * 1.08
-        );
-        atmosGlow.addColorStop(0, 'rgba(150, 140, 130, 0)');
-        atmosGlow.addColorStop(0.5, 'rgba(150, 140, 130, 0.05)');
-        atmosGlow.addColorStop(1, 'rgba(150, 140, 130, 0.12)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 1.08, 0, Math.PI * 2);
-        ctx.fillStyle = atmosGlow;
-        ctx.globalAlpha = opacity * 0.7;
-        ctx.fill();
-
-        // 4. 背面阴影渐变 - 石头星球阴影偏暖褐色
-        const shadowGradient = ctx.createRadialGradient(
-          x + radius * 0.5, y + radius * 0.5, radius * 0.2,
-          x + radius * 0.5, y + radius * 0.5, radius * 1.1
-        );
-        shadowGradient.addColorStop(0, 'rgba(40, 30, 20, 0)');
-        shadowGradient.addColorStop(0.5, 'rgba(40, 30, 20, 0.2)');
-        shadowGradient.addColorStop(1, 'rgba(20, 15, 10, 0.5)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = shadowGradient;
-        ctx.globalAlpha = opacity * 0.85;
-        ctx.fill();
-
-        // 5. 表面粗糙纹理层 - 模拟石头表面凹凸感
-        const textureGradient = ctx.createRadialGradient(
-          x - radius * 0.2, y - radius * 0.2, radius * 0.1,
+        // 行星3D效果 - 参考太空看到的行星外观
+        // 1. 基础球体渐变 - 让球体有明显的3D立体感
+        const baseGradient = ctx.createRadialGradient(
+          x - radius * 0.4, y - radius * 0.4, 0,
           x, y, radius * 1.2
         );
-        textureGradient.addColorStop(0, 'rgba(180, 170, 160, 0.1)');
-        textureGradient.addColorStop(0.3, 'rgba(160, 150, 140, 0.05)');
-        textureGradient.addColorStop(0.6, 'rgba(140, 130, 120, 0)');
-        textureGradient.addColorStop(1, 'rgba(100, 90, 80, 0.08)');
+        baseGradient.addColorStop(0, adjustBrightness(color, 25));
+        baseGradient.addColorStop(0.2, adjustBrightness(color, 12));
+        baseGradient.addColorStop(0.5, color);
+        baseGradient.addColorStop(0.8, adjustBrightness(color, -15));
+        baseGradient.addColorStop(1, adjustBrightness(color, -35));
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = textureGradient;
-        ctx.globalAlpha = opacity * 0.5;
+        ctx.fillStyle = baseGradient;
+        ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 2. 极地冰盖效果
-        ctx.save();
-        const polarCapHeight = radius * 0.25;
-        ctx.beginPath();
-        ctx.ellipse(x, y - radius * 0.85, radius * 0.6, polarCapHeight, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.globalAlpha = opacity * 0.6;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(x, y + radius * 0.85, radius * 0.5, polarCapHeight * 0.8, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220, 240, 255, 0.4)';
-        ctx.globalAlpha = opacity * 0.5;
-        ctx.fill();
-        ctx.restore();
-
-        // 3. 绘制水平条纹带（增强漩涡）
+        // 2. 表面色调层 - 增强表面质感
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(bandAngle);
@@ -1104,28 +1014,78 @@ export default function ProfessionalSpiralTower() {
         for (let i = 0; i < bandCount; i++) {
           const normalizedY = (i / (bandCount - 1)) * 2 - 1;
           const bandY = normalizedY * radius;
-          const widthFactor = bandWidthVar * (1 - Math.abs(normalizedY) * 0.6);
-          const bandHeight = (radius * 0.45 / bandCount) * widthFactor;
-          const waveOffset = Math.sin(normalizedY * 6 + rot) * radius * swirl * 1.2 + 
-                            Math.sin(normalizedY * 4 - rot * 0.8) * radius * turbulence +
-                            Math.cos(normalizedY * 8 + rot * 1.5) * radius * swirl * 0.5;
+          const widthFactor = bandWidthVar * (1 - Math.abs(normalizedY) * 0.5);
+          const bandHeight = (radius * 0.5 / bandCount) * widthFactor;
+          const waveOffset = Math.sin(normalizedY * 4 + rot) * radius * swirl + 
+                            Math.sin(normalizedY * 3 - rot * 0.6) * radius * turbulence;
           
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.6, bandHeight, 0, 0, Math.PI * 2);
+          ctx.ellipse(waveOffset, bandY, radius * 1.5, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i];
-          ctx.globalAlpha = opacity * 0.85;
+          ctx.globalAlpha = opacity * 0.75;
           ctx.fill();
         }
         ctx.restore();
 
-        // 4. 大气散射（边缘发蓝）
-        const atmosGradient = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius);
-        atmosGradient.addColorStop(0, 'rgba(100, 150, 255, 0)');
-        atmosGradient.addColorStop(0.7, 'rgba(100, 150, 255, 0.05)');
-        atmosGradient.addColorStop(1, 'rgba(100, 150, 255, 0.2)');
+        // 3. 极地冰盖 - 行星特征
+        const polarCapHeight = radius * 0.28;
+        ctx.save();
+        // 北极冰盖
+        ctx.beginPath();
+        ctx.ellipse(x, y - radius * 0.88, radius * 0.65, polarCapHeight, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        // 南极冰盖
+        ctx.beginPath();
+        ctx.ellipse(x, y + radius * 0.88, radius * 0.55, polarCapHeight * 0.9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(230, 245, 255, 0.45)';
+        ctx.globalAlpha = opacity * 0.9;
+        ctx.fill();
+        ctx.restore();
+
+        // 4. 3D光照效果 - 简单的半球明暗
+        // 向光面高光
+        const lightGradient = ctx.createRadialGradient(
+          x - radius * 0.35, y - radius * 0.35, 0,
+          x - radius * 0.2, y - radius * 0.2, radius * 1.1
+        );
+        lightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+        lightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.12)');
+        lightGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0)');
+        lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = atmosGradient;
+        ctx.fillStyle = lightGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+
+        // 背光面阴影
+        const darkGradient = ctx.createRadialGradient(
+          x + radius * 0.5, y + radius * 0.5, radius * 0.4,
+          x + radius * 0.5, y + radius * 0.5, radius * 1.1
+        );
+        darkGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        darkGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.2)');
+        darkGradient.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = darkGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+
+        // 5. 大气层边缘辉光 - 蓝色边缘光晕（地球的标志特征）
+        const atmosGlow = ctx.createRadialGradient(
+          x, y, radius * 0.85,
+          x, y, radius * 1.12
+        );
+        atmosGlow.addColorStop(0, 'rgba(100, 150, 255, 0)');
+        atmosGlow.addColorStop(0.6, 'rgba(100, 150, 255, 0.06)');
+        atmosGlow.addColorStop(0.85, 'rgba(120, 170, 255, 0.12)');
+        atmosGlow.addColorStop(1, 'rgba(150, 190, 255, 0.2)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.12, 0, Math.PI * 2);
+        ctx.fillStyle = atmosGlow;
         ctx.globalAlpha = opacity * 0.8;
         ctx.fill();
       } else if (enable3D) {
