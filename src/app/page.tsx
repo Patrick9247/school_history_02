@@ -2906,13 +2906,110 @@ export default function ProfessionalSpiralTower() {
 
       {/* 学院模态框 */}
       {selectedCollege && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-2.5 md:p-3.5 z-30 w-[calc(100%-16px)] md:w-[calc(100%-32px)] max-w-[340px] md:max-w-[360px] max-h-[55vh] md:max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
-          <div className="flex justify-between items-center mb-2 pb-2 md:mb-2.5 md:pb-2.5 border-b border-white/20">
-            <div className="text-[13px] md:text-[14px] font-bold flex-1 pr-2 md:pr-2.5 text-white drop-shadow-md">{selectedCollege.name}</div>
-            <div className="text-[10px] md:text-[11px] text-blue-300 font-medium">{selectedCollege.majors.length} 个专业</div>
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-4 md:bottom-5 bg-[rgba(8,12,25,0.98)] border border-blue-400/50 rounded-xl p-2.5 md:p-3.5 z-30 w-[calc(100%-16px)] md:w-[calc(100%-32px)] max-w-[380px] md:max-w-[400px] max-h-[55vh] md:max-h-[50vh] overflow-y-auto shadow-2xl shadow-black/50">
+          <div className="flex justify-between items-start mb-2 pb-2 md:mb-2.5 md:pb-2.5 border-b border-white/20">
+            <div className="flex items-center gap-3 flex-1">
+              {/* 学院球预览 */}
+              <div className="relative w-14 h-14 md:w-16 md:h-16 flex-shrink-0">
+                <canvas 
+                  ref={(canvas) => {
+                    if (canvas && selectedCollege) {
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        const size = canvas.width;
+                        const radius = size / 2 - 4;
+                        const x = size / 2;
+                        const y = size / 2;
+                        
+                        // 获取学院颜色
+                        const collegeIndex = data.findIndex(d => 
+                          d.departments?.some(dept => dept.name === selectedCollege.name)
+                        );
+                        const planetData = collegeIndex >= 0 ? getPlanetColor(collegeIndex) : getPlanetColor(0);
+                        
+                        // 清空画布
+                        ctx.clearRect(0, 0, size, size);
+                        
+                        // 绘制行星纹理
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.clip();
+                        
+                        // 基础渐变
+                        const gradient = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius * 1.2);
+                        gradient.addColorStop(0, adjustBrightness(selectedCollege.color || '#4A90D9', 25));
+                        gradient.addColorStop(0.5, selectedCollege.color || '#4A90D9');
+                        gradient.addColorStop(1, adjustBrightness(selectedCollege.color || '#4A90D9', -40));
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                        
+                        // 条纹带
+                        if (planetData.bandColors) {
+                          const bandColors = planetData.bandColors;
+                          const bandCount = bandColors.length;
+                          const AXIAL_TILT = 23.5 * Math.PI / 180;
+                          
+                          for (let i = 0; i < bandCount; i++) {
+                            const bandY = ((i - bandCount / 2) / bandCount) * radius * 1.5;
+                            const bandHeight = radius * 0.3 / bandCount;
+                            
+                            ctx.beginPath();
+                            ctx.ellipse(x, y + bandY, radius * 1.1, bandHeight, 0, 0, Math.PI * 2);
+                            ctx.fillStyle = bandColors[i % bandCount];
+                            ctx.globalAlpha = 0.4;
+                            ctx.fill();
+                          }
+                          ctx.globalAlpha = 1;
+                        }
+                        
+                        // 晨昏线
+                        const nightGrad = ctx.createLinearGradient(x - radius, y, x + radius, y);
+                        nightGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                        nightGrad.addColorStop(0.35, 'rgba(0,0,0,0)');
+                        nightGrad.addColorStop(0.5, 'rgba(0,0,0,0.1)');
+                        nightGrad.addColorStop(0.65, 'rgba(0,0,0,0.3)');
+                        nightGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+                        ctx.fillStyle = nightGrad;
+                        ctx.fill();
+                        
+                        // 大气辉光
+                        const atmosGrad = ctx.createRadialGradient(x, y, radius, x, y, radius * 1.15);
+                        atmosGrad.addColorStop(0, 'rgba(130,180,255,0)');
+                        atmosGrad.addColorStop(0.7, 'rgba(130,180,255,0.1)');
+                        atmosGrad.addColorStop(1, 'rgba(150,200,255,0.25)');
+                        ctx.fillStyle = atmosGrad;
+                        ctx.fill();
+                        
+                        ctx.restore();
+                        
+                        // 外发光
+                        ctx.shadowColor = selectedCollege.color || '#4A90D9';
+                        ctx.shadowBlur = 15;
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.strokeStyle = selectedCollege.color || '#4A90D9';
+                        ctx.lineWidth = 2;
+                        ctx.globalAlpha = 0.5;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                        ctx.shadowBlur = 0;
+                      }
+                    }
+                  }}
+                  width={64}
+                  height={64}
+                  className="w-full h-full rounded-full"
+                />
+              </div>
+              <div>
+                <div className="text-[14px] md:text-[15px] font-bold text-white drop-shadow-md">{selectedCollege.name}</div>
+                <div className="text-[10px] md:text-[11px] text-blue-300 font-medium mt-0.5">{selectedCollege.majors.length} 个专业</div>
+              </div>
+            </div>
             <button
               onClick={() => setSelectedCollege(null)}
-              className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-1.5 md:ml-2.5 transition-colors"
+              className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-2 transition-colors flex-shrink-0"
             >
               ×
             </button>
