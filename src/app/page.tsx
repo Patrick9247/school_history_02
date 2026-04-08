@@ -1077,6 +1077,50 @@ export default function ProfessionalSpiralTower() {
         
         ctx.restore();
 
+        // 步骤2.5: 自转指示器（明显的赤道标记带 + 特征斑块）
+        // 赤道高亮带 - 中间一条明显的白色带，随自转旋转
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        
+        // 赤道带（半透明白色条带）
+        const equatorWidth = radius * 0.08;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 1.2, equatorWidth, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = radius * 0.12;
+        ctx.globalAlpha = opacity * 0.6;
+        ctx.stroke();
+        
+        // 特征斑块 - 球体右侧一个明显的深色斑块，随自转移动
+        const spotX = radius * 0.5;
+        const spotY = radius * 0.1;
+        ctx.beginPath();
+        ctx.ellipse(spotX, spotY, radius * 0.12, radius * 0.08, 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = adjustBrightness(color, -30);
+        ctx.globalAlpha = opacity * 0.7;
+        ctx.fill();
+        
+        // 斑块内部高光
+        ctx.beginPath();
+        ctx.ellipse(spotX * 0.9, spotY * 0.8, radius * 0.06, radius * 0.04, 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = adjustBrightness(color, -15);
+        ctx.globalAlpha = opacity * 0.5;
+        ctx.fill();
+        
+        // 经线标记 - 画几条淡淡的经线帮助观察旋转
+        for (let i = 0; i < 3; i++) {
+          const lineAngle = (i / 3) * Math.PI - Math.PI / 2;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, radius * 0.95, radius * 0.1, lineAngle, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = opacity * 0.3;
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+
         // 步骤3: 极地冰盖（简化）
         const polarCapHeight = radius * 0.2;
         const polarRand = (offset: number) => rand(500 + offset, 0, 1);
@@ -2012,8 +2056,8 @@ export default function ProfessionalSpiralTower() {
             ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            // 学院球自转：与公转同步，5秒转一圈
-            const planetRotation = solarAutoRotationRef.current;
+            // 学院球自转：1秒1圈（animationTimeRef每秒增加约1）
+            const planetRotation = animationTimeRef.current * Math.PI * 2;
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
