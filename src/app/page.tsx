@@ -2012,7 +2012,8 @@ export default function ProfessionalSpiralTower() {
             ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
+            // 1秒转1圈 = 2π 弧度/秒，animationTimeRef 每秒增加约1
+            const planetRotation = animationTimeRef.current * Math.PI * 2 + (obj.index || 0) * 0.3;
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
