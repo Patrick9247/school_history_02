@@ -1681,20 +1681,22 @@ export default function ProfessionalSpiralTower() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 检测点击节点 - 仅用于显示 tooltip
+    // 检测点击节点 - 单击显示菜单
     if (currentView === 'spiral') {
       const projection = spiralProjectionRef.current;
       if (!projection || !canvasRef.current) return;
 
       // 获取当前的 centerX 和 centerY（与渲染时一致）
-      const canvasRect = canvasRef.current.getBoundingClientRect();
-      const clickCenterX = canvasRect.width / 2;
-      const clickCenterY = canvasRect.height / 2;
+      const clickCenterX = rect.width / 2;
+      const clickCenterY = rect.height / 2;
 
       // 使用与节点生成相同的 progress 计算
       const progressDivisor = projection.totalYears - 1;
       
       // 遍历所有年份节点，找到点击的节点
+      let clickedYear: number | null = null;
+      let clickedData: any = null;
+
       for (let i = 0; i < allYears.length; i++) {
         const year = allYears[i];
         const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
@@ -1703,36 +1705,55 @@ export default function ProfessionalSpiralTower() {
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
-        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
         
-        if (distance < 20 * proj.scale) {
+        // 使用与渲染一致的球体大小计算阈值
+        const nodeSize = 12;
+        const renderRadius = nodeSize * proj.scale;
+        const clickThreshold = Math.max(renderRadius * 1.5, 20);
+        
+        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
+
+        if (distance < clickThreshold) {
           // 找到匹配的节点
-          console.log('clicked year:', year);
+          const dataItem = data.find(item => item.year === year);
+          if (dataItem) {
+            clickedYear = year;
+            clickedData = dataItem;
+          }
           break;
+        }
+      }
+
+      if (clickedYear !== null && clickedData) {
+        // 检查该年份是否有大事记
+        const hasEvents = getEventsByYear(clickedYear);
+        
+        // 显示年度点击菜单
+        setYearClickMenu({
+          year: clickedYear,
+          x: e.clientX,
+          y: e.clientY,
+          visible: true
+        });
+        
+        // 如果没有大事记，直接进入学院视图
+        if (!hasEvents) {
+          setSelectedYear(clickedYear);
+          solarAutoRotationRef.current = rotationRef.current;
+          setCurrentView('solar');
+          setYearStats({
+            year: clickedYear,
+            deptCount: clickedData.departmentCount,
+            majorCount: clickedData.majorCount
+          });
         }
       }
     }
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (currentView === 'spiral') {
-      // 双击年份节点进入太阳系视图
-      const projection = spiralProjectionRef.current;
-      if (!projection || !canvasRef.current) return;
-
-      // 获取当前的 centerX 和 centerY（与渲染时一致）
-      const clickCenterX = rect.width / 2;
-      const clickCenterY = rect.height / 2;
-
-      console.log('double click params:', {
-        projectionStartYear: projection.startYear,
+    // 双击功能已移除，单击即可显示菜单
+  };
         projectionTotalYears: projection.totalYears,
         projectionRings: projection.rings,
         clickX: x,
