@@ -1599,7 +1599,7 @@ export default function ProfessionalSpiralTower() {
 
         // 中心太阳（响应式半径，跟随缩放）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
-        const sunRadius = (isMobileSolar ? 15 : (isTabletSolar ? 17 : 18)) * Math.sqrt(zoomLevelRef.current);
+        const sunRadius = (isMobileSolar ? 12 : (isTabletSolar ? 14 : 14)) * Math.sqrt(zoomLevelRef.current);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
@@ -1801,7 +1801,7 @@ export default function ProfessionalSpiralTower() {
 
             // 在太阳球下方绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
-              const sunFontSize = isMobileSolar ? 18 : (isTabletSolar ? 20 : 22);
+              const sunFontSize = isMobileSolar ? 13 : (isTabletSolar ? 14 : 15);
               const scale = obj.scale || 1;
               const yearText = selectedYear.toString();
               const textY = y + r + sunFontSize * scale * 0.8; // 字体在球体下方
