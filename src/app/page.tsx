@@ -2945,6 +2945,7 @@ export default function ProfessionalSpiralTower() {
               min="1956"
               max="2025"
               value={selectedYear || 1956}
+              onInput={(e) => setSelectedYear(parseInt((e.target as HTMLInputElement).value))}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="absolute w-full h-8 appearance-none bg-transparent cursor-pointer z-10
                 [&::-webkit-slider-thumb]:appearance-none
