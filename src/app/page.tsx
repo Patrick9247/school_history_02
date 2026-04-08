@@ -2,32 +2,32 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
-// 行星颜色配置（太阳系行星颜色）
+// 行星颜色配置（柔和色调，更接近真实行星）
 const PLANET_COLORS = [
-  { name: '水星', color: '#B5B5B5', gradient: ['#D4D4D4', '#8A8A8A'] },     // 灰色
-  { name: '金星', color: '#E6C87A', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
-  { name: '地球', color: '#4A90D9', gradient: ['#87CEEB', '#2E8B57'] },     // 蓝绿色
-  { name: '火星', color: '#CD5C5C', gradient: ['#E9967A', '#8B4513'] },     // 红褐色
-  { name: '木星', color: '#D4A574', gradient: ['#F4A460', '#CD853F'] },     // 橙褐色
-  { name: '土星', color: '#F4D03F', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
-  { name: '天王星', color: '#72D5E8', gradient: ['#87CEEB', '#4169E1'] },   // 青蓝色
-  { name: '海王星', color: '#4169E1', gradient: ['#6495ED', '#00008B'] },   // 深蓝色
-  { name: '冥王星', color: '#D2B48C', gradient: ['#DEB887', '#A0522D'] },   // 棕褐色
-  { name: '月球', color: '#C0C0C0', gradient: ['#D3D3D3', '#808080'] },    // 银灰色
-  { name: '太阳', color: '#FFD700', gradient: ['#FFA500', '#FF4500'] },    // 金橙色
-  { name: '金星2', color: '#F5DEB3', gradient: ['#FFE4B5', '#D2691E'] },   // 浅金色
-  { name: '火星2', color: '#FF6347', gradient: ['#FF7F50', '#B22222'] },   // 番茄红
-  { name: '木星2', color: '#FF8C00', gradient: ['#FFA07A', '#8B0000'] },   // 暗橙红
-  { name: '土星2', color: '#FFB6C1', gradient: ['#FFC0CB', '#DB7093'] },  // 粉金色
-  { name: '彗星', color: '#9370DB', gradient: ['#E6E6FA', '#8A2BE2'] },    // 紫罗兰
-  { name: '流星', color: '#FF69B4', gradient: ['#FFB6C1', '#FF1493'] },   // 热粉红
-  { name: '星云', color: '#00CED1', gradient: ['#40E0D0', '#008B8B'] },   // 深青色
-  { name: '星际', color: '#FF1493', gradient: ['#FF69B4', '#C71585'] },   // 深粉红
-  { name: '银河', color: '#9400D3', gradient: ['#DA70D6', '#4B0082'] },    // 暗紫罗兰
-  { name: '极光', color: '#00FA9A', gradient: ['#98FB98', '#006400'] },   // 春绿色
-  { name: '日食', color: '#FF4500', gradient: ['#FF6347', '#DC143C'] },   // 橙红色
-  { name: '月食', color: '#8B0000', gradient: ['#A52A2A', '#4A0000'] },    // 暗红色
-  { name: '极光2', color: '#7FFF00', gradient: ['#ADFF2F', '#556B2F'] },   // 黄绿色
+  { name: '水星', color: '#9B9B9B', gradient: ['#B5B5B5', '#7A7A7A'] },     // 灰色
+  { name: '金星', color: '#C9B896', gradient: ['#D4C9A8', '#A89878'] },     // 米黄色
+  { name: '地球', color: '#6B8E9B', gradient: ['#7A9BAA', '#5A7A88'] },     // 灰蓝色
+  { name: '火星', color: '#A67B5B', gradient: ['#B58B6B', '#8B5B3B'] },     // 褐红色
+  { name: '木星', color: '#C4A77D', gradient: ['#D4B78D', '#A4876D'] },     // 浅褐色
+  { name: '土星', color: '#C9B896', gradient: ['#D9C8A6', '#A99876'] },     // 淡金色
+  { name: '天王星', color: '#8FABB8', gradient: ['#9FBBC8', '#7F9BA8'] },   // 灰青色
+  { name: '海王星', color: '#5B7B9B', gradient: ['#6B8BAB', '#4B6B8B'] },   // 深蓝灰
+  { name: '冥王星', color: '#A89888', gradient: ['#B8A898', '#988878'] },   // 棕灰色
+  { name: '月球', color: '#A0A0A0', gradient: ['#B0B0B0', '#909090'] },    // 银灰
+  { name: '月球2', color: '#959595', gradient: ['#A5A5A5', '#858585'] },   // 暗银灰
+  { name: '水星2', color: '#858585', gradient: ['#959595', '#757575'] },   // 深灰
+  { name: '火星2', color: '#967560', gradient: ['#A68570', '#866550'] },   // 暗褐红
+  { name: '木星2', color: '#B89B70', gradient: ['#C8AB80', '#A88B60'] },   // 暖褐色
+  { name: '土星2', color: '#B5A585', gradient: ['#C5B595', '#A59575'] },  // 灰金
+  { name: '月球3', color: '#8A8A8A', gradient: ['#9A9A9A', '#7A7A7A'] },    // 中灰
+  { name: '火星3', color: '#8B6B5B', gradient: ['#9B7B6B', '#7B5B4B'] },   // 暗红灰
+  { name: '地球2', color: '#7A8B96', gradient: ['#8A9BA6', '#6A7B86'] },   // 蓝灰
+  { name: '天王星2', color: '#7A9AAA', gradient: ['#8AAABA', '#6A8A9A'] },    // 浅蓝灰
+  { name: '海王星2', color: '#6B8BA8', gradient: ['#7B9BB8', '#5B7B98'] },   // 灰蓝
+  { name: '冥王星2', color: '#988878', gradient: ['#A89888', '#887868'] },    // 浅棕灰
+  { name: '月球4', color: '#909090', gradient: ['#A0A0A0', '#808080'] },    // 冷灰
+  { name: '水星3', color: '#7B7B7B', gradient: ['#8B8B8B', '#6B6B6B'] },    // 暗灰
+  { name: '金星2', color: '#B5A585', gradient: ['#C5B595', '#A59575'] },   // 柔金
 ];
 
 // 获取学院球颜色（使用行星颜色）
