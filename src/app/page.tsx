@@ -1709,7 +1709,7 @@ export default function ProfessionalSpiralTower() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // 检测点击节点 - 仅用于显示 tooltip
+    // 检测点击节点
     if (currentView === 'spiral') {
       const projection = spiralProjectionRef.current;
       if (!projection || !canvasRef.current) return;
@@ -1723,6 +1723,8 @@ export default function ProfessionalSpiralTower() {
       const progressDivisor = projection.totalYears - 1;
       
       // 遍历所有年份节点，找到点击的节点
+      let clickedYear: number | null = null;
+      
       for (let i = 0; i < allYears.length; i++) {
         const year = allYears[i];
         const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
@@ -1731,13 +1733,30 @@ export default function ProfessionalSpiralTower() {
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
+        
+        // 使用与渲染一致的球体大小计算阈值
+        const nodeSize = 12;
+        const renderRadius = nodeSize * proj.scale;
+        const clickThreshold = Math.max(renderRadius * 1.5, 20);
+        
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
         
-        if (distance < 20 * proj.scale) {
+        if (distance < clickThreshold) {
           // 找到匹配的节点
+          clickedYear = year;
           console.log('clicked year:', year);
           break;
         }
+      }
+
+      if (clickedYear !== null) {
+        // 单击年份球，显示年份菜单
+        setSelectedYear(clickedYear);
+        setYearMenuPosition({ x: e.clientX, y: e.clientY });
+        setShowYearMenu(true);
+      } else {
+        // 单击空白区域，关闭菜单
+        setShowYearMenu(false);
       }
     }
   };
@@ -1751,61 +1770,20 @@ export default function ProfessionalSpiralTower() {
     const y = e.clientY - rect.top;
 
     if (currentView === 'spiral') {
-      // 双击年份节点进入太阳系视图
-      const projection = spiralProjectionRef.current;
-      if (!projection || !canvasRef.current) return;
-
-      // 获取当前的 centerX 和 centerY（与渲染时一致）
-      const clickCenterX = rect.width / 2;
-      const clickCenterY = rect.height / 2;
-
-      console.log('double click params:', {
-        projectionStartYear: projection.startYear,
-        projectionTotalYears: projection.totalYears,
-        projectionRings: projection.rings,
-        clickX: x,
-        clickY: y,
-        clickCenterX,
-        clickCenterY,
-        allYearsCount: allYears.length
-      });
-
-      // 检测双击的球体（使用与节点生成相同的 progress 计算）
-      // 遍历所有年份节点，找到点击的节点
-      let clickedYear: number | null = null;
-      let clickedData: any = null;
-      const progressDivisor = projection.totalYears - 1;
-
-      for (let i = 0; i < allYears.length; i++) {
-        const year = allYears[i];
-        const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
-        const angle = progress * projection.rings * Math.PI * 2;
-        const lx = Math.cos(angle) * projection.baseRadius;
-        const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
-        const lz = Math.sin(angle) * projection.baseRadius;
-        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
-        
-        // 使用与渲染一致的球体大小计算阈值
-        const nodeSize = 12; // 节点原始大小
-        const renderRadius = nodeSize * proj.scale; // 实际渲染半径
-        const clickThreshold = Math.max(renderRadius * 1.5, 20); // 点击范围：渲染半径的1.5倍，最小20px
-        
-        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-
-        if (distance < clickThreshold) {
-          // 找到匹配的节点
-          clickedYear = year;
-          clickedData = data.find(item => item.year === year);
-          console.log('clicked year:', year, clickedData ? `has data: ${clickedData.majorCount} majors` : 'no data');
-          break;
+      // 双击年份节点进入太阳系视图（如果有选中的年份）
+      if (selectedYear !== null) {
+        const dataItem = data.find(item => item.year === selectedYear);
+        if (dataItem) {
+          // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
+          solarAutoRotationRef.current = rotationRef.current;
+          setCurrentView('solar');
+          // 更新年份统计信息
+          setYearStats({
+            year: selectedYear,
+            deptCount: dataItem.departmentCount,
+            majorCount: dataItem.majorCount
+          });
         }
-      }
-
-      if (clickedYear !== null) {
-        // 显示年份菜单（大白兔菜单）
-        setSelectedYear(clickedYear);
-        setYearMenuPosition({ x: e.clientX, y: e.clientY });
-        setShowYearMenu(true);
       }
     } else if (currentView === 'solar') {
       // 检测点击学院或专业球
