@@ -658,8 +658,8 @@ export default function ProfessionalSpiralTower() {
       const hasData = dataItem !== undefined;
       const isEmptyYear = !hasData; // 1966-1971等无数据年份
       
-      // 无数据的年份显示白球
-      const specialColor = isEmptyYear ? '#FFFFFF' : (SPECIAL_YEAR_COLORS[year] || null);
+      // 无数据的年份显示灰球
+      const specialColor = isEmptyYear ? '#888888' : (SPECIAL_YEAR_COLORS[year] || null);
       
       console.log('node:', { year, progress, angle, majorCount: dataItem?.majorCount || 0, isEmptyYear });
       return {
@@ -1225,7 +1225,7 @@ export default function ProfessionalSpiralTower() {
             ctx.font = `${9 * node.scale}px sans-serif`;
             ctx.fillStyle = node.hasData 
               ? `rgba(255, 255, 255, ${opacity * 0.85})` 
-              : `rgba(200, 200, 200, ${opacity * 0.6})`; // 无数据年份用灰色
+              : `rgba(150, 150, 150, ${opacity * 0.5})`; // 无数据年份用灰色
             ctx.textAlign = 'center';
             ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
           }
