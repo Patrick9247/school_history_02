@@ -940,8 +940,8 @@ export default function ProfessionalSpiralTower() {
       } else {
         // 太阳系视图
 
-        // 自动旋转学院球（如果没有拖动且没有悬停在学院球上）
-        if (!isDraggingRef.current && !isHoveringCollegeRef.current) {
+        // 自动旋转学院球（如果没有拖动、没有悬停在学院球上、且没有触摸操作）
+        if (!isDraggingRef.current && !isHoveringCollegeRef.current && !isTouchDraggingRef.current) {
           solarAutoRotationRef.current += 0.003;
         }
 
@@ -956,9 +956,9 @@ export default function ProfessionalSpiralTower() {
 
         const renderObjects: RenderObject[] = [];
 
-        // 中心太阳（响应式半径）
+        // 中心太阳（响应式半径，跟随缩放）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
-        const sunRadius = isMobileSolar ? 16 : (isTabletSolar ? 18 : 20);
+        const sunRadius = (isMobileSolar ? 16 : (isTabletSolar ? 18 : 20)) * Math.sqrt(zoomLevelRef.current);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
@@ -977,7 +977,7 @@ export default function ProfessionalSpiralTower() {
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14),
+            radius: (isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
             collegeName: dept.college
@@ -1003,7 +1003,7 @@ export default function ProfessionalSpiralTower() {
                 type: 'major',
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
-                radius: isMobileSolar ? 3 : (isTabletSolar ? 3.5 : 4),
+                radius: (isMobileSolar ? 3 : (isTabletSolar ? 3.5 : 4)) * Math.sqrt(zoomLevelRef.current),
                 color: dept.color,
                 majorData: major,
                 collegeName: dept.name,
@@ -1335,12 +1335,78 @@ export default function ProfessionalSpiralTower() {
     }
   };
 
-  // 触摸事件处理（用于双指缩放，只在太阳系视图中生效）
+  // 触摸事件处理（用于双指缩放和单指拖拽旋转，只在太阳系视图中生效）
   const initialTouchDistanceRef = useRef<number | null>(null);
   const initialZoomRef = useRef<number>(1);
+  const isTouchDraggingRef = useRef<boolean>(false);
+  const lastTouchPosRef = useRef<{ x: number; y: number } | null>(null);
+  const activeTouchCountRef = useRef<number>(0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (currentView === 'solar' && e.touches.length === 2) {
+    if (currentView === 'solar') {
+      activeTouchCountRef.current = e.touches.length;
+
+      if (e.touches.length === 2) {
+        // 双指缩放
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+        initialTouchDistanceRef.current = distance;
+        initialZoomRef.current = zoomLevelRef.current;
+        isTouchDraggingRef.current = false;
+        lastTouchPosRef.current = null;
+      } else if (e.touches.length === 1) {
+        // 单指拖拽旋转
+        isTouchDraggingRef.current = true;
+        lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        initialTouchDistanceRef.current = null;
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (currentView === 'solar') {
+      activeTouchCountRef.current = e.touches.length;
+
+      if (e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
+        // 双指缩放
+        e.preventDefault();
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const distance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        // 使用更平滑的缩放比例
+        const targetZoom = initialZoomRef.current * (distance / initialTouchDistanceRef.current);
+        // 平滑过渡到目标缩放值
+        zoomLevelRef.current = Math.max(0.5, Math.min(2, targetZoom));
+      } else if (e.touches.length === 1 && isTouchDraggingRef.current && lastTouchPosRef.current) {
+        // 单指拖拽旋转
+        e.preventDefault();
+        const deltaX = e.touches[0].clientX - lastTouchPosRef.current.x;
+        const deltaY = e.touches[0].clientY - lastTouchPosRef.current.y;
+
+        // 水平拖拽 → 绕 Y 轴旋转
+        solarRotYRef.current += deltaX * 0.005;
+        // 垂直拖拽 → 绕 X 轴旋转
+        solarRotXRef.current += deltaY * 0.005;
+
+        lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    activeTouchCountRef.current = e.touches.length;
+
+    // 如果还有手指在触摸，更新状态
+    if (e.touches.length === 2) {
+      // 从双指变为双指（可能是一个手指离开了又快速按下）
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const distance = Math.hypot(
@@ -1349,25 +1415,19 @@ export default function ProfessionalSpiralTower() {
       );
       initialTouchDistanceRef.current = distance;
       initialZoomRef.current = zoomLevelRef.current;
+      isTouchDraggingRef.current = false;
+      lastTouchPosRef.current = null;
+    } else if (e.touches.length === 1) {
+      // 从双指变为单指
+      initialTouchDistanceRef.current = null;
+      isTouchDraggingRef.current = true;
+      lastTouchPosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 0) {
+      // 所有手指都离开了
+      initialTouchDistanceRef.current = null;
+      isTouchDraggingRef.current = false;
+      lastTouchPosRef.current = null;
     }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (currentView === 'solar' && e.touches.length === 2 && initialTouchDistanceRef.current !== null) {
-      e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const distance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      const ratio = distance / initialTouchDistanceRef.current;
-      zoomLevelRef.current = Math.max(0.5, Math.min(2, initialZoomRef.current * ratio));
-    }
-  };
-
-  const handleTouchEnd = () => {
-    initialTouchDistanceRef.current = null;
   };
 
   // 自定义滚动条样式
