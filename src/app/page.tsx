@@ -1089,20 +1089,70 @@ export default function ProfessionalSpiralTower() {
         
         ctx.restore();
 
-        // 步骤3: 极地冰盖
+        // 步骤3: 极地冰盖 - 更丰富的层次
         const polarCapHeight = radius * 0.22;
-        // 北极
+        
+        // 北极冰盖
+        // 冰盖底色
         ctx.beginPath();
-        ctx.ellipse(x, y - radius * 0.9, radius * 0.5, polarCapHeight, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(240, 248, 255, 0.6)';
+        ctx.ellipse(x, y - radius * 0.9, radius * 0.55, polarCapHeight, 0, 0, Math.PI * 2);
+        const northPolarGrad = ctx.createRadialGradient(x, y - radius * 0.9, 0, x, y - radius * 0.9, radius * 0.6);
+        northPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        northPolarGrad.addColorStop(0.4, 'rgba(240, 248, 255, 0.6)');
+        northPolarGrad.addColorStop(0.7, 'rgba(200, 220, 240, 0.4)');
+        northPolarGrad.addColorStop(1, 'rgba(180, 200, 220, 0.2)');
+        ctx.fillStyle = northPolarGrad;
         ctx.globalAlpha = opacity;
         ctx.fill();
-        // 南极
+        
+        // 北极冰盖高光
         ctx.beginPath();
-        ctx.ellipse(x, y + radius * 0.9, radius * 0.45, polarCapHeight * 0.85, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(220, 240, 255, 0.5)';
+        ctx.ellipse(x - radius * 0.1, y - radius * 0.92, radius * 0.25, polarCapHeight * 0.5, 0, 0, Math.PI * 2);
+        const northHighlight = ctx.createRadialGradient(x - radius * 0.15, y - radius * 0.95, 0, x, y - radius * 0.9, radius * 0.3);
+        northHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+        northHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = northHighlight;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        
+        // 北极周围暗环（冰缘）
+        ctx.beginPath();
+        ctx.ellipse(x, y - radius * 0.9, radius * 0.58, polarCapHeight * 1.1, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(100, 120, 140, 0.25)';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = opacity;
+        ctx.stroke();
+        
+        // 南极冰盖
+        // 冰盖底色
+        ctx.beginPath();
+        ctx.ellipse(x, y + radius * 0.9, radius * 0.5, polarCapHeight * 0.9, 0, 0, Math.PI * 2);
+        const southPolarGrad = ctx.createRadialGradient(x, y + radius * 0.9, 0, x, y + radius * 0.9, radius * 0.55);
+        southPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
+        southPolarGrad.addColorStop(0.5, 'rgba(230, 245, 255, 0.55)');
+        southPolarGrad.addColorStop(0.8, 'rgba(190, 210, 235, 0.35)');
+        southPolarGrad.addColorStop(1, 'rgba(160, 190, 220, 0.15)');
+        ctx.fillStyle = southPolarGrad;
+        ctx.globalAlpha = opacity * 0.9;
+        ctx.fill();
+        
+        // 南极冰盖高光
+        ctx.beginPath();
+        ctx.ellipse(x + radius * 0.08, y + radius * 0.88, radius * 0.2, polarCapHeight * 0.4, 0, 0, Math.PI * 2);
+        const southHighlight = ctx.createRadialGradient(x + radius * 0.08, y + radius * 0.88, 0, x, y + radius * 0.9, radius * 0.25);
+        southHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        southHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = southHighlight;
         ctx.globalAlpha = opacity * 0.85;
         ctx.fill();
+        
+        // 南极周围暗环
+        ctx.beginPath();
+        ctx.ellipse(x, y + radius * 0.9, radius * 0.53, polarCapHeight * 0.95, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(100, 120, 140, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = opacity * 0.9;
+        ctx.stroke();
 
         // 步骤4: 晨昏线阴影（背光面）
         ctx.save();
