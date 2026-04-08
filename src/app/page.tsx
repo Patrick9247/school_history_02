@@ -620,10 +620,10 @@ export default function ProfessionalSpiralTower() {
     const spiralHeight = isMobile ? 600 : (isTablet ? 700 : 800);
     const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18));
 
-  // 生成螺旋节点
-    const spiralNodes = data.map((item, index) => {
+  // 生成螺旋节点（使用年份计算 progress，而不是数组索引）
+    const spiralNodes = data.map((item) => {
       const year = item.year;
-      const progress = index / totalYears;
+      const progress = (year - startYear) / (endYear - startYear);
       const angle = progress * rings * Math.PI * 2;
       return {
         localX: Math.cos(angle) * baseRadius,
@@ -664,6 +664,7 @@ export default function ProfessionalSpiralTower() {
       spiralHeight,
       baseRadius,
       totalYears,
+      startYear,
       rings
     };
 
@@ -1391,11 +1392,11 @@ export default function ProfessionalSpiralTower() {
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
-      // 检测悬停节点
+      // 检测悬停节点（使用年份计算 progress）
       const projection = spiralProjectionRef.current;
       if (projection) {
-        const hoveredNode = data.find((item, index) => {
-          const progress = index / projection.totalYears;
+        const hoveredNode = data.find((item) => {
+          const progress = (item.year - projection.startYear) / projection.totalYears;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1458,8 +1459,8 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
-      const clickedNode = data.find((item, index) => {
-        const progress = index / projection.totalYears;
+      const clickedNode = data.find((item) => {
+        const progress = (item.year - projection.startYear) / projection.totalYears;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1489,12 +1490,12 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
-      // 检测双击的球体（使用与触摸相同的范围）
+      // 检测双击的球体（使用年份计算 progress）
       let clickedNode: any = null;
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
-        const progress = i / projection.totalYears;
+        const progress = (item.year - projection.startYear) / projection.totalYears;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1643,10 +1644,10 @@ export default function ProfessionalSpiralTower() {
         // 检测是否触摸到球（使用较大的固定触摸范围）
         let touchedNode: any = null;
 
-        // 遍历所有球体，找到触摸范围内的球体
+        // 遍历所有球体，找到触摸范围内的球体（使用年份计算 progress）
         for (let i = 0; i < data.length; i++) {
           const item = data[i];
-          const progress = i / projection.totalYears;
+          const progress = (item.year - projection.startYear) / projection.totalYears;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
