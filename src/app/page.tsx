@@ -1666,7 +1666,138 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    // 双击查看专业历史沿革功能已关闭
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (currentView === 'spiral') {
+      // 双击年份节点进入太阳系视图
+      const projection = spiralProjectionRef.current;
+      if (!projection || !canvasRef.current) return;
+
+      // 获取当前的 centerX 和 centerY（与渲染时一致）
+      const clickCenterX = rect.width / 2;
+      const clickCenterY = rect.height / 2;
+
+      console.log('double click params:', {
+        projectionStartYear: projection.startYear,
+        projectionTotalYears: projection.totalYears,
+        projectionRings: projection.rings,
+        clickX: x,
+        clickY: y,
+        clickCenterX,
+        clickCenterY,
+        allYearsCount: allYears.length
+      });
+
+      // 检测双击的球体（使用与节点生成相同的 progress 计算）
+      // 遍历所有年份节点，找到点击的节点
+      let clickedYear: number | null = null;
+      let clickedData: any = null;
+      const progressDivisor = projection.totalYears - 1;
+
+      for (let i = 0; i < allYears.length; i++) {
+        const year = allYears[i];
+        const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
+        const angle = progress * projection.rings * Math.PI * 2;
+        const lx = Math.cos(angle) * projection.baseRadius;
+        const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
+        const lz = Math.sin(angle) * projection.baseRadius;
+        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
+        
+        // 使用与渲染一致的球体大小计算阈值
+        const nodeSize = 12; // 节点原始大小
+        const renderRadius = nodeSize * proj.scale; // 实际渲染半径
+        const clickThreshold = Math.max(renderRadius * 1.5, 20); // 点击范围：渲染半径的1.5倍，最小20px
+        
+        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
+        
+        // 调试：只输出距离较小的节点
+        if (distance < 100) {
+          console.log('checking node:', { i, year, distance: distance.toFixed(2), threshold: clickThreshold.toFixed(2), renderRadius: renderRadius.toFixed(2) });
+        }
+
+        if (distance < clickThreshold) {
+          // 找到匹配的节点
+          const dataItem = data.find(item => item.year === year);
+          if (dataItem) {
+            // 只允许双击有数据的年份
+            clickedYear = year;
+            clickedData = dataItem;
+            console.log('clicked:', { year, majorCount: dataItem.majorCount });
+          } else {
+            console.log('no data for year:', year);
+          }
+          break;
+        }
+      }
+
+      if (clickedYear !== null && clickedData) {
+        setSelectedYear(clickedYear); // 设置选中年份
+        // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
+        solarAutoRotationRef.current = rotationRef.current;
+        setCurrentView('solar');
+        // 更新年份统计信息
+        setYearStats({
+          year: clickedYear,
+          deptCount: clickedData.departmentCount,
+          majorCount: clickedData.majorCount
+        });
+      }
+    } else if (currentView === 'solar') {
+      // 检测点击学院或专业球
+      const renderObjects = renderObjectsRef.current;
+      let clickedObject: RenderObject | null = null;
+
+      // 检测点击学院
+      const clickedDept = renderObjects.find(obj => {
+        if (obj.type !== 'department') return false;
+        const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+        return distance < obj.radius * 1.5; // 增加点击范围
+      });
+
+      if (clickedDept) {
+        clickedObject = clickedDept;
+      } else {
+        // 检测点击专业
+        const clickedMajor = renderObjects.find(obj => {
+          if (obj.type !== 'major') return false;
+          const distance = Math.sqrt((x - (obj.x || 0)) ** 2 + (y - (obj.y || 0)) ** 2);
+          return distance < obj.radius * 2; // 专业球较小，增加点击范围
+        });
+
+        if (clickedMajor) {
+          clickedObject = clickedMajor;
+        }
+      }
+
+      if (clickedObject) {
+        if (clickedObject.type === 'department' && clickedObject.name) {
+          // 双击学院，显示该学院的所有专业
+          const deptNode = currentDepartmentsRef.current.find(d => d.name === clickedObject.name);
+          if (deptNode && deptNode.majors.length > 0) {
+            setSelectedCollege({
+              name: clickedObject.name,
+              color: clickedObject.color,
+              majors: deptNode.majors
+            });
+          }
+        } else if (clickedObject.type === 'major' && clickedObject.majorData) {
+          // 双击专业，显示专业详细信息
+          setSelectedMajor(clickedObject.majorData);
+        }
+      } else {
+        // 双击空白区域，清除选中状态并返回螺旋塔视图
+        setSelectedCollege(null);
+        setSelectedMajor(null);
+        setSelectedYear(null);
+        setYearStats(null);
+        setCurrentView('spiral');
+      }
+    }
   };
 
   const zoomIn = () => {
