@@ -502,13 +502,6 @@ export default function ProfessionalSpiralTower() {
     };
   }>>([]);
 
-  // 初始化默认选中第一个专业
-  useEffect(() => {
-    if (allMajors.length > 0 && !userSelectedMajor) {
-      setUserSelectedMajor(allMajors[0]);
-    }
-  }, [allMajors, userSelectedMajor]);
-
   // 发送光球
   const sendLightBall = () => {
     if (!userSelectedMajor) return;
@@ -1827,9 +1820,6 @@ export default function ProfessionalSpiralTower() {
       {/* 用户发送光球选择框 */}
       <div className="absolute right-3 md:right-4 top-16 md:top-20 z-20">
         <div className="flex flex-col items-end gap-2">
-          <div className="text-[10px] md:text-[11px] text-white/50 text-right mb-1">
-            请输入专业名称试一试
-          </div>
           <div className="relative w-36 md:w-44 major-input-container">
             <input
               type="text"
@@ -1839,8 +1829,8 @@ export default function ProfessionalSpiralTower() {
                 setPopoverOpen(true);
               }}
               onFocus={() => setPopoverOpen(true)}
-              placeholder=""
-              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-transparent"
+              placeholder="输入专业名称..."
+              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
             />
             {popoverOpen && (
               <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
