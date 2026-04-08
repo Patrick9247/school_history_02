@@ -298,6 +298,16 @@ export default function ProfessionalSpiralTower() {
   const lastLightCreateTimeRef = useRef(0);
   const LIGHT_CREATE_INTERVAL = 0.53; // 每秒产生的光点数量（0.53秒产生一个，增加3倍）
 
+  // 星空粒子系统
+  const starsRef = useRef<Array<{
+    x: number; y: number; size: number; brightness: number;
+    twinkleSpeed: number; twinkleOffset: number; color: string;
+  }>>([]);
+  const nebulaCloudsRef = useRef<Array<{
+    x: number; y: number; radius: number; color: string;
+    opacity: number; driftSpeed: number; rotation: number;
+  }>>([]);
+
   // 标记是否已初始化光点队列
   const lightParticlesInitializedRef = useRef(false);
 
@@ -1156,6 +1166,74 @@ export default function ProfessionalSpiralTower() {
       // 更新动画时间
       animationTimeRef.current += 0.016;
 
+      // 初始化星空粒子（只在第一次或窗口大小变化时）
+      if (starsRef.current.length === 0 || starsRef.current[0].x !== canvas.width) {
+        starsRef.current = [];
+        for (let i = 0; i < 200; i++) {
+          starsRef.current.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 0.5,
+            brightness: Math.random() * 0.5 + 0.5,
+            twinkleSpeed: Math.random() * 2 + 1,
+            twinkleOffset: Math.random() * Math.PI * 2,
+            color: Math.random() > 0.8 ? '#88ccff' : (Math.random() > 0.5 ? '#ffffff' : '#aaddff')
+          });
+        }
+        // 初始化星云
+        nebulaCloudsRef.current = [];
+        for (let i = 0; i < 5; i++) {
+          nebulaCloudsRef.current.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 300 + 150,
+            color: ['#4a1a6b', '#1a3a6b', '#6b1a3a', '#1a4a6b', '#3a1a6b'][i],
+            opacity: Math.random() * 0.15 + 0.05,
+            driftSpeed: (Math.random() - 0.5) * 0.1,
+            rotation: Math.random() * Math.PI * 2
+          });
+        }
+      }
+
+      // 绘制深空星云背景
+      nebulaCloudsRef.current.forEach(nebula => {
+        const gradient = ctx.createRadialGradient(
+          nebula.x, nebula.y, 0,
+          nebula.x, nebula.y, nebula.radius
+        );
+        gradient.addColorStop(0, nebula.color + '40');
+        gradient.addColorStop(0.5, nebula.color + '20');
+        gradient.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(nebula.x, nebula.y, nebula.radius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = nebula.opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // 星云缓慢漂移
+        nebula.x += nebula.driftSpeed;
+        nebula.y += nebula.driftSpeed * 0.5;
+        nebula.rotation += 0.0001;
+        // 边界检测
+        if (nebula.x < -nebula.radius) nebula.x = canvas.width + nebula.radius;
+        if (nebula.x > canvas.width + nebula.radius) nebula.x = -nebula.radius;
+        if (nebula.y < -nebula.radius) nebula.y = canvas.height + nebula.radius;
+        if (nebula.y > canvas.height + nebula.radius) nebula.y = -nebula.radius;
+      });
+
+      // 绘制星空粒子
+      starsRef.current.forEach(star => {
+        const twinkle = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset) * 0.3 + 0.7;
+        const alpha = star.brightness * twinkle;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = star.color;
+        ctx.globalAlpha = alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
       if (currentView === 'spiral') {
         // 更新旋转（如果没有拖动、没有触摸操作、且鼠标不在螺旋体上）
         if (!isDraggingRef.current && !isTouchDraggingRef.current && !isTouchingNodeRef.current && !isHoveringSpiralRef.current) {
@@ -1703,7 +1781,21 @@ export default function ProfessionalSpiralTower() {
         // 保存渲染对象到 ref，用于点击检测
         renderObjectsRef.current = renderObjects;
 
-        // 绘制学院轨道线（椭圆）- 优化：使用角度缓存
+        // 绘制学院轨道线（渐变效果）
+        // 外层轨道光晕
+        const orbitGlowGradient = ctx.createRadialGradient(
+          centerX, centerY, orbitRadiusX * 0.5,
+          centerX, centerY, orbitRadiusX * 1.5
+        );
+        orbitGlowGradient.addColorStop(0, 'rgba(96, 165, 250, 0)');
+        orbitGlowGradient.addColorStop(0.7, 'rgba(96, 165, 250, 0.05)');
+        orbitGlowGradient.addColorStop(1, 'rgba(96, 165, 250, 0)');
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, orbitRadiusX * 1.3, orbitRadiusY * 1.3, 0, 0, Math.PI * 2);
+        ctx.fillStyle = orbitGlowGradient;
+        ctx.fill();
+
+        // 主轨道线（渐变）
         ctx.beginPath();
         for (let i = 0; i <= orbitSteps; i++) {
           const angleCacheItem = orbitAngleCache[i];
@@ -1717,9 +1809,80 @@ export default function ProfessionalSpiralTower() {
           }
         }
         ctx.closePath();
-        ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
-        ctx.lineWidth = 4;
+        // 创建渐变描边
+        const orbitStrokeGradient = ctx.createLinearGradient(
+          centerX - orbitRadiusX, centerY,
+          centerX + orbitRadiusX, centerY
+        );
+        orbitStrokeGradient.addColorStop(0, 'rgba(96, 165, 250, 0.15)');
+        orbitStrokeGradient.addColorStop(0.3, 'rgba(147, 112, 219, 0.4)');
+        orbitStrokeGradient.addColorStop(0.5, 'rgba(96, 165, 250, 0.5)');
+        orbitStrokeGradient.addColorStop(0.7, 'rgba(147, 112, 219, 0.4)');
+        orbitStrokeGradient.addColorStop(1, 'rgba(96, 165, 250, 0.15)');
+        ctx.strokeStyle = orbitStrokeGradient;
+        ctx.lineWidth = 3;
         ctx.stroke();
+
+        // 内层轨道光晕
+        ctx.beginPath();
+        for (let i = 0; i <= orbitSteps; i++) {
+          const angleCacheItem = orbitAngleCache[i];
+          const lx = angleCacheItem.cos * (orbitRadiusX * 0.95);
+          const ly = angleCacheItem.sin * (orbitRadiusY * 0.95);
+          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
+          if (i === 0) {
+            ctx.moveTo(proj.x, proj.y);
+          } else {
+            ctx.lineTo(proj.x, proj.y);
+          }
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(147, 112, 219, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 绘制专业轨道（精细的虚线轨道）
+        currentDepartmentsRef.current.forEach((dept: DepartmentNode, i: number) => {
+          if (dept.majors && dept.majors.length > 0) {
+            const deptAngle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
+            const dlx = Math.cos(deptAngle) * orbitRadiusX;
+            const dly = Math.sin(deptAngle) * orbitRadiusY;
+            const majorOrbitRadius = (isMobileSolar ? 38 : (isTabletSolar ? 44 : 50)) * zoomLevelRef.current;
+
+            // 绘制精细的专业轨道（带虚线效果）
+            const majorOrbitSteps = 60;
+            for (let j = 0; j <= majorOrbitSteps; j++) {
+              const angle = j / majorOrbitSteps * Math.PI * 2;
+              const mlx = dlx + Math.cos(angle) * majorOrbitRadius;
+              const mly = dly + Math.sin(angle) * majorOrbitRadius * 0.4;
+              const proj = project3D(mlx, mly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
+
+              // 虚线效果（每3个点画一个点）
+              if (j % 3 === 0) {
+                const dashOpacity = 0.08 + Math.sin(angle * 3) * 0.04;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${dashOpacity})`;
+                ctx.fill();
+              }
+            }
+
+            // 绘制专业轨道的淡淡连线
+            ctx.beginPath();
+            ctx.ellipse(
+              centerX + dlx * (1 + majorOrbitRadius / orbitRadiusX * 0.1),
+              centerY + dly * (1 + majorOrbitRadius / orbitRadiusY * 0.1),
+              majorOrbitRadius * 0.9,
+              majorOrbitRadius * 0.36,
+              0, 0, Math.PI * 2
+            );
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 0.5;
+            ctx.setLineDash([2, 4]); // 虚线效果
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        });
 
         // 找到高亮专业所属的学院索引
         const highlightedParentIndex = highlightedMajor
@@ -1881,6 +2044,23 @@ export default function ProfessionalSpiralTower() {
               const innerGlowRadius = obj.radius * (0.45 + collegeGlowIntensity * 0.15);
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true, false);
             }
+            
+            // 绘制学院球大气层光晕效果
+            const atmRadius = obj.radius * 1.4;
+            const atmGradient = ctx.createRadialGradient(
+              obj.x || 0, obj.y || 0, obj.radius * 0.9,
+              obj.x || 0, obj.y || 0, atmRadius
+            );
+            atmGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            atmGradient.addColorStop(0.5, 'rgba(200, 220, 255, 0.15)');
+            atmGradient.addColorStop(0.8, 'rgba(150, 180, 255, 0.08)');
+            atmGradient.addColorStop(1, 'rgba(100, 150, 255, 0)');
+            ctx.beginPath();
+            ctx.arc(obj.x || 0, obj.y || 0, atmRadius, 0, Math.PI * 2);
+            ctx.fillStyle = atmGradient;
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+            ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
             const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
@@ -2739,18 +2919,68 @@ export default function ProfessionalSpiralTower() {
         </div>
       )}
 
-      {/* 返回按钮 */}
+      {/* 底部年份时间轴控件 */}
       {currentView === 'solar' && (
-        <button
-          onClick={() => {
-            setCurrentView('spiral');
-            setYearStats(null);
-            setSelectedYear(null);
-          }}
-          className="fixed bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 bg-blue-400/25 border border-blue-400/50 text-white px-5 md:px-7 py-2 md:py-2.5 rounded-full text-[11px] md:text-[12px] cursor-pointer z-10 active:scale-95 transition-transform"
-        >
-          返回螺旋塔
-        </button>
+        <div className="fixed bottom-4 md:bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+          {/* 年份显示 */}
+          <div className="bg-black/60 backdrop-blur-sm border border-blue-400/40 rounded-lg px-4 py-1.5">
+            <span className="text-white text-sm font-medium">{selectedYear || 1956}年</span>
+          </div>
+          
+          {/* 时间轴滑块 */}
+          <div className="relative w-64 md:w-80 h-8 flex items-center">
+            {/* 轨道背景 */}
+            <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-blue-500/30 rounded-full" />
+            
+            {/* 已走过部分 */}
+            <div 
+              className="absolute left-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-400 rounded-full"
+              style={{ width: `${((selectedYear || 1956) - 1956) / (2025 - 1956) * 100}%` }}
+            />
+            
+            {/* 可拖拽滑块 */}
+            <input
+              type="range"
+              min="1956"
+              max="2025"
+              value={selectedYear || 1956}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="absolute w-full h-8 appearance-none bg-transparent cursor-pointer z-10
+                [&::-webkit-slider-thumb]:appearance-none
+                [&::-webkit-slider-thumb]:w-4
+                [&::-webkit-slider-thumb]:h-4
+                [&::-webkit-slider-thumb]:rounded-full
+                [&::-webkit-slider-thumb]:bg-white
+                [&::-webkit-slider-thumb]:shadow-lg
+                [&::-webkit-slider-thumb]:shadow-blue-500/50
+                [&::-webkit-slider-thumb]:cursor-grab
+                [&::-webkit-slider-thumb]:active:cursor-grabbing
+                [&::-webkit-slider-thumb]:border-2
+                [&::-webkit-slider-thumb]:border-blue-400"
+            />
+            
+            {/* 年份刻度 */}
+            <div className="absolute -bottom-4 left-0 right-0 flex justify-between text-[9px] text-white/40">
+              <span>1956</span>
+              <span>1970</span>
+              <span>1990</span>
+              <span>2010</span>
+              <span>2025</span>
+            </div>
+          </div>
+          
+          {/* 返回按钮 */}
+          <button
+            onClick={() => {
+              setCurrentView('spiral');
+              setYearStats(null);
+              setSelectedYear(null);
+            }}
+            className="bg-blue-400/25 border border-blue-400/50 text-white px-4 py-1.5 rounded-full text-[11px] md:text-[12px] cursor-pointer active:scale-95 transition-transform"
+          >
+            返回螺旋塔
+          </button>
+        </div>
       )}
 
       {/* 年份点击菜单（大白兔菜单） */}
