@@ -253,6 +253,15 @@ export default function ProfessionalSpiralTower() {
     return data.length > 0 ? Math.max(...data.map(d => d.year)) : 2025;
   }, [data]);
 
+  // 生成所有年份数组（1956-2025，包括无数据的年份）
+  const allYears = useMemo(() => {
+    const years: number[] = [];
+    for (let y = 1956; y <= maxYear; y++) {
+      years.push(y);
+    }
+    return years;
+  }, [maxYear]);
+
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
     { year: 1956, label: "建校", desc: "成都地质勘探学院" },
@@ -620,7 +629,7 @@ export default function ProfessionalSpiralTower() {
     const centerY = rect.height / 2;
     const startYear = 1956;
     const endYear = maxYear;
-    const totalYears = endYear - startYear + 1;
+    const totalYears = endYear - startYear + 1; // 70年 (1956-2025)
     
     console.log('spiral params:', { startYear, endYear, totalYears });
     const rings = 6;
@@ -633,20 +642,36 @@ export default function ProfessionalSpiralTower() {
     const spiralHeight = isMobile ? 600 : (isTablet ? 700 : 800);
     const baseRadius = Math.min(rect.width, rect.height) * (isMobile ? 0.22 : (isTablet ? 0.20 : 0.18));
 
-  // 生成螺旋节点（使用年份计算 progress，而不是数组索引）
-    const spiralNodes = data.map((item) => {
-      const year = item.year;
-      const progress = (year - startYear) / (endYear - startYear);
+    // 计算某年对应的螺旋位置
+    const getYearProgress = (year: number) => {
+      return (year - startYear) / (totalYears - 1); // 使用 (totalYears - 1) 作为分母，与节点生成一致
+    };
+
+    // 获取数据中所有有数据的年份集合
+    const dataYearsSet = new Set(data.map(item => item.year));
+    
+    // 生成螺旋节点（所有年份，包括1966-1971空白的用白球显示）
+    const spiralNodes = allYears.map((year) => {
+      const progress = getYearProgress(year); // 使用统一的进度计算
       const angle = progress * rings * Math.PI * 2;
-      console.log('node:', { year, progress, angle, majorCount: item.majorCount });
+      const dataItem = data.find(item => item.year === year);
+      const hasData = dataItem !== undefined;
+      const isEmptyYear = !hasData; // 1966-1971等无数据年份
+      
+      // 无数据的年份显示白球
+      const specialColor = isEmptyYear ? '#FFFFFF' : (SPECIAL_YEAR_COLORS[year] || null);
+      
+      console.log('node:', { year, progress, angle, majorCount: dataItem?.majorCount || 0, isEmptyYear });
       return {
         localX: Math.cos(angle) * baseRadius,
         localY: (1 - progress) * spiralHeight - spiralHeight / 2,
         localZ: Math.sin(angle) * baseRadius,
-        year: item.year,
-        count: item.majorCount,
+        year: year,
+        count: dataItem?.majorCount || 0,
+        departmentCount: dataItem?.departmentCount || 0,
         size: 12, // 固定大小
-        specialColor: SPECIAL_YEAR_COLORS[year] || null
+        specialColor: specialColor,
+        hasData: hasData // 标记是否有数据
       };
     });
 
@@ -1195,10 +1220,12 @@ export default function ProfessionalSpiralTower() {
             ctx.font = `${7 * node.scale}px sans-serif`;
             ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
             ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 6);
-          } else if (node.year % 10 === 0 || hoveredYear === node.year) {
-            // 每10年或鼠标悬停时显示年份
+          } else if (node.year % 10 === 0 || hoveredYear === node.year || !node.hasData) {
+            // 每10年、鼠标悬停时、或无数据年份显示年份
             ctx.font = `${9 * node.scale}px sans-serif`;
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 0.85})`;
+            ctx.fillStyle = node.hasData 
+              ? `rgba(255, 255, 255, ${opacity * 0.85})` 
+              : `rgba(200, 200, 200, ${opacity * 0.6})`; // 无数据年份用灰色
             ctx.textAlign = 'center';
             ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
           }
@@ -1409,20 +1436,36 @@ export default function ProfessionalSpiralTower() {
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
       // 检测悬停节点（使用与节点生成相同的 progress 计算）
+      // 现在遍历所有年份（包括无数据的年份），使用与节点渲染相同的逻辑
       const projection = spiralProjectionRef.current;
       if (projection) {
-        const progressDivisor = projection.totalYears - 1; // endYear - startYear
-        const hoveredNode = data.find((item) => {
-          // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
-          const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
+        // 使用 progressDivisor = totalYears - 1，与节点生成一致
+        const progressDivisor = projection.totalYears - 1;
+        
+        // 遍历所有年份节点，找到悬停的节点
+        let hoveredNode: any = null;
+        for (let i = 0; i < allYears.length; i++) {
+          const year = allYears[i];
+          const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
           const lz = Math.sin(angle) * projection.baseRadius;
           const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-          return distance < 20 * proj.scale;
-        });
+          
+          if (distance < 20 * proj.scale) {
+            // 找到匹配的节点
+            const dataItem = data.find(item => item.year === year);
+            hoveredNode = {
+              year: year,
+              majorCount: dataItem?.majorCount || 0,
+              departmentCount: dataItem?.departmentCount || 0,
+              hasData: dataItem !== undefined
+            };
+            break;
+          }
+        }
 
         if (hoveredNode) {
           isHoveringSpiralRef.current = true;
@@ -1431,17 +1474,23 @@ export default function ProfessionalSpiralTower() {
           setTooltip({
             year: hoveredNode.year,
             count: hoveredNode.majorCount,
-            event: keyEvent ? `${keyEvent.label} · ${keyEvent.desc}` : `${hoveredNode.departmentCount} 个院系 · ${hoveredNode.majorCount} 个专业`,
+            event: hoveredNode.hasData 
+              ? (keyEvent ? `${keyEvent.label} · ${keyEvent.desc}` : `${hoveredNode.departmentCount} 个院系 · ${hoveredNode.majorCount} 个专业`)
+              : '暂无数据',
             x: e.clientX + 15,
             y: e.clientY + 15,
             visible: true
           });
-          // 更新年份统计信息
-          setYearStats({
-            year: hoveredNode.year,
-            deptCount: hoveredNode.departmentCount,
-            majorCount: hoveredNode.majorCount
-          });
+          // 更新年份统计信息（如果有数据）
+          if (hoveredNode.hasData) {
+            setYearStats({
+              year: hoveredNode.year,
+              deptCount: hoveredNode.departmentCount,
+              majorCount: hoveredNode.majorCount
+            });
+          } else {
+            setYearStats(null);
+          }
         } else {
           isHoveringSpiralRef.current = false;
           setHoveredYear(null);
@@ -1477,7 +1526,7 @@ export default function ProfessionalSpiralTower() {
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current || allYears.length === 0) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -1489,28 +1538,31 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
-      const progressDivisor = projection.totalYears - 1; // endYear - startYear
-      const clickedNode = data.find((item) => {
-        // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
-        const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
+      // 使用与节点生成相同的 progress 计算
+      const progressDivisor = projection.totalYears - 1;
+      
+      // 遍历所有年份节点，找到点击的节点
+      for (let i = 0; i < allYears.length; i++) {
+        const year = allYears[i];
+        const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-        return distance < 20 * proj.scale;
-      });
-
-      if (clickedNode) {
-        // 显示 tooltip（暂时不实现，参考文件中是悬停显示）
-        // 这里可以添加点击显示 tooltip 的逻辑
+        
+        if (distance < 20 * proj.scale) {
+          // 找到匹配的节点
+          console.log('clicked year:', year);
+          break;
+        }
       }
     }
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current || data.length === 0) return;
+    if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -1528,17 +1580,18 @@ export default function ProfessionalSpiralTower() {
         projectionRings: projection.rings,
         clickX: x,
         clickY: y,
-        dataLength: data.length
+        allYearsCount: allYears.length
       });
 
       // 检测双击的球体（使用与节点生成相同的 progress 计算）
-      let clickedNode: any = null;
-      const progressDivisor = projection.totalYears - 1; // endYear - startYear
+      // 遍历所有年份节点，找到点击的节点
+      let clickedYear: number | null = null;
+      let clickedData: any = null;
+      const progressDivisor = projection.totalYears - 1;
 
-      for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-        // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
-        const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
+      for (let i = 0; i < allYears.length; i++) {
+        const year = allYears[i];
+        const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1548,25 +1601,33 @@ export default function ProfessionalSpiralTower() {
 
         const clickThreshold = Math.max(50, 24 * proj.scale * 2);
         
-        console.log('checking node:', { i, year: item.year, distance, threshold: clickThreshold });
+        console.log('checking node:', { i, year, distance, threshold: clickThreshold });
 
         if (distance < clickThreshold) {
-          clickedNode = item;
-          console.log('clicked:', { year: item.year, majorCount: item.majorCount });
+          // 找到匹配的节点
+          const dataItem = data.find(item => item.year === year);
+          if (dataItem) {
+            // 只允许双击有数据的年份
+            clickedYear = year;
+            clickedData = dataItem;
+            console.log('clicked:', { year, majorCount: dataItem.majorCount });
+          } else {
+            console.log('no data for year:', year);
+          }
           break;
         }
       }
 
-      if (clickedNode) {
-        setSelectedYear(clickedNode.year); // 设置选中年份
+      if (clickedYear !== null && clickedData) {
+        setSelectedYear(clickedYear); // 设置选中年份
         // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
         solarAutoRotationRef.current = rotationRef.current;
         setCurrentView('solar');
         // 更新年份统计信息
         setYearStats({
-          year: clickedNode.year,
-          deptCount: clickedNode.departmentCount,
-          majorCount: clickedNode.majorCount
+          year: clickedYear,
+          deptCount: clickedData.departmentCount,
+          majorCount: clickedData.majorCount
         });
       }
     } else if (currentView === 'solar') {
@@ -1687,15 +1748,14 @@ export default function ProfessionalSpiralTower() {
         const projection = spiralProjectionRef.current;
         if (!projection) return;
 
-        // 检测是否触摸到球（使用较大的固定触摸范围）
-        let touchedNode: any = null;
+        // 检测是否触摸到球（遍历所有年份节点）
+        let touchedYear: number | null = null;
 
         // 遍历所有球体，找到触摸范围内的球体（使用与节点生成相同的 progress 计算）
-        for (let i = 0; i < data.length; i++) {
-          const item = data[i];
-          // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
-          const progressDivisor = projection.totalYears - 1;
-          const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
+        const progressDivisor = projection.totalYears - 1;
+        for (let i = 0; i < allYears.length; i++) {
+          const year = allYears[i];
+          const progress = progressDivisor > 0 ? (year - projection.startYear) / progressDivisor : 0;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1707,12 +1767,16 @@ export default function ProfessionalSpiralTower() {
           const touchThreshold = Math.max(50, 24 * proj.scale * 2);
 
           if (distance < touchThreshold) {
-            touchedNode = item;
+            // 只记录有数据的年份
+            const dataItem = data.find(item => item.year === year);
+            if (dataItem) {
+              touchedYear = year;
+            }
             break;
           }
         }
 
-        isTouchingNodeRef.current = !!touchedNode;
+        isTouchingNodeRef.current = touchedYear !== null;
 
         // 单指拖拽旋转
         isTouchDraggingRef.current = true;
