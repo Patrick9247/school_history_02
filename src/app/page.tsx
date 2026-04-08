@@ -2679,13 +2679,50 @@ export default function ProfessionalSpiralTower() {
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
       <div className="relative w-full h-screen overflow-hidden">
-        {/* 深空纯色背景 */}
+        {/* 深空背景 */}
         <div 
           className="absolute inset-0"
           style={{
             background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 50%, #050510 100%)'
           }}
         />
+        {/* 闪烁的星星层 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white animate-pulse"
+              style={{
+                width: `${Math.random() < 0.7 ? 1 : 2}px`,
+                height: `${Math.random() < 0.7 ? 1 : 2}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.4 + Math.random() * 0.6,
+                animationDuration: `${1.5 + Math.random() * 2}s`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationIterationCount: 'infinite'
+              }}
+            />
+          ))}
+          {/* 更亮的星星 */}
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={`bright-${i}`}
+              className="absolute rounded-full bg-white animate-pulse"
+              style={{
+                width: '3px',
+                height: '3px',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.6 + Math.random() * 0.4,
+                animationDuration: `${2 + Math.random() * 2}s`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationIterationCount: 'infinite',
+                boxShadow: '0 0 4px 1px rgba(255,255,255,0.5)'
+              }}
+            />
+          ))}
+        </div>
         {/* 遮罩层 */}
         <div className="absolute inset-0 bg-black/30"></div>
         {/* 校徽背景层 - 填充整个屏幕 */}
