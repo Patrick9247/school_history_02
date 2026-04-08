@@ -1795,30 +1795,43 @@ export default function ProfessionalSpiralTower() {
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           if (keyEvent) {
-            ctx.font = `bold ${8 * node.scale}px sans-serif`;
+            // 重要事件年份 - 更大字体便于浏览
+            ctx.font = `bold ${12 * node.scale}px sans-serif`;
             ctx.fillStyle = '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            // 年份外发光效果
+            ctx.shadowColor = 'rgba(255, 200, 100, 0.8)';
+            ctx.shadowBlur = 6 * node.scale;
             ctx.fillText(node.year.toString(), node.x, node.y);
+            ctx.shadowBlur = 0;
 
-            ctx.font = `${7 * node.scale}px sans-serif`;
-            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.9})`;
+            // 事件标签 - 更大字体
+            ctx.font = `bold ${10 * node.scale}px sans-serif`;
+            ctx.fillStyle = `rgba(255,220,150,${opacity})`;
             ctx.textAlign = 'left';
-            ctx.fillText(keyEvent.label, node.x + size + 4, node.y - 5);
-            ctx.font = `${6 * node.scale}px sans-serif`;
-            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.65})`;
-            ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 5);
+            ctx.fillText(keyEvent.label, node.x + size + 6, node.y - 8);
+            
+            // 事件描述 - 更大字体
+            ctx.font = `${9 * node.scale}px sans-serif`;
+            ctx.fillStyle = `rgba(200,220,255,${opacity * 0.85})`;
+            ctx.fillText(keyEvent.desc, node.x + size + 6, node.y + 6);
           } else if (node.year % 10 === 0 || hoveredYear === node.year || !node.hasData) {
             const isKeyYear = [1956, 1958, 1965, 1993, 2001, 2017, 2025].includes(node.year);
             const isDecadeYear = node.year % 10 === 0;
             
             if (isKeyYear || isDecadeYear || hoveredYear === node.year) {
-              ctx.font = `${9 * node.scale}px sans-serif`;
+              // 整数年/关键年 - 更大字体便于浏览
+              ctx.font = `${14 * node.scale}px sans-serif`;
               ctx.fillStyle = node.hasData 
-                ? `rgba(255, 255, 255, ${opacity * 0.8})` 
+                ? `rgba(255, 255, 255, ${opacity * 0.9})` 
                 : `rgba(180, 180, 180, ${opacity * 0.7})`;
               ctx.textAlign = 'center';
-              ctx.fillText(node.year.toString(), node.x, node.y - size - 4);
+              // 年份外发光
+              ctx.shadowColor = 'rgba(100, 180, 255, 0.6)';
+              ctx.shadowBlur = 4 * node.scale;
+              ctx.fillText(node.year.toString(), node.x, node.y - size - 6);
+              ctx.shadowBlur = 0;
             }
           }
         });
