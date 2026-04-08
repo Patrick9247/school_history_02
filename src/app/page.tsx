@@ -266,6 +266,53 @@ export default function ProfessionalSpiralTower() {
   const [yearMenuPosition, setYearMenuPosition] = useState({ x: 0, y: 0 }); // 菜单位置
   const [milestoneModal, setMilestoneModal] = useState<{ visible: boolean; year: number; content: string }>({ visible: false, year: 0, content: '' }); // 大事记弹窗
 
+  // 固定星星数据 - 只生成一次，不随渲染变化
+  const fixedStars = useMemo(() => {
+    // 使用固定种子生成星星位置，确保每次渲染相同
+    const stars: Array<{ left: string; top: string; width: number; height: number; opacity: number; animationDuration: string; animationDelay: string }> = [];
+    for (let i = 0; i < 100; i++) {
+      // 使用固定算法生成位置（不是 Math.random()）
+      const seed = i * 12345;
+      const left = ((seed * 9301 + 49297) % 233280) / 233280 * 100;
+      const top = ((seed * 49297 + 9301) % 233280) / 233280 * 100;
+      const size = (seed % 10 < 7) ? 1 : 2;
+      const opacity = 0.4 + (((seed * 789) % 1000) / 1000) * 0.6;
+      const animDuration = 1.5 + (((seed * 567) % 2000) / 2000) * 2;
+      const animDelay = (((seed * 345) % 2000) / 2000) * 2;
+      stars.push({
+        left: `${left}%`,
+        top: `${top}%`,
+        width: size,
+        height: size,
+        opacity,
+        animationDuration: `${animDuration}s`,
+        animationDelay: `${animDelay}s`
+      });
+    }
+    return stars;
+  }, []);
+
+  // 固定亮星星数据
+  const fixedBrightStars = useMemo(() => {
+    const brightStars: Array<{ left: string; top: string; opacity: number; animationDuration: string; animationDelay: string }> = [];
+    for (let i = 0; i < 20; i++) {
+      const seed = i * 54321;
+      const left = ((seed * 789 + 1234) % 233280) / 233280 * 100;
+      const top = ((seed * 1234 + 789) % 233280) / 233280 * 100;
+      const opacity = 0.6 + (((seed * 567) % 1000) / 1000) * 0.4;
+      const animDuration = 2 + (((seed * 123) % 2000) / 2000) * 2;
+      const animDelay = (((seed * 456) % 3000) / 3000) * 3;
+      brightStars.push({
+        left: `${left}%`,
+        top: `${top}%`,
+        opacity,
+        animationDuration: `${animDuration}s`,
+        animationDelay: `${animDelay}s`
+      });
+    }
+    return brightStars;
+  }, []);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
   const solarRotXRef = useRef(0.6); // Google Earth 风格倾斜视角
@@ -2768,37 +2815,37 @@ export default function ProfessionalSpiralTower() {
             `
           }}
         />
-        {/* 闪烁的星星层 */}
+        {/* 闪烁的星星层 - 使用固定数据，不随渲染变化 */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {Array.from({ length: 100 }).map((_, i) => (
+          {fixedStars.map((star, i) => (
             <div
               key={i}
               className="absolute rounded-full bg-white animate-pulse"
               style={{
-                width: `${Math.random() < 0.7 ? 1 : 2}px`,
-                height: `${Math.random() < 0.7 ? 1 : 2}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.4 + Math.random() * 0.6,
-                animationDuration: `${1.5 + Math.random() * 2}s`,
-                animationDelay: `${Math.random() * 2}s`,
+                width: `${star.width}px`,
+                height: `${star.height}px`,
+                left: star.left,
+                top: star.top,
+                opacity: star.opacity,
+                animationDuration: star.animationDuration,
+                animationDelay: star.animationDelay,
                 animationIterationCount: 'infinite'
               }}
             />
           ))}
           {/* 更亮的星星 */}
-          {Array.from({ length: 20 }).map((_, i) => (
+          {fixedBrightStars.map((star, i) => (
             <div
               key={`bright-${i}`}
               className="absolute rounded-full bg-white animate-pulse"
               style={{
                 width: '3px',
                 height: '3px',
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                opacity: 0.6 + Math.random() * 0.4,
-                animationDuration: `${2 + Math.random() * 2}s`,
-                animationDelay: `${Math.random() * 3}s`,
+                left: star.left,
+                top: star.top,
+                opacity: star.opacity,
+                animationDuration: star.animationDuration,
+                animationDelay: star.animationDelay,
                 animationIterationCount: 'infinite',
                 boxShadow: '0 0 4px 1px rgba(255,255,255,0.5)'
               }}
