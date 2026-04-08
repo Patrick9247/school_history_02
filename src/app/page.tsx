@@ -165,9 +165,7 @@ export default function ProfessionalSpiralTower() {
   const majorRotationAnglesRef = useRef<number[]>([]);
   const renderObjectsRef = useRef<RenderObject[]>([]); // 保存太阳系视图的渲染对象
   const spiralProjectionRef = useRef<{
-    project3D: (lx: number, ly: number, lz: number, rotX: number, rotY: number) => { x: number; y: number; scale: number; z: number };
-    centerX: number;
-    centerY: number;
+    project3D: (lx: number, ly: number, lz: number, rotX: number, rotY: number, cx: number, cy: number) => { x: number; y: number; scale: number; z: number };
     isMobile: boolean;
     isTablet: boolean;
     spiralHeight: number;
@@ -677,8 +675,8 @@ export default function ProfessionalSpiralTower() {
       };
     });
 
-    // 3D 投影函数（保存到 ref，以便在触摸事件中使用）
-    const project3D = (lx: number, ly: number, lz: number, rotX: number, rotY: number) => {
+    // 3D 投影函数（接收 centerX, centerY 作为参数，确保点击检测与渲染一致）
+    const project3D = (lx: number, ly: number, lz: number, rotX: number, rotY: number, cx: number, cy: number) => {
       // 绕 Y 轴旋转
       const x = lx * Math.cos(rotY) - lz * Math.sin(rotY);
       const z = lx * Math.sin(rotY) + lz * Math.cos(rotY);
@@ -692,14 +690,12 @@ export default function ProfessionalSpiralTower() {
       // 防止除以零或负数
       const z2Clamped = Math.max(-perspective + 10, z2);
       const scale = perspective / (perspective + z2Clamped);
-      return { x: centerX + x * scale, y: centerY + y2 * scale * 0.6, scale: Math.max(0.1, scale), z: z2 };
+      return { x: cx + x * scale, y: cy + y2 * scale * 0.6, scale: Math.max(0.1, scale), z: z2 };
     };
 
     // 保存 project3D 和相关参数到 ref
     spiralProjectionRef.current = {
       project3D,
-      centerX,
-      centerY,
       isMobile,
       isTablet,
       spiralHeight,
@@ -848,7 +844,7 @@ export default function ProfessionalSpiralTower() {
 
         // 投影节点
         const projectedNodes = spiralNodes.map(node => {
-          const proj = project3D(node.localX, node.localY, node.localZ, 0, rotationRef.current);
+          const proj = project3D(node.localX, node.localY, node.localZ, 0, rotationRef.current, centerX, centerY);
           return { ...node, x: proj.x, y: proj.y, scale: proj.scale, z: proj.z };
         });
 
@@ -869,7 +865,7 @@ export default function ProfessionalSpiralTower() {
           const proj = project3D(
             Math.cos(angle) * baseRadius,
             (1 - progress) * spiralHeight - spiralHeight / 2,
-            Math.sin(angle) * baseRadius, 0, rotationRef.current
+            Math.sin(angle) * baseRadius, 0, rotationRef.current, centerX, centerY
           );
           pathPoints.push({ ...proj, progress });
         }
@@ -1317,7 +1313,7 @@ export default function ProfessionalSpiralTower() {
 
         // 投影
         renderObjects.forEach(obj => {
-          const proj = project3D(obj.lx, obj.ly, obj.lz, solarRotXRef.current, solarRotYRef.current);
+          const proj = project3D(obj.lx, obj.ly, obj.lz, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
           obj.x = proj.x; obj.y = proj.y; obj.scale = proj.scale; obj.z = proj.z;
         });
 
@@ -1332,7 +1328,7 @@ export default function ProfessionalSpiralTower() {
           const angleCacheItem = orbitAngleCache[i];
           const lx = angleCacheItem.cos * orbitRadiusX;
           const ly = angleCacheItem.sin * orbitRadiusY;
-          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current);
+          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
           if (i === 0) {
             ctx.moveTo(proj.x, proj.y);
           } else {
@@ -1472,6 +1468,10 @@ export default function ProfessionalSpiralTower() {
       // 现在遍历所有年份（包括无数据的年份），使用与节点渲染相同的逻辑
       const projection = spiralProjectionRef.current;
       if (projection) {
+        // 获取当前的 centerX 和 centerY（与渲染时一致）
+        const hoverCenterX = rect.width / 2;
+        const hoverCenterY = rect.height / 2;
+
         // 使用 progressDivisor = totalYears - 1，与节点生成一致
         const progressDivisor = projection.totalYears - 1;
         
@@ -1484,7 +1484,7 @@ export default function ProfessionalSpiralTower() {
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
           const lz = Math.sin(angle) * projection.baseRadius;
-          const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
+          const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, hoverCenterX, hoverCenterY);
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
           
           if (distance < 20 * proj.scale) {
@@ -1569,7 +1569,12 @@ export default function ProfessionalSpiralTower() {
     // 检测点击节点 - 仅用于显示 tooltip
     if (currentView === 'spiral') {
       const projection = spiralProjectionRef.current;
-      if (!projection) return;
+      if (!projection || !canvasRef.current) return;
+
+      // 获取当前的 centerX 和 centerY（与渲染时一致）
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const clickCenterX = canvasRect.width / 2;
+      const clickCenterY = canvasRect.height / 2;
 
       // 使用与节点生成相同的 progress 计算
       const progressDivisor = projection.totalYears - 1;
@@ -1582,7 +1587,7 @@ export default function ProfessionalSpiralTower() {
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
-        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
+        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
         
         if (distance < 20 * proj.scale) {
@@ -1605,7 +1610,11 @@ export default function ProfessionalSpiralTower() {
     if (currentView === 'spiral') {
       // 双击年份节点进入太阳系视图
       const projection = spiralProjectionRef.current;
-      if (!projection) return;
+      if (!projection || !canvasRef.current) return;
+
+      // 获取当前的 centerX 和 centerY（与渲染时一致）
+      const clickCenterX = rect.width / 2;
+      const clickCenterY = rect.height / 2;
 
       console.log('double click params:', {
         projectionStartYear: projection.startYear,
@@ -1613,6 +1622,8 @@ export default function ProfessionalSpiralTower() {
         projectionRings: projection.rings,
         clickX: x,
         clickY: y,
+        clickCenterX,
+        clickCenterY,
         allYearsCount: allYears.length
       });
 
@@ -1629,7 +1640,7 @@ export default function ProfessionalSpiralTower() {
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
-        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
+        const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
 
         const clickThreshold = Math.max(50, 24 * proj.scale * 2);
@@ -1781,6 +1792,10 @@ export default function ProfessionalSpiralTower() {
         const projection = spiralProjectionRef.current;
         if (!projection) return;
 
+        // 获取当前的 centerX 和 centerY（与渲染时一致）
+        const touchCenterX = rect.width / 2;
+        const touchCenterY = rect.height / 2;
+
         // 检测是否触摸到球（遍历所有年份节点）
         let touchedYear: number | null = null;
 
@@ -1793,7 +1808,7 @@ export default function ProfessionalSpiralTower() {
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
           const lz = Math.sin(angle) * projection.baseRadius;
-          const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current);
+          const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, touchCenterX, touchCenterY);
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
 
           // 触摸范围：至少 50px，如果球体较大则使用球体尺寸的 2 倍
