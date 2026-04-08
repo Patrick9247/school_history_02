@@ -858,7 +858,7 @@ export default function ProfessionalSpiralTower() {
         year: year,
         count: dataItem?.majorCount || 0,
         departmentCount: dataItem?.departmentCount || 0,
-        size: 12, // 固定大小
+        size: 8, // 固定大小（2/3比例）
         specialColor: specialColor,
         hasData: hasData // 标记是否有数据
       };
@@ -1519,69 +1519,64 @@ export default function ProfessionalSpiralTower() {
           // 所有年度球都发光，显示3D效果（太阳般的均匀渐变）
           const shouldGlow = true;
           
-          // 绘制太阳般均匀渐变的年度球
-          // 外层大光晕
-          const outerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.5, node.x, node.y, size * 2.5);
-          outerSunGlow.addColorStop(0, addAlpha(color, opacity * 0.6));
-          outerSunGlow.addColorStop(0.4, addAlpha(color, opacity * 0.3));
+          // 外层柔和光晕
+          const outerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.4, node.x, node.y, size * 2.2);
+          outerSunGlow.addColorStop(0, addAlpha(color, opacity * 0.5));
+          outerSunGlow.addColorStop(0.5, addAlpha(color, opacity * 0.25));
           outerSunGlow.addColorStop(1, addAlpha(color, 0));
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size * 2.5, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, size * 2.2, 0, Math.PI * 2);
           ctx.fillStyle = outerSunGlow;
           ctx.fill();
           
           // 内层光晕
-          const innerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.3, node.x, node.y, size * 1.3);
-          innerSunGlow.addColorStop(0, addAlpha('#ffffff', opacity * 0.9));
-          innerSunGlow.addColorStop(0.2, addAlpha(color, opacity * 0.95));
-          innerSunGlow.addColorStop(0.5, addAlpha(color, opacity * 0.8));
-          innerSunGlow.addColorStop(1, addAlpha(color, opacity * 0.5));
+          const innerSunGlow = ctx.createRadialGradient(node.x, node.y, size * 0.25, node.x, node.y, size * 1.2);
+          innerSunGlow.addColorStop(0, addAlpha('#ffffff', opacity * 0.95));
+          innerSunGlow.addColorStop(0.2, addAlpha(color, opacity * 0.9));
+          innerSunGlow.addColorStop(0.6, addAlpha(color, opacity * 0.75));
+          innerSunGlow.addColorStop(1, addAlpha(color, opacity * 0.4));
           ctx.beginPath();
-          ctx.arc(node.x, node.y, size * 1.3, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, size * 1.2, 0, Math.PI * 2);
           ctx.fillStyle = innerSunGlow;
           ctx.fill();
           
-          // 核心球体（均匀渐变，中心亮边缘暗）
-          const sunCore = ctx.createRadialGradient(node.x - size * 0.25, node.y - size * 0.25, 0, node.x, node.y, size);
+          // 核心球体（3D渐变）
+          const sunCore = ctx.createRadialGradient(node.x - size * 0.3, node.y - size * 0.3, 0, node.x, node.y, size);
           sunCore.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-          sunCore.addColorStop(0.3, color);
-          sunCore.addColorStop(0.7, adjustBrightness(color, -10));
-          sunCore.addColorStop(1, adjustBrightness(color, -25));
+          sunCore.addColorStop(0.4, color);
+          sunCore.addColorStop(0.8, adjustBrightness(color, -12));
+          sunCore.addColorStop(1, adjustBrightness(color, -28));
           ctx.beginPath();
           ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
           ctx.fillStyle = sunCore;
           ctx.fill();
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
-          // 当是关键事件或鼠标悬停在该年份时，显示详细信息
           if (keyEvent) {
-            ctx.font = `bold ${9 * node.scale}px sans-serif`;
+            ctx.font = `bold ${8 * node.scale}px sans-serif`;
             ctx.fillStyle = '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(node.year.toString(), node.x, node.y);
 
-            ctx.font = `${8 * node.scale}px sans-serif`;
-            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.95})`;
-            ctx.textAlign = 'left';
-            ctx.fillText(keyEvent.label, node.x + size + 4, node.y - 6);
             ctx.font = `${7 * node.scale}px sans-serif`;
-            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
-            ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 6);
+            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.9})`;
+            ctx.textAlign = 'left';
+            ctx.fillText(keyEvent.label, node.x + size + 4, node.y - 5);
+            ctx.font = `${6 * node.scale}px sans-serif`;
+            ctx.fillStyle = `rgba(255,255,255,${opacity * 0.65})`;
+            ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 5);
           } else if (node.year % 10 === 0 || hoveredYear === node.year || !node.hasData) {
-            // 只显示整十年份、有大事的年份、鼠标悬停时、无数据年份
-            // 整十年份：1960, 1970, 1980, 1990, 2000, 2010, 2020
-            // 有大事年份：1956(建校), 1958(更名), 1965(迁入), 1993(更名), 2001(合并), 2017(双一流), 2025(现今)
             const isKeyYear = [1956, 1958, 1965, 1993, 2001, 2017, 2025].includes(node.year);
             const isDecadeYear = node.year % 10 === 0;
             
             if (isKeyYear || isDecadeYear || hoveredYear === node.year) {
-              ctx.font = `${10 * node.scale}px sans-serif`;
+              ctx.font = `${9 * node.scale}px sans-serif`;
               ctx.fillStyle = node.hasData 
-                ? `rgba(255, 255, 255, ${opacity * 0.85})` 
-                : `rgba(180, 180, 180, ${opacity * 0.8})`;
+                ? `rgba(255, 255, 255, ${opacity * 0.8})` 
+                : `rgba(180, 180, 180, ${opacity * 0.7})`;
               ctx.textAlign = 'center';
-              ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
+              ctx.fillText(node.year.toString(), node.x, node.y - size - 4);
             }
           }
         });
@@ -2156,7 +2151,7 @@ export default function ProfessionalSpiralTower() {
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
         
         // 使用与渲染一致的球体大小计算阈值
-        const nodeSize = 12;
+        const nodeSize = 8;
         const renderRadius = nodeSize * proj.scale;
         const clickThreshold = Math.max(renderRadius * 1.5, 20);
         
@@ -2346,7 +2341,7 @@ export default function ProfessionalSpiralTower() {
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
 
           // 使用与渲染一致的球体大小计算阈值
-          const nodeSize = 12;
+          const nodeSize = 8;
           const renderRadius = nodeSize * proj.scale;
           const touchThreshold = Math.max(renderRadius * 1.5, 25); // 触摸范围比点击稍大
 
