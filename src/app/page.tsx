@@ -255,7 +255,7 @@ export default function ProfessionalSpiralTower() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
-  const solarRotXRef = useRef(0.5);
+  const solarRotXRef = useRef(0.6); // Google Earth 风格倾斜视角
   const solarRotYRef = useRef(0);
   const solarAutoRotationRef = useRef(0); // 学院球自动旋转角度
   const isDraggingRef = useRef(false);
@@ -1645,19 +1645,20 @@ export default function ProfessionalSpiralTower() {
           color: '#3b82f6'
         });
 
-        // 院系（原所在院系）- 增加球体大小和透视效果
+        // 院系（原所在院系）- Google Earth 风格透视感
         currentDepartmentsRef.current.forEach((dept: DepartmentNode, i: number) => {
           const angle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
+          // Google Earth 风格：椭圆轨道，倾斜视角
           const lx = Math.cos(angle) * orbitRadiusX;
           const ly = Math.sin(angle) * orbitRadiusY;
-          // 添加 z 轴偏移，形成椭圆轨道面，产生透视感
-          const lz = Math.sin(angle * 2) * orbitRadiusX * 0.15;
+          // z 值产生上下波动，让学院球在轨道面上有前后位置
+          const lz = Math.sin(angle) * orbitRadiusX * 0.4;
 
           renderObjects.push({
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: (isMobileSolar ? 14 : (isTabletSolar ? 16 : 18)) * Math.sqrt(zoomLevelRef.current), // 增大球体
+            radius: (isMobileSolar ? 16 : (isTabletSolar ? 18 : 20)) * Math.sqrt(zoomLevelRef.current), // 增大球体
             color: dept.color,
             name: dept.name,
             collegeName: dept.college,
@@ -1719,13 +1720,16 @@ export default function ProfessionalSpiralTower() {
         ctx.fillStyle = orbitGlowGradient;
         ctx.fill();
 
-        // 主轨道线（渐变）
+        // 主轨道线（渐变）- 带 z 轴投影形成椭圆轨道面
         ctx.beginPath();
         for (let i = 0; i <= orbitSteps; i++) {
           const angleCacheItem = orbitAngleCache[i];
+          const orbitAngle = (i / orbitSteps) * Math.PI * 2;
           const lx = angleCacheItem.cos * orbitRadiusX;
           const ly = angleCacheItem.sin * orbitRadiusY;
-          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
+          // 与学院球一致的 z 值
+          const lz = Math.sin(orbitAngle) * orbitRadiusX * 0.4;
+          const proj = project3D(lx, ly, lz, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
           if (i === 0) {
             ctx.moveTo(proj.x, proj.y);
           } else {
@@ -1747,13 +1751,15 @@ export default function ProfessionalSpiralTower() {
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // 内层轨道光晕
+        // 内层轨道光晕 - 带 z 轴投影
         ctx.beginPath();
         for (let i = 0; i <= orbitSteps; i++) {
           const angleCacheItem = orbitAngleCache[i];
+          const orbitAngle = (i / orbitSteps) * Math.PI * 2;
           const lx = angleCacheItem.cos * (orbitRadiusX * 0.95);
           const ly = angleCacheItem.sin * (orbitRadiusY * 0.95);
-          const proj = project3D(lx, ly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
+          const lz = Math.sin(orbitAngle) * orbitRadiusX * 0.38;
+          const proj = project3D(lx, ly, lz, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
           if (i === 0) {
             ctx.moveTo(proj.x, proj.y);
           } else {
