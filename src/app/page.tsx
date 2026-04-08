@@ -1182,54 +1182,28 @@ export default function ProfessionalSpiralTower() {
             color: Math.random() > 0.7 ? '#aaccff' : '#ffffff'
           });
         }
-        // 初始化星云（减少数量）
-        nebulaCloudsRef.current = [];
-        for (let i = 0; i < 3; i++) {
-          nebulaCloudsRef.current.push({
+        // 初始化星空（随机分布）
+        for (let i = 0; i < 80; i++) {
+          starsRef.current.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            radius: Math.random() * 200 + 100,
-            color: ['#2a1a4b', '#1a2a4b', '#3a1a3b'][i],
-            opacity: Math.random() * 0.08 + 0.03,
-            driftSpeed: (Math.random() - 0.5) * 0.05,
-            rotation: Math.random() * Math.PI * 2
+            size: Math.random() * 2 + 1,
+            brightness: Math.random() * 0.4 + 0.3,
+            twinkleSpeed: Math.random() * 1.5 + 0.5,
+            twinkleOffset: Math.random() * Math.PI * 2,
+            color: Math.random() > 0.6 ? '#ffffff' : (Math.random() > 0.5 ? '#aaddff' : '#ffccaa')
           });
         }
       }
 
-      // 绘制深空星云背景
-      nebulaCloudsRef.current.forEach(nebula => {
-        const gradient = ctx.createRadialGradient(
-          nebula.x, nebula.y, 0,
-          nebula.x, nebula.y, nebula.radius
-        );
-        gradient.addColorStop(0, nebula.color + '40');
-        gradient.addColorStop(0.5, nebula.color + '20');
-        gradient.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(nebula.x, nebula.y, nebula.radius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = nebula.opacity;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-
-        // 星云缓慢漂移
-        nebula.x += nebula.driftSpeed;
-        nebula.y += nebula.driftSpeed * 0.5;
-        nebula.rotation += 0.0001;
-        // 边界检测
-        if (nebula.x < -nebula.radius) nebula.x = canvas.width + nebula.radius;
-        if (nebula.x > canvas.width + nebula.radius) nebula.x = -nebula.radius;
-        if (nebula.y < -nebula.radius) nebula.y = canvas.height + nebula.radius;
-        if (nebula.y > canvas.height + nebula.radius) nebula.y = -nebula.radius;
-      });
-
-      // 绘制星空粒子（缓慢呼吸效果）
+      // 绘制星空粒子（呼吸闪烁效果）
       starsRef.current.forEach(star => {
-        const breathe = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset) * 0.15 + 0.85;
-        const alpha = star.brightness * breathe;
+        const breathe = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset);
+        const alpha = star.brightness * (0.5 + breathe * 0.5);
+        const sizeScale = 1 + breathe * 0.15;
+        
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, star.size * sizeScale, 0, Math.PI * 2);
         ctx.fillStyle = star.color;
         ctx.globalAlpha = alpha;
         ctx.fill();
