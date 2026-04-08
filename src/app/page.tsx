@@ -1169,7 +1169,9 @@ export default function ProfessionalSpiralTower() {
           if (node.specialColor) {
             color = node.specialColor;
           } else {
-            const hue = 200 + ((node.year - startYear) / totalYears) * 60;
+            // 使用与节点位置计算相同的分母
+            const progressDivisor = totalYears - 1; // endYear - startYear = 69
+            const hue = 200 + ((node.year - startYear) / progressDivisor) * 60;
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
