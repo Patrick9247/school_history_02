@@ -2039,9 +2039,8 @@ export default function ProfessionalSpiralTower() {
             ctx.fill();
             ctx.globalAlpha = 1;
             
-            // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
+            // 绘制学院球：普通3D渐变效果（无行星纹理）
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, true);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
