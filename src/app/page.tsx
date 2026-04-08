@@ -853,11 +853,11 @@ export default function ProfessionalSpiralTower() {
         // 绘制连接线（带灯带效果）
         ctx.beginPath();
         const pathPoints: PathPoint[] = [];
-        // 在1956年之前增加半圈：从进度 -0.5/rings 开始到 1 结束
-        // -0.5/rings = -0.083，对应角度 -π（半圈）
-        // 正常进度是 0-1（1956-2025），现在从 -0.083 开始
+        // 在1956年之前增加半圈，在2025年之后也增加半圈
+        // 从进度 -0.5/rings 开始，到 1 + 0.5/rings 结束
+        // -0.5/rings = -0.083 (1956年前半圈), +0.5/rings = +0.083 (2025年后半圈)
         const startProgress = -0.5 / rings;
-        const endProgress = 1;
+        const endProgress = 1 + 0.5 / rings;
         const totalProgress = endProgress - startProgress;
         // 计算需要绘制的点数（每0.2年一个点）
         const totalDrawYears = totalYears * totalProgress;
