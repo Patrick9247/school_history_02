@@ -1365,6 +1365,11 @@ export default function ProfessionalSpiralTower() {
         ctx.lineWidth = 4;
         ctx.stroke();
 
+        // 找到高亮专业所属的学院索引
+        const highlightedParentIndex = highlightedMajor
+          ? renderObjects.find(obj => obj.type === 'major' && obj.majorData?.name === highlightedMajor)?.parentIndex
+          : undefined;
+
         // 绘制球体
         renderObjects.forEach(obj => {
           // 学院球不透明，固定透明度为1
@@ -1446,12 +1451,29 @@ export default function ProfessionalSpiralTower() {
               ctx.fillText(selectedYear.toString(), obj.x || 0, obj.y || 0);
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
+            // 检查该学院是否包含高亮的专业
+            const isCollegeHighlighted = highlightedParentIndex !== undefined && obj.index === highlightedParentIndex;
+            const collegeGlowIntensity = isCollegeHighlighted ? (0.5 + Math.sin(animationTimeRef.current * 6) * 0.5) : 0;
+            
+            // 如果学院被高亮，绘制多层发光效果
+            if (isCollegeHighlighted) {
+              // 最外层大光晕
+              const outerGlowRadius = obj.radius * (2 + collegeGlowIntensity * 1);
+              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.25 * collegeGlowIntensity, true);
+              // 中层光晕
+              const midGlowRadius = obj.radius * (1.6 + collegeGlowIntensity * 0.5);
+              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * collegeGlowIntensity, true);
+              // 内层光晕
+              const innerGlowRadius = obj.radius * (1.25 + collegeGlowIntensity * 0.3);
+              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true);
+            }
+            
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
             ctx.font = `${deptFontSize * (obj.scale || 1)}px sans-serif`;
-            ctx.fillStyle = searchMatch ? '#FFD700' : `rgba(255, 255, 255, ${opacity * 0.9})`;
+            ctx.fillStyle = searchMatch || isCollegeHighlighted ? '#FFD700' : `rgba(255, 255, 255, ${opacity * 0.9})`;
             ctx.textAlign = 'center';
             // 对于院系，显示完整的名称（包括"系"或"学院"）
             const displayName = obj.type === 'department' ? obj.name : obj.name?.split('（')[0];
