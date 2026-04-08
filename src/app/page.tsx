@@ -1169,27 +1169,28 @@ export default function ProfessionalSpiralTower() {
       // 初始化星空粒子（只在第一次或窗口大小变化时）
       if (starsRef.current.length === 0 || starsRef.current[0].x !== canvas.width) {
         starsRef.current = [];
-        for (let i = 0; i < 200; i++) {
+        // 只生成50颗星星，随机分布，不闪烁
+        for (let i = 0; i < 50; i++) {
           starsRef.current.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 2 + 0.5,
-            brightness: Math.random() * 0.5 + 0.5,
-            twinkleSpeed: Math.random() * 2 + 1,
-            twinkleOffset: Math.random() * Math.PI * 2,
-            color: Math.random() > 0.8 ? '#88ccff' : (Math.random() > 0.5 ? '#ffffff' : '#aaddff')
+            size: Math.random() * 1.5 + 0.5,
+            brightness: Math.random() * 0.3 + 0.2,
+            twinkleSpeed: 0, // 不闪烁
+            twinkleOffset: 0,
+            color: Math.random() > 0.7 ? '#aaccff' : '#ffffff'
           });
         }
-        // 初始化星云
+        // 初始化星云（减少数量）
         nebulaCloudsRef.current = [];
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 3; i++) {
           nebulaCloudsRef.current.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            radius: Math.random() * 300 + 150,
-            color: ['#4a1a6b', '#1a3a6b', '#6b1a3a', '#1a4a6b', '#3a1a6b'][i],
-            opacity: Math.random() * 0.15 + 0.05,
-            driftSpeed: (Math.random() - 0.5) * 0.1,
+            radius: Math.random() * 200 + 100,
+            color: ['#2a1a4b', '#1a2a4b', '#3a1a3b'][i],
+            opacity: Math.random() * 0.08 + 0.03,
+            driftSpeed: (Math.random() - 0.5) * 0.05,
             rotation: Math.random() * Math.PI * 2
           });
         }
@@ -1222,14 +1223,12 @@ export default function ProfessionalSpiralTower() {
         if (nebula.y > canvas.height + nebula.radius) nebula.y = -nebula.radius;
       });
 
-      // 绘制星空粒子
+      // 绘制星空粒子（不闪烁，静态分布）
       starsRef.current.forEach(star => {
-        const twinkle = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset) * 0.3 + 0.7;
-        const alpha = star.brightness * twinkle;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fillStyle = star.color;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = star.brightness;
         ctx.fill();
         ctx.globalAlpha = 1;
       });
