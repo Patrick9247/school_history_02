@@ -905,7 +905,7 @@ export default function ProfessionalSpiralTower() {
         year: year,
         count: dataItem?.majorCount || 0,
         departmentCount: dataItem?.departmentCount || 0,
-        size: 8, // 固定大小（2/3比例）
+        size: isMobile ? 4 : (isTablet ? 5.5 : 8), // 手机端更小
         specialColor: specialColor,
         hasData: hasData // 标记是否有数据
       };
@@ -1913,7 +1913,7 @@ export default function ProfessionalSpiralTower() {
 
         // 中心太阳（响应式半径，跟随缩放）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
-        const sunRadius = (isMobileSolar ? 12 : (isTabletSolar ? 14 : 14)) * Math.sqrt(zoomLevelRef.current);
+        const sunRadius = (isMobileSolar ? 8 : (isTabletSolar ? 12 : 14)) * Math.sqrt(zoomLevelRef.current);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
@@ -1934,7 +1934,7 @@ export default function ProfessionalSpiralTower() {
             type: 'department',
             index: i,
             lx, ly, lz,
-            radius: (isMobileSolar ? 10 : (isTabletSolar ? 12 : 14)) * Math.sqrt(zoomLevelRef.current),
+            radius: (isMobileSolar ? 6 : (isTabletSolar ? 10 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
             collegeName: dept.college,
@@ -1951,7 +1951,7 @@ export default function ProfessionalSpiralTower() {
             majorRotationAnglesRef.current[i] += 0.015 + i * 0.002;
 
             // 专业球轨道半径（围绕学院球的卫星轨道）
-            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 32 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 18 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             dept.majors.forEach((major: Major, j: number) => {
               // 每个专业有不同的相位角，围绕学院球均匀分布并持续旋转
               const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
@@ -1965,7 +1965,7 @@ export default function ProfessionalSpiralTower() {
                 type: 'major',
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
-                radius: (isMobileSolar ? 1.5 : (isTabletSolar ? 1.8 : 2)) * Math.sqrt(zoomLevelRef.current),
+                radius: (isMobileSolar ? 1.0 : (isTabletSolar ? 1.5 : 2)) * Math.sqrt(zoomLevelRef.current),
                 color: dept.color,
                 majorData: major,
                 collegeName: dept.name,
@@ -2057,7 +2057,7 @@ export default function ProfessionalSpiralTower() {
             const deptAngle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
             const dlx = Math.cos(deptAngle) * orbitRadiusX;
             const dly = Math.sin(deptAngle) * orbitRadiusY;
-            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 32 : 36)) * zoomLevelRef.current;
+            const majorOrbitRadius = (isMobileSolar ? 18 : (isTabletSolar ? 28 : 36)) * zoomLevelRef.current;
             ctx.beginPath();
             ctx.ellipse(
               centerX + dlx,
