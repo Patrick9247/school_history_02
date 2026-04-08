@@ -909,9 +909,9 @@ export default function ProfessionalSpiralTower() {
             color = `hsl(${hue}, 70%, 60%)`;
           }
 
-          // 所有年度球都发光，但不显示3D效果
+          // 所有年度球都发光，显示3D效果
           const shouldGlow = true;
-          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, false);
+          drawSphere(node.x, node.y, size, color, opacity, shouldGlow || undefined, true);
 
           const keyEvent = keyEvents.find(e => e.year === node.year);
           // 当是关键事件或鼠标悬停在该年份时，显示详细信息
