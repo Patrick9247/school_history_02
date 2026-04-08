@@ -922,41 +922,38 @@ export default function ProfessionalSpiralTower() {
         lightX, lightY, radius * 0.1,
         x, y, radius
       );
-      baseGradient.addColorStop(0, adjustBrightness(color, 60));
-      baseGradient.addColorStop(0.3, adjustBrightness(color, 25));
-      baseGradient.addColorStop(0.6, color);
-      baseGradient.addColorStop(0.85, adjustBrightness(color, -25));
-      baseGradient.addColorStop(1, adjustBrightness(color, -50));
+      baseGradient.addColorStop(0, adjustBrightness(color, 50));
+      baseGradient.addColorStop(0.25, adjustBrightness(color, 25));
+      baseGradient.addColorStop(0.5, color);
+      baseGradient.addColorStop(0.75, adjustBrightness(color, -20));
+      baseGradient.addColorStop(1, adjustBrightness(color, -40));
 
       ctx.fillStyle = baseGradient;
       ctx.globalAlpha = opacity;
       ctx.fill();
 
-      // 添加简洁的横向带状纹理（木星/土星风格）
+      // 添加清晰的横向带状纹理（木星/土星风格）
       const bandCount = 5 + (planetIndex % 3); // 5-7条带
-      const baseSeed = planetIndex * 7;
       
       for (let i = 0; i < bandCount; i++) {
-        // 计算带的位置（考虑球面透视）
+        // 计算带的位置
         const normalizedY = (i + 0.5) / bandCount;
         const bandY = y - radius + normalizedY * radius * 2;
         
         // 球面透视：边缘的带被压缩
         const edgeFactor = Math.sqrt(1 - Math.pow((normalizedY - 0.5) * 2, 2));
-        const bandHeight = (radius * 2 / bandCount) * Math.max(0.3, edgeFactor) * 0.7;
+        const bandHeight = (radius * 2 / bandCount) * Math.max(0.35, edgeFactor) * 0.8;
         
-        // 明暗交替
+        // 明暗交替，更强对比
         const isLightBand = i % 2 === 0;
-        const brightness = isLightBand ? 15 : -20;
+        const brightness = isLightBand ? 25 : -30;
         
-        // 渐变带（自然过渡）
+        // 清晰的带状纹理（减少渐变过渡，更分明）
         const bandGradient = ctx.createLinearGradient(x - radius, bandY, x + radius, bandY);
         bandGradient.addColorStop(0, 'transparent');
-        bandGradient.addColorStop(0.05, 'transparent');
-        bandGradient.addColorStop(0.15, addAlpha(adjustBrightness(color, brightness), 0.5));
-        bandGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, brightness + 10), 0.6));
-        bandGradient.addColorStop(0.85, addAlpha(adjustBrightness(color, brightness), 0.5));
-        bandGradient.addColorStop(0.95, 'transparent');
+        bandGradient.addColorStop(0.1, addAlpha(adjustBrightness(color, brightness), 0.75));
+        bandGradient.addColorStop(0.5, addAlpha(adjustBrightness(color, brightness + 15), 0.85));
+        bandGradient.addColorStop(0.9, addAlpha(adjustBrightness(color, brightness), 0.75));
         bandGradient.addColorStop(1, 'transparent');
         
         ctx.fillStyle = bandGradient;
@@ -971,8 +968,8 @@ export default function ProfessionalSpiralTower() {
         x - radius * 0.3, y - radius * 0.3, 0,
         x - radius * 0.3, y - radius * 0.3, radius * 0.5
       );
-      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-      highlightGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.2)');
+      highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+      highlightGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
       highlightGrad.addColorStop(1, 'transparent');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -982,11 +979,11 @@ export default function ProfessionalSpiralTower() {
 
       // 边缘暗边
       const edgeGrad = ctx.createRadialGradient(
-        x, y, radius * 0.7,
+        x, y, radius * 0.65,
         x, y, radius
       );
       edgeGrad.addColorStop(0, 'transparent');
-      edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+      edgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fillStyle = edgeGrad;
@@ -998,25 +995,25 @@ export default function ProfessionalSpiralTower() {
       if ((planetIndex % 4) === 0) {
         // 光环（半透明椭圆形）
         ctx.save();
-        ctx.globalAlpha = opacity * 0.4;
+        ctx.globalAlpha = opacity * 0.5;
         
         // 外层光环
-        ctx.strokeStyle = addAlpha(adjustBrightness(color, 30), 0.5);
-        ctx.lineWidth = radius * 0.06;
+        ctx.strokeStyle = addAlpha(adjustBrightness(color, 35), 0.6);
+        ctx.lineWidth = radius * 0.07;
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.5, radius * 0.12, 0.15, 0, Math.PI * 2);
         ctx.stroke();
         
         // 中层光环
-        ctx.strokeStyle = addAlpha(adjustBrightness(color, 15), 0.4);
-        ctx.lineWidth = radius * 0.04;
+        ctx.strokeStyle = addAlpha(adjustBrightness(color, 20), 0.5);
+        ctx.lineWidth = radius * 0.045;
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.35, radius * 0.1, 0.15, 0, Math.PI * 2);
         ctx.stroke();
         
         // 内层光环
-        ctx.strokeStyle = addAlpha('#fff', 0.3);
-        ctx.lineWidth = radius * 0.025;
+        ctx.strokeStyle = addAlpha('#fff', 0.4);
+        ctx.lineWidth = radius * 0.03;
         ctx.beginPath();
         ctx.ellipse(x, y, radius * 1.55, radius * 0.14, 0.15, 0, Math.PI * 2);
         ctx.stroke();
@@ -1027,8 +1024,8 @@ export default function ProfessionalSpiralTower() {
       // 外发光效果
       if (glow) {
         const glowGrad = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2);
-        glowGrad.addColorStop(0, addAlpha(color, 0.4));
-        glowGrad.addColorStop(0.5, addAlpha(color, 0.15));
+        glowGrad.addColorStop(0, addAlpha(color, 0.45));
+        glowGrad.addColorStop(0.5, addAlpha(color, 0.18));
         glowGrad.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
