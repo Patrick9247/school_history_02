@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { yearEvents, getEventsByYear } from '@/lib/yearEvents';
 
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
 const SPECIAL_YEAR_COLORS: Record<number, string> = {
@@ -148,6 +149,18 @@ export default function ProfessionalSpiralTower() {
   const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
   const [yearStats, setYearStats] = useState<{ year: number; deptCount: number; majorCount: number } | null>(null);
   const [hoveredYear, setHoveredYear] = useState<number | null>(null); // 记录当前悬停的年份
+  const [yearClickMenu, setYearClickMenu] = useState<{
+    year: number;
+    x: number;
+    y: number;
+    visible: boolean;
+  }>({ year: 0, x: 0, y: 0, visible: false }); // 年度点击菜单
+  const [showYearEvents, setShowYearEvents] = useState<{
+    year: number;
+    x: number;
+    y: number;
+    visible: boolean;
+  }>({ year: 0, x: 0, y: 0, visible: false }); // 年度大事弹窗
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -1772,16 +1785,28 @@ export default function ProfessionalSpiralTower() {
       }
 
       if (clickedYear !== null && clickedData) {
-        setSelectedYear(clickedYear); // 设置选中年份
-        // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
-        solarAutoRotationRef.current = rotationRef.current;
-        setCurrentView('solar');
-        // 更新年份统计信息
-        setYearStats({
+        // 检查该年份是否有大事记
+        const hasEvents = getEventsByYear(clickedYear);
+        
+        // 显示年度点击菜单
+        setYearClickMenu({
           year: clickedYear,
-          deptCount: clickedData.departmentCount,
-          majorCount: clickedData.majorCount
+          x: lastMousePosRef.current.x,
+          y: lastMousePosRef.current.y,
+          visible: true
         });
+        
+        // 如果没有大事记，直接进入学院视图
+        if (!hasEvents) {
+          setSelectedYear(clickedYear);
+          solarAutoRotationRef.current = rotationRef.current;
+          setCurrentView('solar');
+          setYearStats({
+            year: clickedYear,
+            deptCount: clickedData.departmentCount,
+            majorCount: clickedData.majorCount
+          });
+        }
       }
     } else if (currentView === 'solar') {
       // 检测点击学院或专业球
@@ -2396,6 +2421,119 @@ export default function ProfessionalSpiralTower() {
             </>
           )}
         </div>
+      )}
+
+      {/* 年度点击菜单 */}
+      {yearClickMenu.visible && (
+        <>
+          {/* 半透明遮罩 */}
+          <div 
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setYearClickMenu(prev => ({ ...prev, visible: false }))}
+          />
+          {/* 菜单弹窗 */}
+          <div 
+            className="fixed z-50 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-md border border-blue-400/50 rounded-xl shadow-2xl shadow-blue-500/20 overflow-hidden"
+            style={{ 
+              left: Math.min(yearClickMenu.x, window.innerWidth - 200),
+              top: Math.min(yearClickMenu.y, window.innerHeight - 160)
+            }}
+          >
+            <div className="px-4 py-3 bg-gradient-to-r from-blue-600/80 to-purple-600/80">
+              <div className="text-white font-bold text-sm">{yearClickMenu.year}年</div>
+            </div>
+            <div className="p-2">
+              {/* 年度大事按钮 */}
+              <button
+                onClick={() => {
+                  setYearClickMenu(prev => ({ ...prev, visible: false }));
+                  const events = getEventsByYear(yearClickMenu.year);
+                  if (events) {
+                    setShowYearEvents({
+                      year: yearClickMenu.year,
+                      x: yearClickMenu.x,
+                      y: yearClickMenu.y,
+                      visible: true
+                    });
+                  }
+                }}
+                className="w-full px-4 py-2.5 text-left text-white hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-2 text-sm"
+              >
+                <span className="text-lg">&#128221;</span>
+                <span>年度大事</span>
+              </button>
+              {/* 专业按钮 */}
+              <button
+                onClick={() => {
+                  setYearClickMenu(prev => ({ ...prev, visible: false }));
+                  const dataItem = data.find(item => item.year === yearClickMenu.year);
+                  if (dataItem) {
+                    setSelectedYear(yearClickMenu.year);
+                    solarAutoRotationRef.current = rotationRef.current;
+                    setCurrentView('solar');
+                    setYearStats({
+                      year: yearClickMenu.year,
+                      deptCount: dataItem.departmentCount,
+                      majorCount: dataItem.majorCount
+                    });
+                  }
+                }}
+                className="w-full px-4 py-2.5 text-left text-white hover:bg-purple-500/30 rounded-lg transition-colors flex items-center gap-2 text-sm"
+              >
+                <span className="text-lg">&#127891;</span>
+                <span>查看专业</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 年度大事弹窗 */}
+      {showYearEvents.visible && (
+        <>
+          {/* 半透明遮罩 */}
+          <div 
+            className="fixed inset-0 bg-black/60 z-40"
+            onClick={() => setShowYearEvents(prev => ({ ...prev, visible: false }))}
+          />
+          {/* 大事记弹窗 */}
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-lg max-h-[70vh] bg-gradient-to-br from-slate-900/98 to-slate-800/98 backdrop-blur-md border border-blue-400/50 rounded-2xl shadow-2xl shadow-blue-500/30 overflow-hidden">
+            {/* 标题栏 */}
+            <div className="px-5 py-4 bg-gradient-to-r from-blue-600/80 to-purple-600/80 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">&#128218;</span>
+                <span className="text-white font-bold text-lg">{showYearEvents.year}年大事记</span>
+              </div>
+              <button
+                onClick={() => setShowYearEvents(prev => ({ ...prev, visible: false }))}
+                className="text-white/80 hover:text-white transition-colors text-2xl leading-none"
+              >
+                &times;
+              </button>
+            </div>
+            {/* 内容区 */}
+            <div className="p-5 overflow-y-auto max-h-[calc(70vh-60px)]">
+              {(() => {
+                const events = getEventsByYear(showYearEvents.year);
+                if (!events) {
+                  return <div className="text-white/60 text-center py-8">该年暂无大事记</div>;
+                }
+                return (
+                  <div className="space-y-3">
+                    {events.events.map((event, index) => (
+                      <div 
+                        key={index}
+                        className="text-white/90 text-sm leading-relaxed bg-white/5 rounded-lg p-3 border border-white/10 hover:border-blue-400/30 transition-colors"
+                      >
+                        {event}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </>
       )}
 
       {/* 返回按钮 */}
