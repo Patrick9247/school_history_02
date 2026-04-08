@@ -148,6 +148,10 @@ export default function ProfessionalSpiralTower() {
   const [collegesWithMajors, setCollegesWithMajors] = useState<College[]>([]);
   const [yearStats, setYearStats] = useState<{ year: number; deptCount: number; majorCount: number } | null>(null);
   const [hoveredYear, setHoveredYear] = useState<number | null>(null); // 记录当前悬停的年份
+  const [milestones, setMilestones] = useState<{ year: number; content: string }[]>([]); // 大事记数据
+  const [showYearMenu, setShowYearMenu] = useState(false); // 是否显示年份点击菜单
+  const [yearMenuPosition, setYearMenuPosition] = useState({ x: 0, y: 0 }); // 菜单位置
+  const [milestoneModal, setMilestoneModal] = useState<{ visible: boolean; year: number; content: string }>({ visible: false, year: 0, content: '' }); // 大事记弹窗
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rotationRef = useRef(0);
@@ -332,6 +336,42 @@ export default function ProfessionalSpiralTower() {
       setLoading(false);
     }
   }, [baseColleges]);
+
+  // 获取大事记数据
+  const fetchMilestones = useCallback(async () => {
+    try {
+      const docUrl = 'https://code.coze.cn/api/sandbox/coze_coding/file/proxy?expire_time=-1&file_path=assets%2F%E5%A4%A7%E4%BA%8B%E8%AE%B0.docx&nonce=00982661-045a-4adc-8cbd-40af26bce6ce&project_id=7625930670103068735&sign=085ed2a2fcae23c3673561f952774f00ea357c3c8a63bd56e16784f90c0adb90';
+      const response = await fetch('/api/fetch-milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: docUrl })
+      });
+      const result = await response.json();
+
+      if (result.status === 'success' && result.content) {
+        // 解析大事记文本，按年份提取
+        const text = result.content;
+        const parsedMilestones: { year: number; content: string }[] = [];
+        
+        // 使用正则匹配年份标题（格式：1956年\n\n...）
+        const yearPattern = /(19[5-9]\d|20[0-2]\d)年\n\n([\s\S]*?)(?=\n\n(19[5-9]\d|20[0-2]\d)年|$)/g;
+        let match;
+        
+        while ((match = yearPattern.exec(text)) !== null) {
+          const year = parseInt(match[1]);
+          const content = match[2].trim();
+          if (content && content.length > 0) {
+            parsedMilestones.push({ year, content });
+          }
+        }
+        
+        setMilestones(parsedMilestones);
+        console.log('Loaded milestones:', parsedMilestones.length, parsedMilestones.map(m => `${m.year}年`));
+      }
+    } catch (error) {
+      console.error('Error fetching milestones:', error);
+    }
+  }, []);
 
   // 根据选中年份过滤学院专业
   const getCollegesByYear = useCallback((year: number): College[] => {
@@ -531,7 +571,8 @@ export default function ProfessionalSpiralTower() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchMilestones();
+  }, [fetchData, fetchMilestones]);
 
   // 用户发送的光球状态
   const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户选中的专业
@@ -1750,38 +1791,21 @@ export default function ProfessionalSpiralTower() {
         const clickThreshold = Math.max(renderRadius * 1.5, 20); // 点击范围：渲染半径的1.5倍，最小20px
         
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-        
-        // 调试：只输出距离较小的节点
-        if (distance < 100) {
-          console.log('checking node:', { i, year, distance: distance.toFixed(2), threshold: clickThreshold.toFixed(2), renderRadius: renderRadius.toFixed(2) });
-        }
 
         if (distance < clickThreshold) {
           // 找到匹配的节点
-          const dataItem = data.find(item => item.year === year);
-          if (dataItem) {
-            // 只允许双击有数据的年份
-            clickedYear = year;
-            clickedData = dataItem;
-            console.log('clicked:', { year, majorCount: dataItem.majorCount });
-          } else {
-            console.log('no data for year:', year);
-          }
+          clickedYear = year;
+          clickedData = data.find(item => item.year === year);
+          console.log('clicked year:', year, clickedData ? `has data: ${clickedData.majorCount} majors` : 'no data');
           break;
         }
       }
 
-      if (clickedYear !== null && clickedData) {
-        setSelectedYear(clickedYear); // 设置选中年份
-        // 设置学院球初始旋转角度，与螺旋塔的当前旋转角度保持一致
-        solarAutoRotationRef.current = rotationRef.current;
-        setCurrentView('solar');
-        // 更新年份统计信息
-        setYearStats({
-          year: clickedYear,
-          deptCount: clickedData.departmentCount,
-          majorCount: clickedData.majorCount
-        });
+      if (clickedYear !== null) {
+        // 显示年份菜单（大白兔菜单）
+        setSelectedYear(clickedYear);
+        setYearMenuPosition({ x: e.clientX, y: e.clientY });
+        setShowYearMenu(true);
       }
     } else if (currentView === 'solar') {
       // 检测点击学院或专业球
@@ -2410,6 +2434,96 @@ export default function ProfessionalSpiralTower() {
         >
           返回螺旋塔
         </button>
+      )}
+
+      {/* 年份点击菜单（大白兔菜单） */}
+      {showYearMenu && selectedYear !== null && (
+        <>
+          {/* 遮罩层 */}
+          <div 
+            className="fixed inset-0 z-30"
+            onClick={() => setShowYearMenu(false)}
+          />
+          {/* 菜单 */}
+          <div 
+            className="fixed z-40 bg-black/95 border border-blue-400/60 rounded-xl shadow-2xl shadow-blue-500/40 overflow-hidden"
+            style={{ 
+              left: Math.min(yearMenuPosition.x, window.innerWidth - 160),
+              top: Math.min(yearMenuPosition.y, window.innerHeight - 100),
+              minWidth: '120px'
+            }}
+          >
+            <div className="p-2">
+              <div className="text-[11px] text-blue-400/80 px-3 py-1 border-b border-blue-400/30">
+                {selectedYear}年
+              </div>
+              <button
+                onClick={() => {
+                  // 查看大事记
+                  const milestone = milestones.find(m => m.year === selectedYear);
+                  if (milestone) {
+                    setMilestoneModal({ visible: true, year: selectedYear, content: milestone.content });
+                  } else {
+                    setMilestoneModal({ visible: true, year: selectedYear, content: '暂无大事记' });
+                  }
+                  setShowYearMenu(false);
+                }}
+                className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <span className="w-5 h-5 rounded-full bg-blue-400/30 flex items-center justify-center text-blue-400 text-[10px]">记</span>
+                大事记
+              </button>
+              <button
+                onClick={() => {
+                  // 查看专业
+                  const dataItem = data.find(item => item.year === selectedYear);
+                  if (selectedYear && dataItem) {
+                    setYearStats({
+                      year: selectedYear,
+                      deptCount: dataItem.departmentCount,
+                      majorCount: dataItem.majorCount
+                    });
+                    solarAutoRotationRef.current = rotationRef.current;
+                    setCurrentView('solar');
+                  }
+                  setShowYearMenu(false);
+                }}
+                className="w-full text-left px-3 py-2.5 text-[12px] text-white hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <span className="w-5 h-5 rounded-full bg-purple-400/30 flex items-center justify-center text-purple-400 text-[10px]">专</span>
+                专业
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 大事记弹窗 */}
+      {milestoneModal.visible && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/70 z-50"
+            onClick={() => setMilestoneModal({ visible: false, year: 0, content: '' })}
+          />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/95 border border-blue-400/60 rounded-2xl shadow-2xl shadow-blue-500/40 w-[90%] max-w-md overflow-hidden">
+            <div className="p-4 md:p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[14px] md:text-[15px] text-blue-400 font-semibold">
+                  {milestoneModal.year}年大事记
+                </h3>
+                <button
+                  onClick={() => setMilestoneModal({ visible: false, year: 0, content: '' })}
+                  className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="text-[12px] md:text-[13px] text-white/90 leading-relaxed max-h-64 overflow-y-auto">
+                {milestoneModal.content}
+              </div>
+            </div>
+          </div>
+        </>
       )}
       </div>
     </>
