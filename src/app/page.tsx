@@ -1645,22 +1645,26 @@ export default function ProfessionalSpiralTower() {
               majorRotationAnglesRef.current[i] = Math.random() * Math.PI * 2;
             }
 
-            majorRotationAnglesRef.current[i] += 0.008 + i * 0.001;
+            // 专业球围绕学院球旋转，每个学院的专业独立旋转
+            majorRotationAnglesRef.current[i] += 0.015 + i * 0.002;
 
-            const majorOrbitRadius = (isMobileSolar ? 38 : (isTabletSolar ? 44 : 50)) * zoomLevelRef.current;
+            // 专业球轨道半径（围绕学院球的卫星轨道）
+            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 32 : 36)) * zoomLevelRef.current;
             dept.majors.forEach((major: Major, j: number) => {
+              // 每个专业有不同的相位角，围绕学院球均匀分布并持续旋转
               const majorAngle = majorRotationAnglesRef.current[i] + (j / dept.majors.length) * Math.PI * 2;
 
+              // 专业球位置：在学院球位置基础上，加上围绕学院球的轨道偏移
               const mlx = lx + Math.cos(majorAngle) * majorOrbitRadius;
-              const mly = ly + Math.sin(majorAngle) * majorOrbitRadius * 0.4;
-              const mlz = Math.sin(majorAngle * 2) * 20 + Math.cos(animationTimeRef.current * 3 + j) * 10;
+              const mly = ly + Math.sin(majorAngle) * majorOrbitRadius * 0.35; // 椭圆轨道
+              const mlz = lz + Math.sin(majorAngle) * majorOrbitRadius * 0.25; // z轴也有轨道深度
 
               renderObjects.push({
                 type: 'major',
                 parentIndex: i,
                 lx: mlx, ly: mly, lz: mlz,
-                radius: (isMobileSolar ? 2 : (isTabletSolar ? 2.3 : 2.7)) * Math.sqrt(zoomLevelRef.current), // 缩小到2/3
-                color: dept.color, // 与学院球主色调一致
+                radius: (isMobileSolar ? 1.5 : (isTabletSolar ? 1.8 : 2)) * Math.sqrt(zoomLevelRef.current),
+                color: dept.color,
                 majorData: major,
                 collegeName: dept.name,
                 angle: majorAngle
