@@ -2,32 +2,33 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
-// 行星颜色配置（太阳系行星颜色）
+// 行星颜色配置（偏暗色系，带状纹理）
 const PLANET_COLORS = [
-  { name: '水星', color: '#B5B5B5', gradient: ['#D4D4D4', '#8A8A8A'] },     // 灰色
-  { name: '金星', color: '#E6C87A', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
-  { name: '地球', color: '#4A90D9', gradient: ['#87CEEB', '#2E8B57'] },     // 蓝绿色
-  { name: '火星', color: '#CD5C5C', gradient: ['#E9967A', '#8B4513'] },     // 红褐色
-  { name: '木星', color: '#D4A574', gradient: ['#F4A460', '#CD853F'] },     // 橙褐色
-  { name: '土星', color: '#F4D03F', gradient: ['#F5DEB3', '#DAA520'] },     // 金黄色
-  { name: '天王星', color: '#72D5E8', gradient: ['#87CEEB', '#4169E1'] },   // 青蓝色
-  { name: '海王星', color: '#4169E1', gradient: ['#6495ED', '#00008B'] },   // 深蓝色
-  { name: '冥王星', color: '#D2B48C', gradient: ['#DEB887', '#A0522D'] },   // 棕褐色
-  { name: '月球', color: '#C0C0C0', gradient: ['#D3D3D3', '#808080'] },    // 银灰色
-  { name: '太阳', color: '#FFD700', gradient: ['#FFA500', '#FF4500'] },    // 金橙色
-  { name: '金星2', color: '#F5DEB3', gradient: ['#FFE4B5', '#D2691E'] },   // 浅金色
-  { name: '火星2', color: '#FF6347', gradient: ['#FF7F50', '#B22222'] },   // 番茄红
-  { name: '木星2', color: '#FF8C00', gradient: ['#FFA07A', '#8B0000'] },   // 暗橙红
-  { name: '土星2', color: '#FFB6C1', gradient: ['#FFC0CB', '#DB7093'] },  // 粉金色
-  { name: '彗星', color: '#9370DB', gradient: ['#E6E6FA', '#8A2BE2'] },    // 紫罗兰
-  { name: '流星', color: '#FF69B4', gradient: ['#FFB6C1', '#FF1493'] },   // 热粉红
-  { name: '星云', color: '#00CED1', gradient: ['#40E0D0', '#008B8B'] },   // 深青色
-  { name: '星际', color: '#FF1493', gradient: ['#FF69B4', '#C71585'] },   // 深粉红
-  { name: '银河', color: '#9400D3', gradient: ['#DA70D6', '#4B0082'] },    // 暗紫罗兰
-  { name: '极光', color: '#00FA9A', gradient: ['#98FB98', '#006400'] },   // 春绿色
-  { name: '日食', color: '#FF4500', gradient: ['#FF6347', '#DC143C'] },   // 橙红色
-  { name: '月食', color: '#8B0000', gradient: ['#A52A2A', '#4A0000'] },    // 暗红色
-  { name: '极光2', color: '#7FFF00', gradient: ['#ADFF2F', '#556B2F'] },   // 黄绿色
+  // 带状行星（5个主要带状结构）
+  { name: '木星', color: '#8B6914', gradient: ['#A67C00', '#5C4A1F'], bands: true, bandColors: ['#C4A35A', '#8B6914', '#6B4423', '#8B6914', '#C4A35A'] },
+  { name: '木星2', color: '#704214', gradient: ['#8B5A2B', '#4A2C0A'], bands: true, bandColors: ['#DEB887', '#704214', '#8B4513', '#704214', '#DEB887'] },
+  { name: '木星3', color: '#5D4E37', gradient: ['#8B7355', '#3D2E1F'], bands: true, bandColors: ['#C4B59D', '#5D4E37', '#8B7765', '#5D4E37', '#C4B59D'] },
+  { name: '海王星', color: '#2E4A62', gradient: ['#4169E1', '#1A2F4A'], bands: true, bandColors: ['#5D8AA8', '#2E4A62', '#1E3A5F', '#2E4A62', '#5D8AA8'] },
+  { name: '土星', color: '#8B7500', gradient: ['#DAA520', '#8B6914'], bands: true, bandColors: ['#F4D03F', '#8B7500', '#B8860B', '#8B7500', '#F4D03F'] },
+  
+  // 非带状行星（偏暗色系）
+  { name: '水星', color: '#5A5A5A', gradient: ['#808080', '#3A3A3A'], bands: false },
+  { name: '金星', color: '#8B7355', gradient: ['#D2B48C', '#6B4423'], bands: false },
+  { name: '地球', color: '#2F4F4F', gradient: ['#4A6A6A', '#1A2F2F'], bands: false },
+  { name: '火星', color: '#8B3A3A', gradient: ['#CD5C5C', '#5C2828'], bands: false },
+  { name: '天王星', color: '#3A5F5F', gradient: ['#5F8F8F', '#2A3F3F'], bands: false },
+  { name: '冥王星', color: '#6B5344', gradient: ['#8B7355', '#4A3A2A'], bands: false },
+  { name: '月球', color: '#4A4A4A', gradient: ['#6A6A6A', '#2A2A2A'], bands: false },
+  { name: '彗星', color: '#4A3A5F', gradient: ['#6B5B8F', '#2A1A3F'], bands: false },
+  { name: '星云', color: '#2A4A4A', gradient: ['#3A5A5A', '#1A2A2A'], bands: false },
+  { name: '银河', color: '#3A2A4A', gradient: ['#5A4A6A', '#2A1A3A'], bands: false },
+  { name: '极光', color: '#2A4A2A', gradient: ['#3A5A3A', '#1A2A1A'], bands: false },
+  { name: '暗星1', color: '#4A3A2A', gradient: ['#5A4A3A', '#3A2A1A'], bands: false },
+  { name: '暗星2', color: '#3A4A5A', gradient: ['#4A5A6A', '#2A3A4A'], bands: false },
+  { name: '暗星3', color: '#5A3A4A', gradient: ['#6A4A5A', '#4A2A3A'], bands: false },
+  { name: '暗星4', color: '#3A5A4A', gradient: ['#4A6A5A', '#2A4A3A'], bands: false },
+  { name: '暗星5', color: '#4A4A3A', gradient: ['#5A5A4A', '#3A3A2A'], bands: false },
+  { name: '暗星6', color: '#5A4A3A', gradient: ['#6A5A4A', '#4A3A2A'], bands: false },
 ];
 
 // 获取学院球颜色（使用行星颜色）
@@ -131,6 +132,7 @@ interface DepartmentNode {
   color: string;
   majors: Major[];
   college: string; // 归属学院
+  planetData?: { name: string; bands: boolean; bandColors?: string[] }; // 行星数据
 }
 
 interface PathPoint {
@@ -158,6 +160,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
+  planetData?: { name: string; bands: boolean; bandColors?: string[] }; // 行星数据（带状纹理）
 }
 
 export default function ProfessionalSpiralTower() {
@@ -485,7 +488,8 @@ export default function ProfessionalSpiralTower() {
         name: deptName,
         color: planetColor.color,
         majors: data.majors,
-        college: data.college
+        college: data.college,
+        planetData: planetColor
       };
     });
 
@@ -537,7 +541,8 @@ export default function ProfessionalSpiralTower() {
         name: deptName,
         color: planetColor.color,
         majors: data.majors,
-        college: data.college
+        college: data.college,
+        planetData: planetColor
       };
     });
 
@@ -853,11 +858,14 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[] }, rotation?: number) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
       }
+
+      // 旋转角度（用于带状纹理动画）
+      const rot = rotation || 0;
 
       if (glow) {
         // 外层光芒（淡）
@@ -885,29 +893,92 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = 1;
       }
 
-      if (enable3D) {
-        // 3D渐变效果
-        const gradient = ctx.createRadialGradient(
-          x - radius * 0.3, y - radius * 0.3, radius * 0.1,
-          x, y, radius
+      // 保存当前上下文状态
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      if (planetData?.bands && planetData.bandColors) {
+        // 绘制带状纹理（Google Earth 风格）
+        const bandColors = planetData.bandColors;
+        const bandCount = bandColors.length;
+        const bandHeight = (radius * 2) / bandCount;
+
+        // 绘制每条带（考虑旋转动画）
+        bandColors.forEach((bandColor, i) => {
+          const normalizedY = (i / bandCount) * 2 - 1; // -1 到 1
+          
+          // 添加轻微的波浪效果（模拟真实行星带）
+          const waveOffset = Math.sin(normalizedY * 4 + rot) * 0.02;
+          const bandY = y + normalizedY * radius + waveOffset * radius;
+          
+          ctx.beginPath();
+          ctx.ellipse(x, bandY, radius * 1.2, bandHeight * 0.6, 0, 0, Math.PI * 2);
+          ctx.fillStyle = bandColor;
+          ctx.globalAlpha = opacity * 0.85;
+          ctx.fill();
+        });
+
+        // 添加 Google Earth 风格的阴影覆盖
+        const shadowGradient = ctx.createRadialGradient(
+          x - radius * 0.4, y - radius * 0.4, 0,
+          x, y, radius * 1.2
         );
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.2, color);
-        gradient.addColorStop(0.8, color);
-        gradient.addColorStop(1, adjustBrightness(color, -20));
+        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+        shadowGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.05)');
+        shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+        shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.25)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+        
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = shadowGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (enable3D) {
+        // Google Earth 风格的 3D 渐变效果
+        // 创建多层渐变实现更真实的 3D 效果
+        const gradient = ctx.createRadialGradient(
+          x - radius * 0.35, y - radius * 0.35, radius * 0.05,
+          x, y, radius * 1.1
+        );
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
+        gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.15)');
+        gradient.addColorStop(0.3, color);
+        gradient.addColorStop(0.7, color);
+        gradient.addColorStop(0.85, adjustBrightness(color, -15));
+        gradient.addColorStop(1, adjustBrightness(color, -40));
 
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.globalAlpha = opacity;
         ctx.fill();
-        ctx.globalAlpha = 1;
 
+        // 添加边缘高光
+        const edgeGradient = ctx.createLinearGradient(
+          x - radius, y - radius,
+          x + radius, y + radius
+        );
+        edgeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+        edgeGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0)');
+        edgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = adjustBrightness(color, -20);
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = opacity * 0.8;
+        ctx.fillStyle = edgeGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // 绘制球体轮廓
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = adjustBrightness(color, -30);
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = opacity * 0.6;
         ctx.stroke();
         ctx.globalAlpha = 1;
       } else {
@@ -919,6 +990,9 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
         ctx.globalAlpha = 1;
       }
+
+      // 恢复上下文状态
+      ctx.restore();
     };
 
     // 优化：创建学院轨道的角度缓存
@@ -1413,7 +1487,8 @@ export default function ProfessionalSpiralTower() {
             radius: (isMobileSolar ? 11 : (isTabletSolar ? 12.5 : 14)) * Math.sqrt(zoomLevelRef.current),
             color: dept.color,
             name: dept.name,
-            collegeName: dept.college
+            collegeName: dept.college,
+            planetData: dept.planetData
           });
 
           // 专业
@@ -1509,7 +1584,7 @@ export default function ProfessionalSpiralTower() {
             
             for (let t = tailLength; t >= 0; t--) {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
-              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow);
+              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow, true);
             }
             
             // 绘制球体
@@ -1517,15 +1592,15 @@ export default function ProfessionalSpiralTower() {
               // 高亮专业：绘制多层发光效果
               // 最外层大光晕
               const outerGlowRadius = obj.radius * (2.5 + glowIntensity * 1.5);
-              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.2 * glowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.2 * glowIntensity, true, false);
               // 中层光晕
               const midGlowRadius = obj.radius * (1.8 + glowIntensity * 0.8);
-              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * glowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * glowIntensity, true, false);
               // 内层光晕
               const innerGlowRadius = obj.radius * (1.3 + glowIntensity * 0.4);
-              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF6600', 0.45 * glowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF6600', 0.45 * glowIntensity, true, false);
               // 核心球体
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, '#FFD700', opacity, true);
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, '#FFD700', opacity, true, true, undefined, animationTimeRef.current * 0.5);
               
               // 显示专业名称（带发光背景）
               const majorFontSize = isMobileSolar ? 8 : 9;
@@ -1546,10 +1621,11 @@ export default function ProfessionalSpiralTower() {
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
               ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow);
+              // 普通专业球：使用 Google Earth 风格的 3D 效果
+              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow, true);
             }
           } else if (obj.type === 'sun') {
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true);
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, true, undefined, animationTimeRef.current * 0.3);
 
             // 在太阳球上绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
@@ -1569,16 +1645,18 @@ export default function ProfessionalSpiralTower() {
             if (isCollegeHighlighted) {
               // 最外层大光晕（缩小到原来的1/3）
               const outerGlowRadius = obj.radius * (0.8 + collegeGlowIntensity * 0.3);
-              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.25 * collegeGlowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.25 * collegeGlowIntensity, true, false);
               // 中层光晕
               const midGlowRadius = obj.radius * (0.6 + collegeGlowIntensity * 0.2);
-              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * collegeGlowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * collegeGlowIntensity, true, false);
               // 内层光晕
               const innerGlowRadius = obj.radius * (0.45 + collegeGlowIntensity * 0.15);
-              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true);
+              drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF8800', 0.45 * collegeGlowIntensity, true, false);
             }
             
-            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted);
+            // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
+            const planetRotation = animationTimeRef.current * 0.5 + (obj.index || 0) * 0.3;
+            drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
             // 响应式字体大小
             const deptFontSize = isMobileSolar ? 8 : (isTabletSolar ? 8.5 : 9);
