@@ -587,6 +587,9 @@ export default function ProfessionalSpiralTower() {
       };
       userLightBallsRef.current.push(newLightBall);
     }
+    // 发送后清空输入并关闭下拉列表
+    setUserSelectedMajor('');
+    setPopoverOpen(false);
   };
 
   // 太阳系视图搜索功能
