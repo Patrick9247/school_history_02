@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import LoadingScreen from '@/components/LoadingScreen';
 
 // 行星颜色配置（明亮色系，全部带状纹理，条纹随机）
 const PLANET_COLORS = [
@@ -243,7 +242,6 @@ interface RenderObject {
 export default function ProfessionalSpiralTower() {
   const [data, setData] = useState<YearData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [appReady, setAppReady] = useState(false); // 控制加载画面
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const selectedYearRef = useRef<number | null>(null); // 用于 canvas 实时读取
@@ -737,14 +735,6 @@ export default function ProfessionalSpiralTower() {
     fetchData();
     fetchMilestones();
   }, [fetchData, fetchMilestones]);
-
-  // 当数据加载完成时，触发 appReady
-  useEffect(() => {
-    if (!loading && data.length > 0) {
-      // 数据加载完成，触发加载画面完成
-      setAppReady(true);
-    }
-  }, [loading, data]);
 
   // 用户发送的光球状态
   const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户选中的专业
@@ -2791,9 +2781,14 @@ export default function ProfessionalSpiralTower() {
     }
   `;
 
-  // 初始加载时显示加载画面
-  if (!appReady) {
-    return <LoadingScreen onLoaded={() => setAppReady(true)} />;
+  // 加载中显示简单loading
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 50%, #050510 100%)' }}>
+        <div className="text-xl text-blue-400 mb-4">成都理工大学专业沿革星系图</div>
+        <div className="text-white/60">加载中...</div>
+      </div>
+    );
   }
 
   return (

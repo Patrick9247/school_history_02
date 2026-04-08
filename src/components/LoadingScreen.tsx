@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface LoadingScreenProps {
   onLoaded: () => void;
@@ -10,9 +10,24 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ onLoaded, minDisplayTime = 1500 }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const startTimeRef = useRef<number>(Date.now());
+  const hasTriggeredRef = useRef(false);
+
+  // 处理加载完成的回调
+  const handleComplete = useCallback(() => {
+    if (hasTriggeredRef.current) return;
+    hasTriggeredRef.current = true;
+    
+    setFadeOut(true);
+    setTimeout(() => {
+      setIsCompleted(true);
+      onLoaded();
+    }, 500);
+  }, [onLoaded]);
 
   useEffect(() => {
-    const startTime = Date.now();
+    const startTime = startTimeRef.current;
     
     // 模拟加载进度
     const interval = setInterval(() => {
@@ -24,15 +39,12 @@ export default function LoadingScreen({ onLoaded, minDisplayTime = 1500 }: Loadi
       });
     }, 100);
 
-    // 模拟加载完成
+    // 检查是否应该完成加载
     const checkLoaded = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      // 至少显示 minDisplayTime ms，或者进度达到100%
-      if (elapsed >= minDisplayTime || progress >= 100) {
-        clearInterval(interval);
-        clearInterval(checkLoaded);
-        setFadeOut(true);
-        setTimeout(onLoaded, 500); // 等待淡出动画完成
+      // 至少显示 minDisplayTime ms，或者进度接近100%
+      if (elapsed >= minDisplayTime || progress >= 99) {
+        handleComplete();
       }
     }, 50);
 
@@ -40,7 +52,12 @@ export default function LoadingScreen({ onLoaded, minDisplayTime = 1500 }: Loadi
       clearInterval(interval);
       clearInterval(checkLoaded);
     };
-  }, [onLoaded, minDisplayTime, progress]);
+  }, [minDisplayTime, progress, handleComplete]);
+
+  // 如果已完成，直接返回 null
+  if (isCompleted) {
+    return null;
+  }
 
   return (
     <div 
