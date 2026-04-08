@@ -1093,37 +1093,6 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
 
       } else if (textureType === 4) {
-        // 天王星/海王星风格：冰层 + 风暴
-        // 冰层纹理
-        for (let i = 0; i < 8; i++) {
-          const bandAngle = (planetIndex * 5 + i * 0.8);
-          const bandY = y + Math.sin(bandAngle) * radius * 0.4;
-          const bandGrad = ctx.createLinearGradient(x - radius, bandY, x + radius, bandY);
-          const brightness = Math.sin(i * 0.8) * 20;
-          bandGrad.addColorStop(0, 'transparent');
-          bandGrad.addColorStop(0.2, 'transparent');
-          bandGrad.addColorStop(0.4, addAlpha(adjustBrightness(color, brightness), 0.3));
-          bandGrad.addColorStop(0.6, addAlpha(adjustBrightness(color, brightness + 10), 0.3));
-          bandGrad.addColorStop(0.8, 'transparent');
-          bandGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = bandGrad;
-          ctx.fillRect(x - radius, bandY - radius / 12, radius * 2, radius / 6);
-        }
-        // 冰风暴
-        for (let i = 0; i < 3; i++) {
-          const stormX = x + (i - 1) * radius * 0.3;
-          const stormY = y + Math.cos(planetIndex * 3 + i) * radius * 0.2;
-          const stormGrad = ctx.createRadialGradient(stormX, stormY, 0, stormX, stormY, radius * 0.2);
-          stormGrad.addColorStop(0, addAlpha('#87CEEB', 0.5));
-          stormGrad.addColorStop(0.5, addAlpha(color, 0.3));
-          stormGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = stormGrad;
-          ctx.beginPath();
-          ctx.arc(stormX, stormY, radius * 0.18, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-      } else if (textureType === 5) {
         // 金星风格：浓厚云层 + 旋涡
         // 云层带
         for (let i = 0; i < 6; i++) {
@@ -1154,58 +1123,28 @@ export default function ProfessionalSpiralTower() {
           }
         }
 
-      } else if (textureType === 6) {
-        // 泰坦（土卫六）风格：橙色大气 + 甲烷湖
+      } else {
+        // 泰坦（土卫六）风格：橙色大气 + 甲烷湖（简洁版）
         // 大气层渐变
         const hazeGrad = ctx.createRadialGradient(x, y, radius * 0.7, x, y, radius);
         hazeGrad.addColorStop(0, 'transparent');
-        hazeGrad.addColorStop(0.7, addAlpha('#D2691E', 0.2));
-        hazeGrad.addColorStop(1, addAlpha('#8B4513', 0.4));
+        hazeGrad.addColorStop(0.6, addAlpha('#D2691E', 0.15));
+        hazeGrad.addColorStop(1, addAlpha('#8B4513', 0.25));
         ctx.fillStyle = hazeGrad;
         ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
         // 甲烷湖
-        for (let i = 0; i < 3; i++) {
-          const lakeX = x + Math.sin(planetIndex * 8 + i * 2) * radius * 0.3;
-          const lakeY = y + Math.cos(planetIndex * 6 + i * 3) * radius * 0.2;
-          const lakeGrad = ctx.createRadialGradient(lakeX, lakeY, 0, lakeX, lakeY, radius * 0.15);
-          lakeGrad.addColorStop(0, addAlpha('#87CEEB', 0.6));
-          lakeGrad.addColorStop(0.7, addAlpha('#4682B4', 0.4));
+        for (let i = 0; i < 2; i++) {
+          const lakeX = x + Math.sin(planetIndex * 8 + i * 2) * radius * 0.25;
+          const lakeY = y + Math.cos(planetIndex * 6 + i * 3) * radius * 0.15;
+          const lakeGrad = ctx.createRadialGradient(lakeX, lakeY, 0, lakeX, lakeY, radius * 0.12);
+          lakeGrad.addColorStop(0, addAlpha('#87CEEB', 0.5));
+          lakeGrad.addColorStop(0.7, addAlpha('#4682B4', 0.3));
           lakeGrad.addColorStop(1, 'transparent');
           ctx.fillStyle = lakeGrad;
           ctx.beginPath();
-          ctx.ellipse(lakeX, lakeY, radius * 0.18, radius * 0.1, planetIndex + i, 0, Math.PI * 2);
+          ctx.ellipse(lakeX, lakeY, radius * 0.15, radius * 0.08, planetIndex + i, 0, Math.PI * 2);
           ctx.fill();
         }
-
-      } else {
-        // 冥王星风格：冰冻表面 + 氮冰 + 心形区域
-        // 冰冻平原
-        for (let i = 0; i < 5; i++) {
-          const patchX = x + Math.sin(planetIndex * 6 + i * 1.5) * radius * 0.4;
-          const patchY = y + Math.cos(planetIndex * 4 + i * 2) * radius * 0.3;
-          const patchGrad = ctx.createRadialGradient(patchX, patchY, 0, patchX, patchY, radius * 0.2);
-          patchGrad.addColorStop(0, addAlpha('#E8DAB8', 0.5));
-          patchGrad.addColorStop(0.5, addAlpha('#D4C4A8', 0.3));
-          patchGrad.addColorStop(1, 'transparent');
-          ctx.fillStyle = patchGrad;
-          ctx.beginPath();
-          ctx.arc(patchX, patchY, radius * 0.18, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // 氮冰川
-        const glacierGrad = ctx.createRadialGradient(x, y, 0, x, y, radius * 0.5);
-        glacierGrad.addColorStop(0, addAlpha('#B8D4E8', 0.4));
-        glacierGrad.addColorStop(0.5, addAlpha('#87CEEB', 0.2));
-        glacierGrad.addColorStop(1, 'transparent');
-        ctx.fillStyle = glacierGrad;
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-        // 心的左半
-        ctx.fillStyle = addAlpha('#FFF5EE', 0.3);
-        ctx.beginPath();
-        ctx.arc(x - radius * 0.15, y - radius * 0.05, radius * 0.2, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       // 添加表面细节噪点（模拟岩石纹理）
