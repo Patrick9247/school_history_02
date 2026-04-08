@@ -172,6 +172,7 @@ export default function ProfessionalSpiralTower() {
     spiralHeight: number;
     baseRadius: number;
     totalYears: number;
+    startYear: number;
     rings: number;
   } | null>(null);
 
@@ -591,6 +592,14 @@ export default function ProfessionalSpiralTower() {
     const rect = canvas.parentElement?.getBoundingClientRect();
     if (!rect) return;
 
+    // 调试：打印 data 的年份信息
+    console.log('data info:', {
+      length: data.length,
+      years: data.map(d => d.year),
+      firstYear: data[0]?.year,
+      lastYear: data[data.length - 1]?.year
+    });
+
     // 获取设备像素比，支持高 DPI 屏幕
     const dpr = window.devicePixelRatio || 1;
 
@@ -610,6 +619,8 @@ export default function ProfessionalSpiralTower() {
     const startYear = 1956;
     const endYear = maxYear;
     const totalYears = endYear - startYear + 1;
+    
+    console.log('spiral params:', { startYear, endYear, totalYears });
     const rings = 6;
 
     // 响应式参数调整
@@ -625,6 +636,7 @@ export default function ProfessionalSpiralTower() {
       const year = item.year;
       const progress = (year - startYear) / (endYear - startYear);
       const angle = progress * rings * Math.PI * 2;
+      console.log('node:', { year, progress, angle, majorCount: item.majorCount });
       return {
         localX: Math.cos(angle) * baseRadius,
         localY: (1 - progress) * spiralHeight - spiralHeight / 2,
@@ -1300,9 +1312,9 @@ export default function ProfessionalSpiralTower() {
           // 检查是否匹配搜索关键词
           const searchMatch = searchKeyword.trim() !== '' &&
             ((obj.type === 'department' || obj.type === 'college') &&
-             obj.name.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+             (obj.name || '').toLowerCase().includes(searchKeyword.toLowerCase())) ||
             (obj.type === 'major' &&
-             obj.majorData?.name.toLowerCase().includes(searchKeyword.toLowerCase()));
+             (obj.majorData?.name || '').toLowerCase().includes(searchKeyword.toLowerCase()));
 
           // 搜索匹配时添加闪闪发光效果
           const shouldGlow = searchMatch ? true :
@@ -1392,11 +1404,13 @@ export default function ProfessionalSpiralTower() {
       }
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else if (currentView === 'spiral') {
-      // 检测悬停节点（使用年份计算 progress）
+      // 检测悬停节点（使用与节点生成相同的 progress 计算）
       const projection = spiralProjectionRef.current;
       if (projection) {
+        const progressDivisor = projection.totalYears - 1; // endYear - startYear
         const hoveredNode = data.find((item) => {
-          const progress = (item.year - projection.startYear) / projection.totalYears;
+          // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
+          const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1459,8 +1473,10 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
+      const progressDivisor = projection.totalYears - 1; // endYear - startYear
       const clickedNode = data.find((item) => {
-        const progress = (item.year - projection.startYear) / projection.totalYears;
+        // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
+        const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1490,12 +1506,23 @@ export default function ProfessionalSpiralTower() {
       const projection = spiralProjectionRef.current;
       if (!projection) return;
 
-      // 检测双击的球体（使用年份计算 progress）
+      console.log('double click params:', {
+        projectionStartYear: projection.startYear,
+        projectionTotalYears: projection.totalYears,
+        projectionRings: projection.rings,
+        clickX: x,
+        clickY: y,
+        dataLength: data.length
+      });
+
+      // 检测双击的球体（使用与节点生成相同的 progress 计算）
       let clickedNode: any = null;
+      const progressDivisor = projection.totalYears - 1; // endYear - startYear
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
-        const progress = (item.year - projection.startYear) / projection.totalYears;
+        // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
+        const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
         const angle = progress * projection.rings * Math.PI * 2;
         const lx = Math.cos(angle) * projection.baseRadius;
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
@@ -1504,9 +1531,12 @@ export default function ProfessionalSpiralTower() {
         const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
 
         const clickThreshold = Math.max(50, 24 * proj.scale * 2);
+        
+        console.log('checking node:', { i, year: item.year, distance, threshold: clickThreshold });
 
         if (distance < clickThreshold) {
           clickedNode = item;
+          console.log('clicked:', { year: item.year, majorCount: item.majorCount });
           break;
         }
       }
@@ -1644,10 +1674,12 @@ export default function ProfessionalSpiralTower() {
         // 检测是否触摸到球（使用较大的固定触摸范围）
         let touchedNode: any = null;
 
-        // 遍历所有球体，找到触摸范围内的球体（使用年份计算 progress）
+        // 遍历所有球体，找到触摸范围内的球体（使用与节点生成相同的 progress 计算）
         for (let i = 0; i < data.length; i++) {
           const item = data[i];
-          const progress = (item.year - projection.startYear) / projection.totalYears;
+          // 与节点生成代码保持一致：progress = (year - startYear) / (endYear - startYear)
+          const progressDivisor = projection.totalYears - 1;
+          const progress = progressDivisor > 0 ? (item.year - projection.startYear) / progressDivisor : 0;
           const angle = progress * projection.rings * Math.PI * 2;
           const lx = Math.cos(angle) * projection.baseRadius;
           const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
