@@ -1005,56 +1005,70 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 1.5 3D立体光影效果
-        // 左上角高光（光源方向）
-        const highlightX = x - radius * 0.35;
-        const highlightY = y - radius * 0.35;
-        const highlightGradient = ctx.createRadialGradient(
-          highlightX, highlightY, 0,
-          x, y, radius * 1.2
+        // 行星3D立体效果
+        // 1. 晨昏线效果 - 模拟光照的明暗分界
+        const terminatorX = x - radius * 0.4; // 晨昏线位置
+        const terminatorGradient = ctx.createLinearGradient(
+          x - radius * 1.5, y, x + radius * 1.5, y
         );
-        highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-        highlightGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.2)');
-        highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
-        highlightGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        terminatorGradient.addColorStop(0, 'rgba(0, 0, 0, 0.5)');
+        terminatorGradient.addColorStop(0.25, 'rgba(0, 0, 0, 0.25)');
+        terminatorGradient.addColorStop(0.35, 'rgba(0, 0, 0, 0)');
+        terminatorGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.1)');
+        terminatorGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
+        terminatorGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0)');
+        terminatorGradient.addColorStop(0.65, 'rgba(0, 0, 0, 0)');
+        terminatorGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.15)');
+        terminatorGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = highlightGradient;
-        ctx.globalAlpha = opacity * 0.7;
+        ctx.fillStyle = terminatorGradient;
+        ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 右下角阴影
-        const shadowX = x + radius * 0.4;
-        const shadowY = y + radius * 0.4;
-        const shadowGradient = ctx.createRadialGradient(
-          x, y, radius * 0.3,
-          shadowX, shadowY, radius * 1.1
+        // 2. 高光层 - 太阳直射面的强反射
+        const sunlitGradient = ctx.createRadialGradient(
+          x - radius * 0.35, y - radius * 0.25, 0,
+          x - radius * 0.2, y - radius * 0.15, radius * 0.8
         );
-        shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        shadowGradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.1)');
-        shadowGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.25)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+        sunlitGradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+        sunlitGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.2)');
+        sunlitGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+        sunlitGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = sunlitGradient;
+        ctx.globalAlpha = opacity * 0.8;
+        ctx.fill();
+
+        // 3. 边缘大气辉光 - 行星大气层的发光效果
+        const atmosGlow = ctx.createRadialGradient(
+          x, y, radius * 0.85,
+          x, y, radius * 1.15
+        );
+        atmosGlow.addColorStop(0, 'rgba(100, 160, 255, 0)');
+        atmosGlow.addColorStop(0.4, 'rgba(100, 160, 255, 0.08)');
+        atmosGlow.addColorStop(0.7, 'rgba(100, 160, 255, 0.15)');
+        atmosGlow.addColorStop(1, 'rgba(100, 160, 255, 0.25)');
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 1.12, 0, Math.PI * 2);
+        ctx.fillStyle = atmosGlow;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+
+        // 4. 背面阴影渐变 - 增加立体深度感
+        const shadowGradient = ctx.createRadialGradient(
+          x + radius * 0.5, y + radius * 0.5, radius * 0.3,
+          x + radius * 0.5, y + radius * 0.5, radius * 1.2
+        );
+        shadowGradient.addColorStop(0, 'rgba(0, 20, 60, 0)');
+        shadowGradient.addColorStop(0.5, 'rgba(0, 20, 60, 0.15)');
+        shadowGradient.addColorStop(1, 'rgba(0, 20, 60, 0.35)');
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = shadowGradient;
-        ctx.globalAlpha = opacity;
+        ctx.globalAlpha = opacity * 0.9;
         ctx.fill();
-
-        // 顶部边缘高光弧
-        const edgeHighlightGradient = ctx.createRadialGradient(
-          x - radius * 0.2, y - radius * 0.2, radius * 0.5,
-          x - radius * 0.2, y - radius * 0.2, radius * 1.1
-        );
-        edgeHighlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        edgeHighlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.15)');
-        edgeHighlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.beginPath();
-        ctx.arc(x, y, radius, -Math.PI * 0.8, -Math.PI * 0.2);
-        ctx.strokeStyle = edgeHighlightGradient;
-        ctx.lineWidth = 3;
-        ctx.globalAlpha = opacity * 0.6;
-        ctx.stroke();
-        ctx.globalAlpha = opacity;
 
         // 2. 极地冰盖效果
         ctx.save();
