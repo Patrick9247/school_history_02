@@ -30,7 +30,7 @@ const PLANET_COLORS = [
 ];
 
 // 生成带状纹理数据（条纹角度随机，数量3-8条，带宽度变化和云层效果）
-const generateBandData = (index: number, baseColor: string): { bands: boolean; bandColors: string[]; bandAngle: number; bandCount: number; swirlStrength: number; cloudColor: string; bandWidthVar: number } => {
+const generateBandData = (index: number, baseColor: string): { bands: boolean; bandColors: string[]; bandAngle: number; bandCount: number; swirlStrength: number; cloudColor: string; bandWidthVar: number; turbulence: number; ovalBands: { offset: number; width: number; color: string }[] } => {
   // 使用索引生成确定性随机数，确保每次渲染一致
   const seed = index * 12345;
   const randomBetween = (min: number, max: number, seedOffset: number) => {
@@ -38,32 +38,46 @@ const generateBandData = (index: number, baseColor: string): { bands: boolean; b
     return min + (x - Math.floor(x)) * (max - min);
   };
   
-  // 随机条纹数量（4-7条，更自然的数量）
-  const bandCount = Math.floor(randomBetween(4, 8, index)) as 4 | 5 | 6 | 7;
+  // 随机条纹数量（5-8条，更丰富的层次）
+  const bandCount = Math.floor(randomBetween(5, 9, index)) as 5 | 6 | 7 | 8;
   
-  // 随机条纹角度（-25到25度，更柔和的倾斜）
-  const bandAngle = randomBetween(-25, 25, index + 100);
+  // 随机条纹角度（-20到20度，更柔和的倾斜）
+  const bandAngle = randomBetween(-20, 20, index + 100);
   
-  // 漩涡强度（0-0.15，影响条纹弯曲程度）
-  const swirlStrength = randomBetween(0.03, 0.12, index + 200);
+  // 漩涡强度（增加，让条纹更弯曲）
+  const swirlStrength = randomBetween(0.1, 0.25, index + 200);
   
-  // 条纹宽度变化（0.5-1.5，影响条纹厚度不均匀）
-  const bandWidthVar = randomBetween(0.5, 1.4, index + 300);
+  // 湍流强度（新增，影响条纹的不规则性）
+  const turbulence = randomBetween(0.05, 0.15, index + 250);
+  
+  // 条纹宽度变化（0.4-1.5，影响条纹厚度不均匀）
+  const bandWidthVar = randomBetween(0.4, 1.5, index + 300);
   
   // 生成条纹颜色（更柔和的深浅交替，自然过渡）
   const bandColors: string[] = [];
   for (let i = 0; i < bandCount; i++) {
     // 条纹亮度变化更柔和
     const isLight = i % 2 === 0;
-    const colorVar = isLight ? randomBetween(15, 30, index * 100 + i) : randomBetween(-25, -15, index * 100 + i);
+    const colorVar = isLight ? randomBetween(15, 35, index * 100 + i) : randomBetween(-30, -15, index * 100 + i);
     const adjustedColor = adjustBrightnessValue(baseColor, colorVar);
     bandColors.push(adjustedColor);
   }
   
   // 云层颜色（基于基础色，添加一点蓝/白色调）
-  const cloudColor = adjustBrightnessValue(baseColor, randomBetween(15, 25, index + 400));
+  const cloudColor = adjustBrightnessValue(baseColor, randomBetween(20, 35, index + 400));
   
-  return { bands: true, bandColors, bandAngle, bandCount, swirlStrength, cloudColor, bandWidthVar };
+  // 生成不规则的椭圆云斑（模拟木星大红斑等）
+  const ovalBands: { offset: number; width: number; color: string }[] = [];
+  const ovalCount = Math.floor(randomBetween(2, 4, index + 500));
+  for (let i = 0; i < ovalCount; i++) {
+    ovalBands.push({
+      offset: randomBetween(-0.5, 0.5, index * 10 + i),
+      width: randomBetween(0.08, 0.2, index * 10 + i + 100),
+      color: adjustBrightnessValue(baseColor, randomBetween(10, 25, index * 10 + i + 200))
+    });
+  }
+  
+  return { bands: true, bandColors, bandAngle, bandCount, swirlStrength, cloudColor, bandWidthVar, turbulence, ovalBands };
 };
 
 // 调整颜色亮度
@@ -181,7 +195,7 @@ interface DepartmentNode {
   color: string;
   majors: Major[];
   college: string; // 归属学院
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number }; // 行星数据（自然纹理）
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
 }
 
 interface PathPoint {
@@ -209,7 +223,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
-  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number }; // 行星数据（自然纹理）
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }; // 行星数据（自然纹理）
 }
 
 export default function ProfessionalSpiralTower() {
@@ -907,7 +921,7 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number }, rotation?: number) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number; swirlStrength?: number; cloudColor?: string; bandWidthVar?: number; turbulence?: number; ovalBands?: { offset: number; width: number; color: string }[] }, rotation?: number) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
@@ -956,15 +970,18 @@ export default function ProfessionalSpiralTower() {
         const bandCount = bandColors.length;
         const bandAngle = (planetData.bandAngle || 0) * Math.PI / 180;
         const cloudColor = planetData.cloudColor || color;
+        const turbulence = planetData.turbulence || 0.1;
+        const ovalBands = planetData.ovalBands || [];
 
         // 先绘制基础渐变背景（更柔和）
         const baseGradient = ctx.createRadialGradient(
           x - radius * 0.25, y - radius * 0.25, 0,
           x, y, radius * 1.05
         );
-        baseGradient.addColorStop(0, adjustBrightness(color, 10));
-        baseGradient.addColorStop(0.4, color);
-        baseGradient.addColorStop(1, adjustBrightness(color, -15));
+        baseGradient.addColorStop(0, adjustBrightness(color, 12));
+        baseGradient.addColorStop(0.35, adjustBrightness(color, 5));
+        baseGradient.addColorStop(0.7, color);
+        baseGradient.addColorStop(1, adjustBrightness(color, -18));
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = baseGradient;
@@ -983,39 +1000,59 @@ export default function ProfessionalSpiralTower() {
           const bandY = normalizedY * radius;
           
           // 条纹宽度变化（中间宽，两端窄）
-          const widthFactor = bandWidthVar * (1 - Math.abs(normalizedY) * 0.4);
-          const bandHeight = (radius * 0.35 / bandCount) * widthFactor;
+          const widthFactor = bandWidthVar * (1 - Math.abs(normalizedY) * 0.5);
+          const bandHeight = (radius * 0.4 / bandCount) * widthFactor;
           
-          // 漩涡弯曲效果（轻微的正弦波）
-          const waveOffset = Math.sin(normalizedY * 4 + rot) * radius * swirl;
+          // 漩涡弯曲效果（增强的正弦波）
+          const waveOffset = Math.sin(normalizedY * 5 + rot) * radius * swirl + 
+                            Math.sin(normalizedY * 3 - rot * 0.7) * radius * turbulence;
           
           // 绘制椭圆形条纹带（柔和边缘）
           ctx.beginPath();
           ctx.ellipse(waveOffset, bandY, radius * 1.5, bandHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColors[i];
-          ctx.globalAlpha = opacity * 0.85;
+          ctx.globalAlpha = opacity * 0.88;
           ctx.fill();
         }
         
         ctx.restore();
 
+        // 绘制椭圆云斑（模拟木星大红斑等特征）
+        ovalBands.forEach(oval => {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(bandAngle * 0.5);
+          
+          const ovalY = oval.offset * radius;
+          const ovalWidth = oval.width * radius;
+          const ovalHeight = ovalWidth * 0.5;
+          
+          ctx.beginPath();
+          ctx.ellipse(0, ovalY, ovalWidth, ovalHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = oval.color;
+          ctx.globalAlpha = opacity * 0.4;
+          ctx.fill();
+          
+          ctx.restore();
+        });
+
         // 添加云层效果（局部高亮条纹）
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(bandAngle * 0.7 + rot * 0.1); // 云层稍微不同角度
+        ctx.rotate(bandAngle * 0.7 + rot * 0.15); // 云层稍微不同角度
         
-        // 绘制2-3条云带（使用旋转角度作为随机种子的一部分）
-        const cloudCount = Math.min(3, Math.floor(bandCount / 2));
+        // 绘制3-5条云带（使用旋转角度作为随机种子的一部分）
+        const cloudCount = Math.min(5, Math.floor(bandCount / 1.5));
         const cloudSeed = rot;
         for (let i = 0; i < cloudCount; i++) {
-          const cloudY = (Math.sin(i * 2.5 + cloudSeed) * 0.6) * radius;
-          const cloudWidth = (0.8 + Math.cos(i * 1.7 + cloudSeed) * 0.3) * radius;
-          const cloudHeight = radius * 0.08;
+          const cloudY = (Math.sin(i * 2.3 + cloudSeed) * 0.65) * radius;
+          const cloudWidth = (0.7 + Math.cos(i * 1.5 + cloudSeed) * 0.4) * radius;
+          const cloudHeight = radius * 0.06 + Math.sin(i + cloudSeed) * radius * 0.02;
           
           ctx.beginPath();
           ctx.ellipse(0, cloudY, cloudWidth, cloudHeight, 0, 0, Math.PI * 2);
           ctx.fillStyle = cloudColor;
-          ctx.globalAlpha = opacity * 0.25;
+          ctx.globalAlpha = opacity * 0.35;
           ctx.fill();
         }
         
@@ -1026,12 +1063,12 @@ export default function ProfessionalSpiralTower() {
           x - radius * 0.3, y - radius * 0.3, radius * 0.1,
           x, y, radius * 1.2
         );
-        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-        shadowGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.15)');
-        shadowGradient.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
-        shadowGradient.addColorStop(0.6, 'rgba(0, 0, 0, 0)');
-        shadowGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.1)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.38)');
+        shadowGradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.18)');
+        shadowGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0)');
+        shadowGradient.addColorStop(0.55, 'rgba(0, 0, 0, 0)');
+        shadowGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.12)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.38)');
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
