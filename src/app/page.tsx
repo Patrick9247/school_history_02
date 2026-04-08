@@ -1641,11 +1641,18 @@ export default function ProfessionalSpiralTower() {
         const ly = (1 - progress) * projection.spiralHeight - projection.spiralHeight / 2;
         const lz = Math.sin(angle) * projection.baseRadius;
         const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, clickCenterX, clickCenterY);
-        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
-
-        const clickThreshold = Math.max(50, 24 * proj.scale * 2);
         
-        console.log('checking node:', { i, year, distance, threshold: clickThreshold });
+        // 使用与渲染一致的球体大小计算阈值
+        const nodeSize = 12; // 节点原始大小
+        const renderRadius = nodeSize * proj.scale; // 实际渲染半径
+        const clickThreshold = Math.max(renderRadius * 1.5, 20); // 点击范围：渲染半径的1.5倍，最小20px
+        
+        const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
+        
+        // 调试：只输出距离较小的节点
+        if (distance < 100) {
+          console.log('checking node:', { i, year, distance: distance.toFixed(2), threshold: clickThreshold.toFixed(2), renderRadius: renderRadius.toFixed(2) });
+        }
 
         if (distance < clickThreshold) {
           // 找到匹配的节点
@@ -1811,8 +1818,10 @@ export default function ProfessionalSpiralTower() {
           const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, touchCenterX, touchCenterY);
           const distance = Math.sqrt((x - proj.x) ** 2 + (y - proj.y) ** 2);
 
-          // 触摸范围：至少 50px，如果球体较大则使用球体尺寸的 2 倍
-          const touchThreshold = Math.max(50, 24 * proj.scale * 2);
+          // 使用与渲染一致的球体大小计算阈值
+          const nodeSize = 12;
+          const renderRadius = nodeSize * proj.scale;
+          const touchThreshold = Math.max(renderRadius * 1.5, 25); // 触摸范围比点击稍大
 
           if (distance < touchThreshold) {
             // 只记录有数据的年份
