@@ -2674,6 +2674,17 @@ export default function ProfessionalSpiralTower() {
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
       <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
+        {/* 校徽背景层 */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ opacity: 0.3 }}
+        >
+          <img 
+            src="/college-logo.png" 
+            alt="校徽" 
+            className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] lg:w-[1000px] lg:h-[1000px] object-contain"
+          />
+        </div>
         {/* 半透明遮罩层，确保内容清晰可见 */}
         <div className="absolute inset-0 bg-black/60"></div>
       <canvas
