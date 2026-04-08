@@ -420,13 +420,45 @@ export default function ProfessionalSpiralTower() {
     return colleges;
   }, [currentView, selectedYear, getCollegesByYear, colleges]);
 
-  // 获取当前视图使用的院系数据
+  // 获取当前视图使用的院系数据（直接使用 rawApiData 过滤，确保显示当年专业）
   const currentDepartments = useMemo(() => {
-    if (currentView === 'solar' && selectedYear !== null) {
-      return getDepartmentsByYear(selectedYear);
+    if (currentView !== 'solar' || selectedYear === null) {
+      return [];
     }
-    return [];
-  }, [currentView, selectedYear, getDepartmentsByYear]);
+    
+    // 直接使用 rawApiData 过滤该年份的数据，避免缓存问题
+    const yearData = rawApiData.filter(item => item.year === selectedYear);
+    
+    // 按原所在院系分组
+    const deptMap = new Map<string, { majors: Major[], college: string }>();
+    yearData.forEach(item => {
+      const deptName = item.department || '其他院系';
+      if (!deptMap.has(deptName)) {
+        deptMap.set(deptName, { majors: [], college: item.category || '' });
+      }
+      deptMap.get(deptName)!.majors.push({
+        name: item.major,
+        code: '',
+        degree: item.level || '本科',
+        college: item.category || '',
+        original_college: item.category || '',
+        original_dept: item.department || '',
+      });
+    });
+
+    // 生成院系节点，使用 HSL 颜色
+    const departments: DepartmentNode[] = Array.from(deptMap.entries()).map(([deptName, data], index) => {
+      const hue = (index * 137.5) % 360;
+      return {
+        name: deptName,
+        color: `hsl(${hue}, 70%, 55%)`,
+        majors: data.majors,
+        college: data.college
+      };
+    });
+
+    return departments;
+  }, [currentView, selectedYear, rawApiData]);
 
   // 使用 ref 存储 currentDepartments 的最新值，避免依赖项数组大小变化问题
   const currentDepartmentsRef = useRef<DepartmentNode[]>([]);
