@@ -1599,7 +1599,7 @@ export default function ProfessionalSpiralTower() {
 
         // 中心太阳（响应式半径，跟随缩放）
         const pulseScale = 1 + Math.sin(animationTimeRef.current * 2) * 0.05;
-        const sunRadius = (isMobileSolar ? 16 : (isTabletSolar ? 18 : 20)) * Math.sqrt(zoomLevelRef.current);
+        const sunRadius = (isMobileSolar ? 10 : (isTabletSolar ? 11 : 12)) * Math.sqrt(zoomLevelRef.current);
         renderObjects.push({
           type: 'sun',
           lx: 0, ly: 0, lz: 0,
