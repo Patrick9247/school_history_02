@@ -1212,10 +1212,7 @@ export default function ProfessionalSpiralTower() {
 
         sortedNodes.forEach(node => {
           const size = node.size * node.scale;
-          // 无数据年份透明度稍高，确保可见
-          const opacity = node.hasData 
-            ? Math.max(0.5, Math.min(1, (1 - node.z / 600)))
-            : Math.max(0.7, Math.min(1, (1 - node.z / 600)));
+          const opacity = Math.max(0.5, Math.min(1, (1 - node.z / 600)));
           let color: string;
           if (node.specialColor) {
             color = node.specialColor;
@@ -1253,11 +1250,11 @@ export default function ProfessionalSpiralTower() {
             const isKeyYear = [1956, 1958, 1965, 1993, 2001, 2017, 2025].includes(node.year);
             const isDecadeYear = node.year % 10 === 0;
             
-            if (isKeyYear || isDecadeYear || hoveredYear === node.year || !node.hasData) {
+            if (isKeyYear || isDecadeYear || hoveredYear === node.year) {
               ctx.font = `${10 * node.scale}px sans-serif`;
               ctx.fillStyle = node.hasData 
                 ? `rgba(255, 255, 255, ${opacity * 0.85})` 
-                : `rgba(180, 180, 180, ${opacity * 0.8})`; // 无数据年份用浅灰色，更清晰
+                : `rgba(180, 180, 180, ${opacity * 0.8})`;
               ctx.textAlign = 'center';
               ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
             }
