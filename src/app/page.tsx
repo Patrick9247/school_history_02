@@ -272,6 +272,9 @@ export default function ProfessionalSpiralTower() {
         // 保存原始 API 数据
         setRawApiData(result.data);
 
+        // 清空按年份缓存的院系数据，确保数据更新后显示正确的当年专业
+        setDepartmentsByYear(new Map());
+
         const transformedData = transformData(result.data);
         setData(transformedData);
 
