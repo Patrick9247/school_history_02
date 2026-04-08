@@ -1755,38 +1755,18 @@ export default function ProfessionalSpiralTower() {
             const deptAngle = (i / currentDepartmentsRef.current.length) * Math.PI * 2 - Math.PI / 2 + solarAutoRotationRef.current;
             const dlx = Math.cos(deptAngle) * orbitRadiusX;
             const dly = Math.sin(deptAngle) * orbitRadiusY;
-            const majorOrbitRadius = (isMobileSolar ? 38 : (isTabletSolar ? 44 : 50)) * zoomLevelRef.current;
-
-            // 绘制精细的专业轨道（带虚线效果）
-            const majorOrbitSteps = 60;
-            for (let j = 0; j <= majorOrbitSteps; j++) {
-              const angle = j / majorOrbitSteps * Math.PI * 2;
-              const mlx = dlx + Math.cos(angle) * majorOrbitRadius;
-              const mly = dly + Math.sin(angle) * majorOrbitRadius * 0.4;
-              const proj = project3D(mlx, mly, 0, solarRotXRef.current, solarRotYRef.current, centerX, centerY);
-
-              // 虚线效果（每3个点画一个点）
-              if (j % 3 === 0) {
-                const dashOpacity = 0.08 + Math.sin(angle * 3) * 0.04;
-                ctx.beginPath();
-                ctx.arc(proj.x, proj.y, 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${dashOpacity})`;
-                ctx.fill();
-              }
-            }
-
-            // 绘制专业轨道的淡淡连线
+            const majorOrbitRadius = (isMobileSolar ? 28 : (isTabletSolar ? 32 : 36)) * zoomLevelRef.current;
             ctx.beginPath();
             ctx.ellipse(
-              centerX + dlx * (1 + majorOrbitRadius / orbitRadiusX * 0.1),
-              centerY + dly * (1 + majorOrbitRadius / orbitRadiusY * 0.1),
-              majorOrbitRadius * 0.9,
-              majorOrbitRadius * 0.36,
+              centerX + dlx,
+              centerY + dly,
+              majorOrbitRadius,
+              majorOrbitRadius * 0.35,
               0, 0, Math.PI * 2
             );
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
             ctx.lineWidth = 0.5;
-            ctx.setLineDash([2, 4]); // 虚线效果
+            ctx.setLineDash([2, 4]);
             ctx.stroke();
             ctx.setLineDash([]);
           }
