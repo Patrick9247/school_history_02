@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 // 行星颜色配置（明亮色系，全部带状纹理，条纹随机）
 const PLANET_COLORS = [
@@ -242,6 +243,7 @@ interface RenderObject {
 export default function ProfessionalSpiralTower() {
   const [data, setData] = useState<YearData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [appReady, setAppReady] = useState(false); // 控制加载画面
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const selectedYearRef = useRef<number | null>(null); // 用于 canvas 实时读取
@@ -735,6 +737,14 @@ export default function ProfessionalSpiralTower() {
     fetchData();
     fetchMilestones();
   }, [fetchData, fetchMilestones]);
+
+  // 当数据加载完成时，触发 appReady
+  useEffect(() => {
+    if (!loading && data.length > 0) {
+      // 数据加载完成，触发加载画面完成
+      setAppReady(true);
+    }
+  }, [loading, data]);
 
   // 用户发送的光球状态
   const [userSelectedMajor, setUserSelectedMajor] = useState<string>(''); // 用户选中的专业
@@ -2781,14 +2791,9 @@ export default function ProfessionalSpiralTower() {
     }
   `;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-center">
-          <div className="text-2xl mb-4">加载中...</div>
-        </div>
-      </div>
-    );
+  // 初始加载时显示加载画面
+  if (!appReady) {
+    return <LoadingScreen onLoaded={() => setAppReady(true)} />;
   }
 
   return (
