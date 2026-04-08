@@ -2674,8 +2674,57 @@ export default function ProfessionalSpiralTower() {
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
       <div className="relative w-full h-screen overflow-hidden bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/background.jpg)' }}>
-        {/* 半透明遮罩层，确保内容清晰可见 */}
-        <div className="absolute inset-0 bg-black/60"></div>
+        {/* 半透明遮罩层，确保内容清晰可见 - 适当降低透明度以显示校徽 */}
+        <div className="absolute inset-0 bg-black/50"></div>
+        
+        {/* 成都理工大学校徽背景装饰 - 隐约透明，大气稳重 */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+          {/* 主校徽 - 中心偏下 */}
+          <div 
+            className="absolute opacity-[0.08] md:opacity-[0.1]"
+            style={{
+              width: 'min(80vw, 800px)',
+              height: 'min(80vw, 800px)',
+              top: '10%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <img 
+              src="/college-emblem.svg" 
+              alt="" 
+              className="w-full h-full object-contain"
+              style={{ filter: 'blur(1px) brightness(0.8)' }}
+            />
+          </div>
+          
+          {/* 辅助装饰 - 右上角小校徽 */}
+          <div 
+            className="absolute top-8 right-8 md:top-12 md:right-16 opacity-[0.12] md:opacity-[0.15]"
+            style={{ width: '120px', height: '120px' }}
+          >
+            <img 
+              src="/college-emblem.svg" 
+              alt="" 
+              className="w-full h-full object-contain"
+              style={{ filter: 'blur(0.5px)' }}
+            />
+          </div>
+          
+          {/* 辅助装饰 - 左下角小校徽 */}
+          <div 
+            className="absolute bottom-16 left-4 md:bottom-24 md:left-12 opacity-[0.1] md:opacity-[0.12]"
+            style={{ width: '80px', height: '80px' }}
+          >
+            <img 
+              src="/college-emblem.svg" 
+              alt="" 
+              className="w-full h-full object-contain"
+              style={{ filter: 'blur(0.5px)' }}
+            />
+          </div>
+        </div>
+        
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
