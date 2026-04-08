@@ -299,16 +299,6 @@ export default function ProfessionalSpiralTower() {
   const lastLightCreateTimeRef = useRef(0);
   const LIGHT_CREATE_INTERVAL = 0.53; // 每秒产生的光点数量（0.53秒产生一个，增加3倍）
 
-  // 星空粒子系统
-  const starsRef = useRef<Array<{
-    x: number; y: number; size: number; brightness: number;
-    twinkleSpeed: number; twinkleOffset: number; color: string;
-  }>>([]);
-  const nebulaCloudsRef = useRef<Array<{
-    x: number; y: number; radius: number; color: string;
-    opacity: number; driftSpeed: number; rotation: number;
-  }>>([]);
-
   // 标记是否已初始化光点队列
   const lightParticlesInitializedRef = useRef(false);
 
@@ -1166,49 +1156,6 @@ export default function ProfessionalSpiralTower() {
 
       // 更新动画时间
       animationTimeRef.current += 0.016;
-
-      // 初始化星空粒子（只在第一次或窗口大小变化时）
-      if (starsRef.current.length === 0 || starsRef.current[0].x !== canvas.width) {
-        starsRef.current = [];
-        // 只生成60颗星星，随机分布
-        for (let i = 0; i < 60; i++) {
-          starsRef.current.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 1.5 + 0.5,
-            brightness: Math.random() * 0.25 + 0.15,
-            twinkleSpeed: Math.random() * 0.5 + 0.2, // 缓慢的呼吸效果
-            twinkleOffset: Math.random() * Math.PI * 2,
-            color: Math.random() > 0.7 ? '#aaccff' : '#ffffff'
-          });
-        }
-        // 初始化星空（随机分布）
-        for (let i = 0; i < 80; i++) {
-          starsRef.current.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 2 + 1,
-            brightness: Math.random() * 0.4 + 0.3,
-            twinkleSpeed: Math.random() * 1.5 + 0.5,
-            twinkleOffset: Math.random() * Math.PI * 2,
-            color: Math.random() > 0.6 ? '#ffffff' : (Math.random() > 0.5 ? '#aaddff' : '#ffccaa')
-          });
-        }
-      }
-
-      // 绘制星空粒子（呼吸闪烁效果）
-      starsRef.current.forEach(star => {
-        const breathe = Math.sin(animationTimeRef.current * star.twinkleSpeed + star.twinkleOffset);
-        const alpha = star.brightness * (0.5 + breathe * 0.5);
-        const sizeScale = 1 + breathe * 0.15;
-        
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size * sizeScale, 0, Math.PI * 2);
-        ctx.fillStyle = star.color;
-        ctx.globalAlpha = alpha;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
 
       if (currentView === 'spiral') {
         // 更新旋转（如果没有拖动、没有触摸操作、且鼠标不在螺旋体上）
