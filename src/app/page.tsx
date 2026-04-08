@@ -1816,52 +1816,41 @@ export default function ProfessionalSpiralTower() {
           
           if (obj.type === 'major') {
             const tailLength = 3;
-            // 如果是高亮的专业，增加发光效果
             const glowIntensity = isHighlighted ? (0.6 + Math.sin(animationTimeRef.current * 8) * 0.4) : 0;
             const highlightGlow = isHighlighted;
+            const scaledRadius = obj.radius * (obj.scale || 1);
             
             for (let t = tailLength; t >= 0; t--) {
               const trailOpacity = opacity * (1 - t / tailLength) * 0.5;
-              // 专业球使用单色，不带纹理，enable3D: false
-              drawSphere((obj.x || 0) - t * 2, obj.y || 0, obj.radius * (1 - t / tailLength), obj.color, trailOpacity, highlightGlow, false);
+              const trailRadius = scaledRadius * (1 - t / tailLength);
+              drawSphere((obj.x || 0) - t * 2, obj.y || 0, trailRadius, obj.color, trailOpacity, highlightGlow, false);
             }
             
-            // 绘制球体
             if (isHighlighted) {
-              // 高亮专业：绘制多层发光效果
-              // 最外层大光晕
-              const outerGlowRadius = obj.radius * (2.5 + glowIntensity * 1.5);
+              const outerGlowRadius = scaledRadius * (2.5 + glowIntensity * 1.5);
               drawSphere(obj.x || 0, obj.y || 0, outerGlowRadius, '#FFD700', 0.2 * glowIntensity, true, false);
-              // 中层光晕
-              const midGlowRadius = obj.radius * (1.8 + glowIntensity * 0.8);
+              const midGlowRadius = scaledRadius * (1.8 + glowIntensity * 0.8);
               drawSphere(obj.x || 0, obj.y || 0, midGlowRadius, '#FFA500', 0.35 * glowIntensity, true, false);
-              // 内层光晕
-              const innerGlowRadius = obj.radius * (1.3 + glowIntensity * 0.4);
+              const innerGlowRadius = scaledRadius * (1.3 + glowIntensity * 0.4);
               drawSphere(obj.x || 0, obj.y || 0, innerGlowRadius, '#FF6600', 0.45 * glowIntensity, true, false);
-              // 核心球体：单色，与学院球主色调一致
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, true, false);
+              drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, true, false);
               
-              // 显示专业名称（带发光背景）
               const majorFontSize = isMobileSolar ? 8 : 9;
               const textX = obj.x || 0;
-              const textY = (obj.y || 0) + obj.radius + 14;
-              // 文字背景发光
+              const textY = (obj.y || 0) + scaledRadius + 14;
               ctx.font = `bold ${majorFontSize * (obj.scale || 1) + 2}px sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               const textMetrics = ctx.measureText(obj.majorData?.name || '');
               const textWidth = textMetrics.width;
               const textHeight = majorFontSize * (obj.scale || 1);
-              // 绘制文字背景
               ctx.fillStyle = `rgba(0, 0, 0, ${0.6 * glowIntensity})`;
               ctx.fillRect(textX - textWidth / 2 - 4, textY - textHeight / 2 - 2, textWidth + 8, textHeight + 4);
-              // 绘制文字
               ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
               ctx.fillText(obj.majorData?.name || '', textX, textY);
             } else {
-              // 普通专业球：单色，与学院球主色调一致，无纹理
-              drawSphere(obj.x || 0, obj.y || 0, obj.radius, obj.color, opacity, false, false);
+              drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, false, false);
             }
           } else if (obj.type === 'sun') {
             // Google Earth 太阳效果：均匀的径向渐变，无纹理
