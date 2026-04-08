@@ -1927,10 +1927,9 @@ export default function ProfessionalSpiralTower() {
           return { level: 'low', scale: 0.3 };
         };
 
-        // 绘制学院轨道线（椭圆）- 渐变虚线效果
+        // 绘制学院轨道线（椭圆）- 多层光晕 + 流动虚线效果
         const time = animationTimeRef.current;
         
-        // 主轨道：渐变虚线
         ctx.save();
         ctx.beginPath();
         for (let i = 0; i <= orbitSteps; i++) {
@@ -1946,26 +1945,50 @@ export default function ProfessionalSpiralTower() {
         }
         ctx.closePath();
         
-        // 外层光晕
-        ctx.strokeStyle = 'rgba(100, 180, 255, 0.15)';
-        ctx.lineWidth = 12;
+        // 最外层大光晕（柔和蓝色光晕）
+        ctx.strokeStyle = 'rgba(60, 140, 255, 0.12)';
+        ctx.lineWidth = 24;
         ctx.stroke();
         
-        // 中层光晕
-        ctx.strokeStyle = 'rgba(100, 180, 255, 0.25)';
-        ctx.lineWidth = 8;
+        // 外层光晕（蓝色）
+        ctx.strokeStyle = 'rgba(80, 160, 255, 0.2)';
+        ctx.lineWidth = 16;
         ctx.stroke();
         
-        // 主轨道线（带虚线效果）
-        ctx.setLineDash([15, 10]); // 虚线：15px 线段，10px 间隙
-        ctx.lineDashOffset = -time * 20; // 流动效果
-        ctx.strokeStyle = 'rgba(150, 200, 255, 0.6)';
+        // 中层光晕（亮蓝色）
+        ctx.strokeStyle = 'rgba(100, 180, 255, 0.3)';
+        ctx.lineWidth = 10;
+        ctx.stroke();
+        
+        // 内层光晕（白色）
+        ctx.strokeStyle = 'rgba(200, 220, 255, 0.4)';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        
+        // 主轨道线（白色实线 + 蓝色虚线叠加）
+        ctx.strokeStyle = 'rgba(220, 240, 255, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // 流动的虚线光点效果
+        ctx.setLineDash([8, 16]); // 短虚线
+        ctx.lineDashOffset = -time * 30; // 快速流动效果
+        ctx.strokeStyle = 'rgba(150, 200, 255, 0.8)';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.setLineDash([]);
+        
+        // 第二层流动虚线（错位产生更多光点）
+        ctx.setLineDash([12, 24]);
+        ctx.lineDashOffset = -time * 30 + 12;
+        ctx.strokeStyle = 'rgba(200, 230, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
         ctx.restore();
 
-        // 绘制专业次级轨道（每个学院的专业小轨道）- 根据 LOD 决定是否绘制
+        // 绘制专业次级轨道（每个学院的专业小轨道）- 发光连接线
         renderObjects.filter(obj => obj.type === 'major').forEach(obj => {
           if (obj.parentIndex === undefined) return;
           const parentObj = renderObjects.find(o => o.type === 'department' && o.index === obj.parentIndex);
@@ -1974,24 +1997,49 @@ export default function ProfessionalSpiralTower() {
           const lod = getLODLevel(parentObj.z);
           if (lod.level === 'low') return;
           
-          const majorOrbitRadius = (isMobileSolar ? 38 : (isTabletSolar ? 44 : 50)) * zoomLevelRef.current;
-          
-          // 绘制专业到学院的连接线
+          // 绘制专业到学院的连接线 - 多层光晕效果
           ctx.save();
+          
+          // 外层光晕
           ctx.beginPath();
           ctx.moveTo(parentObj.x, parentObj.y);
           ctx.lineTo(obj.x || 0, obj.y || 0);
-          
-          // 使用渐变线条
-          const lineGradient = ctx.createLinearGradient(parentObj.x, parentObj.y, obj.x || 0, obj.y || 0);
-          lineGradient.addColorStop(0, 'rgba(150, 180, 255, 0.4)');
-          lineGradient.addColorStop(0.5, 'rgba(150, 180, 255, 0.15)');
-          lineGradient.addColorStop(1, 'rgba(150, 180, 255, 0.1)');
-          ctx.strokeStyle = lineGradient;
-          ctx.lineWidth = lod.level === 'medium' ? 0.5 : 1; // 中等细节减半线宽
-          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(100, 180, 255, 0.15)';
+          ctx.lineWidth = lod.level === 'medium' ? 3 : 5;
           ctx.stroke();
-          ctx.setLineDash([]);
+          
+          // 中层光晕
+          ctx.beginPath();
+          ctx.moveTo(parentObj.x, parentObj.y);
+          ctx.lineTo(obj.x || 0, obj.y || 0);
+          ctx.strokeStyle = 'rgba(150, 200, 255, 0.25)';
+          ctx.lineWidth = lod.level === 'medium' ? 1.5 : 2.5;
+          ctx.stroke();
+          
+          // 核心线（渐变）
+          ctx.beginPath();
+          ctx.moveTo(parentObj.x, parentObj.y);
+          ctx.lineTo(obj.x || 0, obj.y || 0);
+          const lineGradient = ctx.createLinearGradient(parentObj.x, parentObj.y, obj.x || 0, obj.y || 0);
+          lineGradient.addColorStop(0, 'rgba(200, 220, 255, 0.6)');
+          lineGradient.addColorStop(0.5, 'rgba(150, 190, 255, 0.35)');
+          lineGradient.addColorStop(1, 'rgba(100, 170, 255, 0.15)');
+          ctx.strokeStyle = lineGradient;
+          ctx.lineWidth = lod.level === 'medium' ? 0.5 : 1;
+          ctx.stroke();
+          
+          // 流动光点
+          const dist = Math.sqrt(Math.pow((obj.x || 0) - parentObj.x, 2) + Math.pow((obj.y || 0) - parentObj.y, 2));
+          const dotPos = (time * 40) % (dist * 2);
+          if (dotPos < dist) {
+            const dotX = parentObj.x + ((obj.x || 0) - parentObj.x) * (dotPos / dist);
+            const dotY = parentObj.y + ((obj.y || 0) - parentObj.y) * (dotPos / dist);
+            ctx.beginPath();
+            ctx.arc(dotX, dotY, lod.level === 'medium' ? 1.5 : 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(200, 230, 255, 0.8)';
+            ctx.fill();
+          }
+          
           ctx.restore();
         });
 
