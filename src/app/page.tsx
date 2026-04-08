@@ -982,7 +982,7 @@ export default function ProfessionalSpiralTower() {
         // 绘制自然行星纹理（增强版）
         const bandColors = planetData.bandColors;
         const bandCount = bandColors.length;
-        const bandAngle = ((planetData.bandAngle || 0) * Math.PI / 180) + rot;
+        const bandAngle = (planetData.bandAngle || 0) * Math.PI / 180;
         const cloudColor = planetData.cloudColor || color;
         const turbulence = planetData.turbulence || 0.1;
         const swirl = planetData.swirlStrength || 0.15;
@@ -1031,9 +1031,12 @@ export default function ProfessionalSpiralTower() {
         ctx.fill();
 
         // 步骤2: 表面纹理层（优化绘制次数）
+        // 自转轴固定倾斜23.5度（像地球），纹理绕此轴旋转
+        const AXIAL_TILT = 23.5 * Math.PI / 180; // 23.5度倾角
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(bandAngle);
+        ctx.rotate(AXIAL_TILT); // 先倾斜自转轴
+        ctx.rotate(bandAngle + rot); // 再加上自转角度
         
         // 主条纹带（简化计算）
         for (let i = 0; i < bandCount + 2; i++) {
@@ -1081,6 +1084,7 @@ export default function ProfessionalSpiralTower() {
         // 赤道高亮带 - 中间一条明显的白色带，随自转旋转
         ctx.save();
         ctx.translate(x, y);
+        ctx.rotate(AXIAL_TILT); // 自转轴固定倾斜
         ctx.rotate(rot);
         
         // 赤道带（半透明白色条带）
@@ -2056,7 +2060,8 @@ export default function ProfessionalSpiralTower() {
             ctx.globalAlpha = 1;
             
             // 绘制学院球：使用行星数据和旋转角度（带状纹理 + Google Earth 3D 效果）
-            // 学院球自转：1秒1圈（animationTimeRef每秒增加约1）
+            // 学院球自转：1秒1圈，自转轴固定（不随公转改变方向）
+            // 自转轴保持23.5度倾斜，像地球一样
             const planetRotation = animationTimeRef.current * Math.PI * 2;
             drawSphere(obj.x || 0, obj.y || 0, obj.radius * (obj.scale || 1), obj.color, opacity, shouldGlow || isCollegeHighlighted, true, obj.planetData, planetRotation);
 
