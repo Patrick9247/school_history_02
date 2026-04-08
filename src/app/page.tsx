@@ -990,6 +990,12 @@ export default function ProfessionalSpiralTower() {
         const ovalBands = planetData.ovalBands || [];
 
         // 行星渲染 - 参考游戏中的行星效果
+        // 伪随机函数（基于位置的随机值）
+        const rand = (seed: number, min: number, max: number) => {
+          const t = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+          return min + (t - Math.floor(t)) * (max - min);
+        };
+        
         // 步骤1: 填充基础球体（从亮到暗的自然渐变）
         const baseGradient = ctx.createRadialGradient(
           x - radius * 0.5, y - radius * 0.5, 0,  // 光源方向：左上方
@@ -1006,151 +1012,197 @@ export default function ProfessionalSpiralTower() {
         ctx.globalAlpha = opacity;
         ctx.fill();
 
-        // 步骤2: 表面纹理层 - 条纹和漩涡
+        // 步骤2: 表面纹理层 - 条纹和漩涡（随机自然）
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(bandAngle);
         
-        // 绘制主条纹带（水平环绕）
-        for (let i = 0; i < bandCount; i++) {
-          const normalizedY = (i / (bandCount - 1)) * 2 - 1;
-          const bandY = normalizedY * radius;
-          const widthFactor = 1 - Math.abs(normalizedY) * 0.4;
-          const bandHeight = (radius * 0.5 / bandCount) * widthFactor;
+        // 主条纹带（随机位置和宽度）
+        for (let i = 0; i < bandCount + 3; i++) {
+          // 随机Y位置，不完全均匀
+          const seed = i * 7.3;
+          const baseY = rand(seed, -0.85, 0.85);
+          const bandY = baseY * radius;
+          const widthVar = rand(seed + 1, 0.6, 1.2);
+          const bandHeight = (radius * 0.45 / bandCount) * widthVar;
           
-          // 漩涡弯曲效果 - 多层正弦波叠加
+          // 随机漩涡弯曲强度
+          const swirl1 = rand(seed + 2, 0.6, 1.4) * swirl;
+          const swirl2 = rand(seed + 3, 0.5, 1.3) * turbulence;
+          const swirl3 = rand(seed + 4, 0.3, 0.8) * swirl;
+          
+          // 随机弯曲相位
+          const phase1 = rand(seed + 5, 0, Math.PI * 2);
+          const phase2 = rand(seed + 6, 0, Math.PI * 2);
+          
           const waveOffset = 
-            Math.sin(normalizedY * 4 + rot) * radius * swirl +
-            Math.sin(normalizedY * 7 - rot * 1.3) * radius * turbulence * 0.8 +
-            Math.cos(normalizedY * 10 + rot * 1.8) * radius * swirl * 0.4;
+            Math.sin(baseY * 4 + rot + phase1) * radius * swirl1 +
+            Math.sin(baseY * 6 - rot * 1.2 + phase2) * radius * swirl2 +
+            Math.cos(baseY * 9 + rot * 1.6) * radius * swirl3;
+          
+          // 随机宽度延伸
+          const widthStretch = rand(seed + 7, 1.2, 1.6);
           
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.4, bandHeight, 0, 0, Math.PI * 2);
-          ctx.fillStyle = bandColors[i];
-          ctx.globalAlpha = opacity * 0.55;
+          ctx.ellipse(waveOffset, bandY, radius * widthStretch, bandHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = bandColors[i % bandCount];
+          ctx.globalAlpha = opacity * rand(seed + 8, 0.4, 0.65);
           ctx.fill();
         }
         
-        // 绘制细条纹（高纬度细节）
-        for (let i = 0; i < bandCount - 1; i++) {
-          const y1 = ((i + 0.3) / (bandCount - 1)) * 2 - 1;
-          const y2 = ((i + 0.7) / (bandCount - 1)) * 2 - 1;
-          const bandY = ((y1 + y2) / 2) * radius;
-          const bandHeight = radius * 0.08 / bandCount;
+        // 细条纹（随机分布）
+        const thinBandCount = Math.floor(rand(42, 4, 8));
+        for (let i = 0; i < thinBandCount; i++) {
+          const seed = i * 13.7 + 100;
+          const baseY = rand(seed, -0.75, 0.75);
+          const bandY = baseY * radius;
+          const bandHeight = rand(seed + 1, 0.03, 0.1) * radius;
           
           const waveOffset = 
-            Math.sin(y1 * 5 + rot * 1.2) * radius * swirl * 0.6 +
-            Math.sin(y1 * 8 - rot * 0.9) * radius * turbulence * 0.5;
+            Math.sin(baseY * 5 + rot * 1.1) * radius * swirl * rand(seed + 2, 0.4, 0.8) +
+            Math.sin(baseY * 7 - rot * 0.8) * radius * turbulence * rand(seed + 3, 0.3, 0.7);
           
           ctx.beginPath();
-          ctx.ellipse(waveOffset, bandY, radius * 1.3, bandHeight, 0, 0, Math.PI * 2);
-          ctx.fillStyle = adjustBrightness(bandColors[i], -10);
-          ctx.globalAlpha = opacity * 0.35;
+          ctx.ellipse(waveOffset, bandY, radius * rand(seed + 4, 1.1, 1.5), bandHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], rand(seed + 5, -20, 5));
+          ctx.globalAlpha = opacity * rand(seed + 6, 0.2, 0.4);
           ctx.fill();
         }
         
-        // 绘制漩涡斑块（模拟大红斑）
-        const vortexCount = 3;
+        // 漩涡斑块（随机大小、位置、形状）
+        const vortexCount = Math.floor(rand(88, 2, 5));
         for (let i = 0; i < vortexCount; i++) {
-          const vortexY = ((i + 1) / (vortexCount + 1)) * 2 - 1;
-          const vortexX = Math.sin(vortexY * 6 + rot * 0.8) * radius * swirl * 1.5;
-          const vortexWidth = radius * 0.15 * (1 - Math.abs(vortexY) * 0.3);
-          const vortexHeight = vortexWidth * 0.6;
+          const seed = i * 17.3 + 200;
+          const vortexY = rand(seed, -0.6, 0.6) * radius;
+          const vortexX = rand(seed + 1, -1, 1) * radius * swirl * 1.5;
+          const sizeVar = rand(seed + 2, 0.6, 1.4);
+          const vortexWidth = radius * 0.18 * sizeVar;
+          const vortexHeight = vortexWidth * rand(seed + 3, 0.4, 0.8);
+          const rotation = rand(seed + 4, -0.3, 0.3);
           
+          ctx.save();
+          ctx.translate(vortexX, vortexY);
+          ctx.rotate(rotation);
           ctx.beginPath();
-          ctx.ellipse(vortexX, vortexY * radius, vortexWidth, vortexHeight, 0, 0, Math.PI * 2);
-          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], -15);
-          ctx.globalAlpha = opacity * 0.45;
+          ctx.ellipse(0, 0, vortexWidth, vortexHeight, 0, 0, Math.PI * 2);
+          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], rand(seed + 5, -25, -5));
+          ctx.globalAlpha = opacity * rand(seed + 6, 0.3, 0.55);
           ctx.fill();
           
-          // 漩涡内部高光
+          // 漩涡内部高光（随机偏移）
           ctx.beginPath();
-          ctx.ellipse(vortexX, vortexY * radius, vortexWidth * 0.5, vortexHeight * 0.5, 0, 0, Math.PI * 2);
-          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], 10);
-          ctx.globalAlpha = opacity * 0.25;
+          ctx.ellipse(
+            rand(seed + 7, -0.3, 0.3) * vortexWidth,
+            rand(seed + 8, -0.3, 0.3) * vortexHeight,
+            vortexWidth * 0.45, vortexHeight * 0.45, 0, 0, Math.PI * 2
+          );
+          ctx.fillStyle = adjustBrightness(bandColors[i % bandCount], rand(seed + 9, 5, 20));
+          ctx.globalAlpha = opacity * rand(seed + 10, 0.15, 0.35);
           ctx.fill();
+          ctx.restore();
         }
         
-        // 绘制云带（亮色横向条纹）
-        const cloudBandCount = 4;
+        // 云带（随机长度、位置、透明度）
+        const cloudBandCount = Math.floor(rand(77, 3, 6));
         for (let i = 0; i < cloudBandCount; i++) {
-          const cloudY = (Math.sin(i * 1.7 + rot * 0.3) * 0.7) * radius;
-          const cloudWidth = radius * (0.8 + Math.cos(i * 2.1) * 0.3);
-          const cloudHeight = radius * 0.04 + Math.sin(i * 3.2) * radius * 0.02;
+          const seed = i * 23.1 + 300;
+          const cloudY = rand(seed, -0.8, 0.8) * radius;
+          const cloudWidth = radius * rand(seed + 1, 0.5, 1.2);
+          const cloudHeight = rand(seed + 2, 0.02, 0.07) * radius;
           
-          const cloudOffset = Math.sin(cloudY / radius * 4 + rot) * radius * swirl * 0.8;
+          const cloudOffset = Math.sin(cloudY / radius * 4 + rot + seed) * radius * swirl * rand(seed + 3, 0.5, 1.2);
+          
+          // 云带两端淡出效果
+          const cloudGrad = ctx.createLinearGradient(x - cloudWidth, cloudY, x + cloudWidth, cloudY);
+          cloudGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+          cloudGrad.addColorStop(0.2, `rgba(255, 255, 255, ${rand(seed + 4, 0.15, 0.35)})`);
+          cloudGrad.addColorStop(0.8, `rgba(255, 255, 255, ${rand(seed + 5, 0.15, 0.35)})`);
+          cloudGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
           
           ctx.beginPath();
           ctx.ellipse(cloudOffset, cloudY, cloudWidth, cloudHeight, 0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-          ctx.globalAlpha = opacity * 0.4;
+          ctx.fillStyle = cloudGrad;
+          ctx.globalAlpha = opacity;
           ctx.fill();
         }
         
         ctx.restore();
 
-        // 步骤3: 极地冰盖 - 更丰富的层次
-        const polarCapHeight = radius * 0.22;
+        // 步骤3: 极地冰盖 - 随机自然
+        const polarSeed = Math.floor(radius * 10);
+        const polarCapHeight = radius * rand(polarSeed, 0.18, 0.26);
         
-        // 北极冰盖
-        // 冰盖底色
+        // 北极冰盖 - 随机偏移和大小
+        const northX = x + rand(polarSeed + 1, -0.05, 0.05) * radius;
+        const northY = y - radius * rand(polarSeed + 2, 0.85, 0.93);
+        const northW = radius * rand(polarSeed + 3, 0.45, 0.6);
+        const northH = polarCapHeight * rand(polarSeed + 4, 0.85, 1.15);
+        
         ctx.beginPath();
-        ctx.ellipse(x, y - radius * 0.9, radius * 0.55, polarCapHeight, 0, 0, Math.PI * 2);
-        const northPolarGrad = ctx.createRadialGradient(x, y - radius * 0.9, 0, x, y - radius * 0.9, radius * 0.6);
-        northPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-        northPolarGrad.addColorStop(0.4, 'rgba(240, 248, 255, 0.6)');
-        northPolarGrad.addColorStop(0.7, 'rgba(200, 220, 240, 0.4)');
-        northPolarGrad.addColorStop(1, 'rgba(180, 200, 220, 0.2)');
+        ctx.ellipse(northX, northY, northW, northH, 0, 0, Math.PI * 2);
+        const northPolarGrad = ctx.createRadialGradient(northX, northY, 0, northX, northY, Math.max(northW, northH));
+        northPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        northPolarGrad.addColorStop(0.3, 'rgba(245, 252, 255, 0.65)');
+        northPolarGrad.addColorStop(0.6, 'rgba(200, 220, 240, 0.4)');
+        northPolarGrad.addColorStop(1, 'rgba(160, 190, 220, 0.15)');
         ctx.fillStyle = northPolarGrad;
         ctx.globalAlpha = opacity;
         ctx.fill();
         
-        // 北极冰盖高光
+        // 北极冰盖高光 - 随机位置
+        const hlX = northX + rand(polarSeed + 5, -0.15, 0.1) * radius;
+        const hlY = northY - rand(polarSeed + 6, 0, 0.05) * radius;
         ctx.beginPath();
-        ctx.ellipse(x - radius * 0.1, y - radius * 0.92, radius * 0.25, polarCapHeight * 0.5, 0, 0, Math.PI * 2);
-        const northHighlight = ctx.createRadialGradient(x - radius * 0.15, y - radius * 0.95, 0, x, y - radius * 0.9, radius * 0.3);
-        northHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+        ctx.ellipse(hlX, hlY, radius * rand(polarSeed + 7, 0.2, 0.3), northH * rand(polarSeed + 8, 0.4, 0.6), 0, 0, Math.PI * 2);
+        const northHighlight = ctx.createRadialGradient(hlX, hlY, 0, hlX, hlY, radius * 0.3);
+        northHighlight.addColorStop(0, `rgba(255, 255, 255, ${rand(polarSeed + 9, 0.5, 0.8)})`);
         northHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = northHighlight;
         ctx.globalAlpha = opacity;
         ctx.fill();
         
-        // 北极周围暗环（冰缘）
+        // 北极冰缘 - 随机粗细
         ctx.beginPath();
-        ctx.ellipse(x, y - radius * 0.9, radius * 0.58, polarCapHeight * 1.1, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100, 120, 140, 0.25)';
-        ctx.lineWidth = 2;
+        ctx.ellipse(northX, northY, northW * rand(polarSeed + 10, 1.05, 1.15), northH * rand(polarSeed + 11, 1.0, 1.2), 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(100, 120, 140, ${rand(polarSeed + 12, 0.15, 0.3)})`;
+        ctx.lineWidth = rand(polarSeed + 13, 1.5, 3);
         ctx.globalAlpha = opacity;
         ctx.stroke();
         
-        // 南极冰盖
-        // 冰盖底色
+        // 南极冰盖 - 随机偏移和大小
+        const southX = x + rand(polarSeed + 20, -0.05, 0.05) * radius;
+        const southY = y + radius * rand(polarSeed + 21, 0.85, 0.93);
+        const southW = radius * rand(polarSeed + 22, 0.4, 0.55);
+        const southH = polarCapHeight * rand(polarSeed + 23, 0.8, 1.0);
+        
         ctx.beginPath();
-        ctx.ellipse(x, y + radius * 0.9, radius * 0.5, polarCapHeight * 0.9, 0, 0, Math.PI * 2);
-        const southPolarGrad = ctx.createRadialGradient(x, y + radius * 0.9, 0, x, y + radius * 0.9, radius * 0.55);
-        southPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
-        southPolarGrad.addColorStop(0.5, 'rgba(230, 245, 255, 0.55)');
-        southPolarGrad.addColorStop(0.8, 'rgba(190, 210, 235, 0.35)');
-        southPolarGrad.addColorStop(1, 'rgba(160, 190, 220, 0.15)');
+        ctx.ellipse(southX, southY, southW, southH, 0, 0, Math.PI * 2);
+        const southPolarGrad = ctx.createRadialGradient(southX, southY, 0, southX, southY, Math.max(southW, southH));
+        southPolarGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+        southPolarGrad.addColorStop(0.4, 'rgba(235, 248, 255, 0.6)');
+        southPolarGrad.addColorStop(0.7, 'rgba(190, 215, 240, 0.35)');
+        southPolarGrad.addColorStop(1, 'rgba(150, 185, 225, 0.12)');
         ctx.fillStyle = southPolarGrad;
         ctx.globalAlpha = opacity * 0.9;
         ctx.fill();
         
         // 南极冰盖高光
+        const shlX = southX + rand(polarSeed + 24, -0.1, 0.15) * radius;
+        const shlY = southY + rand(polarSeed + 25, -0.05, 0.05) * radius;
         ctx.beginPath();
-        ctx.ellipse(x + radius * 0.08, y + radius * 0.88, radius * 0.2, polarCapHeight * 0.4, 0, 0, Math.PI * 2);
-        const southHighlight = ctx.createRadialGradient(x + radius * 0.08, y + radius * 0.88, 0, x, y + radius * 0.9, radius * 0.25);
-        southHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        ctx.ellipse(shlX, shlY, radius * rand(polarSeed + 26, 0.15, 0.25), southH * rand(polarSeed + 27, 0.35, 0.5), 0, 0, Math.PI * 2);
+        const southHighlight = ctx.createRadialGradient(shlX, shlY, 0, shlX, shlY, radius * 0.25);
+        southHighlight.addColorStop(0, `rgba(255, 255, 255, ${rand(polarSeed + 28, 0.4, 0.7)})`);
         southHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = southHighlight;
         ctx.globalAlpha = opacity * 0.85;
         ctx.fill();
         
-        // 南极周围暗环
+        // 南极冰缘
         ctx.beginPath();
-        ctx.ellipse(x, y + radius * 0.9, radius * 0.53, polarCapHeight * 0.95, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100, 120, 140, 0.2)';
-        ctx.lineWidth = 2;
+        ctx.ellipse(southX, southY, southW * rand(polarSeed + 29, 1.05, 1.15), southH * rand(polarSeed + 30, 0.95, 1.1), 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(100, 120, 140, ${rand(polarSeed + 31, 0.12, 0.25)})`;
+        ctx.lineWidth = rand(polarSeed + 32, 1.5, 3);
         ctx.globalAlpha = opacity * 0.9;
         ctx.stroke();
 
