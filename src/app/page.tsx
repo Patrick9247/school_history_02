@@ -2,38 +2,78 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 
-// 行星颜色配置（偏暗色系，带状纹理）
+// 行星颜色配置（偏暗色系，全部带状纹理，条纹随机）
 const PLANET_COLORS = [
-  // 带状行星（5个主要带状结构）
-  { name: '木星', color: '#8B6914', gradient: ['#A67C00', '#5C4A1F'], bands: true, bandColors: ['#C4A35A', '#8B6914', '#6B4423', '#8B6914', '#C4A35A'] },
-  { name: '木星2', color: '#704214', gradient: ['#8B5A2B', '#4A2C0A'], bands: true, bandColors: ['#DEB887', '#704214', '#8B4513', '#704214', '#DEB887'] },
-  { name: '木星3', color: '#5D4E37', gradient: ['#8B7355', '#3D2E1F'], bands: true, bandColors: ['#C4B59D', '#5D4E37', '#8B7765', '#5D4E37', '#C4B59D'] },
-  { name: '海王星', color: '#2E4A62', gradient: ['#4169E1', '#1A2F4A'], bands: true, bandColors: ['#5D8AA8', '#2E4A62', '#1E3A5F', '#2E4A62', '#5D8AA8'] },
-  { name: '土星', color: '#8B7500', gradient: ['#DAA520', '#8B6914'], bands: true, bandColors: ['#F4D03F', '#8B7500', '#B8860B', '#8B7500', '#F4D03F'] },
-  
-  // 非带状行星（偏暗色系）
-  { name: '水星', color: '#5A5A5A', gradient: ['#808080', '#3A3A3A'], bands: false },
-  { name: '金星', color: '#8B7355', gradient: ['#D2B48C', '#6B4423'], bands: false },
-  { name: '地球', color: '#2F4F4F', gradient: ['#4A6A6A', '#1A2F2F'], bands: false },
-  { name: '火星', color: '#8B3A3A', gradient: ['#CD5C5C', '#5C2828'], bands: false },
-  { name: '天王星', color: '#3A5F5F', gradient: ['#5F8F8F', '#2A3F3F'], bands: false },
-  { name: '冥王星', color: '#6B5344', gradient: ['#8B7355', '#4A3A2A'], bands: false },
-  { name: '月球', color: '#4A4A4A', gradient: ['#6A6A6A', '#2A2A2A'], bands: false },
-  { name: '彗星', color: '#4A3A5F', gradient: ['#6B5B8F', '#2A1A3F'], bands: false },
-  { name: '星云', color: '#2A4A4A', gradient: ['#3A5A5A', '#1A2A2A'], bands: false },
-  { name: '银河', color: '#3A2A4A', gradient: ['#5A4A6A', '#2A1A3A'], bands: false },
-  { name: '极光', color: '#2A4A2A', gradient: ['#3A5A3A', '#1A2A1A'], bands: false },
-  { name: '暗星1', color: '#4A3A2A', gradient: ['#5A4A3A', '#3A2A1A'], bands: false },
-  { name: '暗星2', color: '#3A4A5A', gradient: ['#4A5A6A', '#2A3A4A'], bands: false },
-  { name: '暗星3', color: '#5A3A4A', gradient: ['#6A4A5A', '#4A2A3A'], bands: false },
-  { name: '暗星4', color: '#3A5A4A', gradient: ['#4A6A5A', '#2A4A3A'], bands: false },
-  { name: '暗星5', color: '#4A4A3A', gradient: ['#5A5A4A', '#3A3A2A'], bands: false },
-  { name: '暗星6', color: '#5A4A3A', gradient: ['#6A5A4A', '#4A3A2A'], bands: false },
+  // 所有行星都带状纹理，使用随机条纹
+  { name: '水星', color: '#5A5A5A', gradient: ['#7A7A7A', '#3A3A3A'], baseBandColor: '#6A6A6A' },
+  { name: '金星', color: '#8B7355', gradient: ['#9B8365', '#6B5335'], baseBandColor: '#7B6345' },
+  { name: '地球', color: '#2F4F4F', gradient: ['#4A6A6A', '#1A2F2F'], baseBandColor: '#3A5F5F' },
+  { name: '火星', color: '#8B3A3A', gradient: ['#9B4A4A', '#6B2A2A'], baseBandColor: '#7B3A3A' },
+  { name: '木星', color: '#8B6914', gradient: ['#A67C00', '#5C4A1F'], baseBandColor: '#9B7924' },
+  { name: '土星', color: '#8B7500', gradient: ['#9B8500', '#6B5500'], baseBandColor: '#7B6500' },
+  { name: '天王星', color: '#3A5F5F', gradient: ['#5F8F8F', '#2A3F3F'], baseBandColor: '#4A6F6F' },
+  { name: '海王星', color: '#2E4A62', gradient: ['#4E6A82', '#1A2A42'], baseBandColor: '#3E5A72' },
+  { name: '冥王星', color: '#6B5344', gradient: ['#8B7355', '#4A3A2A'], baseBandColor: '#5B4334' },
+  { name: '月球', color: '#4A4A4A', gradient: ['#6A6A6A', '#2A2A2A'], baseBandColor: '#5A5A5A' },
+  { name: '彗星', color: '#4A3A5F', gradient: ['#6B5B8F', '#2A1A3F'], baseBandColor: '#5A4A6F' },
+  { name: '星云', color: '#2A4A4A', gradient: ['#3A5A5A', '#1A2A2A'], baseBandColor: '#3A4A4A' },
+  { name: '银河', color: '#3A2A4A', gradient: ['#5A4A6A', '#2A1A3A'], baseBandColor: '#4A3A5A' },
+  { name: '极光', color: '#2A4A2A', gradient: ['#3A5A3A', '#1A2A1A'], baseBandColor: '#3A4A3A' },
+  { name: '暗星1', color: '#4A3A2A', gradient: ['#5A4A3A', '#3A2A1A'], baseBandColor: '#5A4A3A' },
+  { name: '暗星2', color: '#3A4A5A', gradient: ['#4A5A6A', '#2A3A4A'], baseBandColor: '#4A5A5A' },
+  { name: '暗星3', color: '#5A3A4A', gradient: ['#6A4A5A', '#4A2A3A'], baseBandColor: '#5A4A4A' },
+  { name: '暗星4', color: '#3A5A4A', gradient: ['#4A6A5A', '#2A4A3A'], baseBandColor: '#4A5A4A' },
+  { name: '暗星5', color: '#4A4A3A', gradient: ['#5A5A4A', '#3A3A2A'], baseBandColor: '#4A4A3A' },
+  { name: '暗星6', color: '#5A4A3A', gradient: ['#6A5A4A', '#4A3A2A'], baseBandColor: '#5A5A3A' },
+  { name: '暗星7', color: '#4A3A3A', gradient: ['#5A4A4A', '#3A2A2A'], baseBandColor: '#5A4A4A' },
+  { name: '暗星8', color: '#3A3A4A', gradient: ['#4A4A5A', '#2A2A3A'], baseBandColor: '#4A4A5A' },
 ];
 
-// 获取学院球颜色（使用行星颜色）
+// 生成带状纹理数据（条纹角度随机，数量3-8条）
+const generateBandData = (index: number, baseColor: string): { bands: boolean; bandColors: string[]; bandAngle: number; bandCount: number } => {
+  // 使用索引生成确定性随机数，确保每次渲染一致
+  const seed = index * 12345;
+  const randomBetween = (min: number, max: number, seedOffset: number) => {
+    const x = Math.sin(seed + seedOffset) * 10000;
+    return min + (x - Math.floor(x)) * (max - min);
+  };
+  
+  // 随机条纹数量（3-8条）
+  const bandCount = Math.floor(randomBetween(3, 9, index)) as 3 | 4 | 5 | 6 | 7 | 8;
+  
+  // 随机条纹角度（-30到30度）
+  const bandAngle = randomBetween(-30, 30, index + 100);
+  
+  // 生成条纹颜色（深浅交替）
+  const bandColors: string[] = [];
+  for (let i = 0; i < bandCount; i++) {
+    // 深浅交替
+    const isLight = i % 2 === 0;
+    const colorVar = randomBetween(-15, 15, index * 100 + i);
+    const adjustedColor = adjustBrightnessValue(baseColor, colorVar);
+    bandColors.push(adjustedColor);
+  }
+  
+  return { bands: true, bandColors, bandAngle, bandCount };
+};
+
+// 调整颜色亮度
+const adjustBrightnessValue = (hexColor: string, percent: number): string => {
+  const num = parseInt(hexColor.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + percent));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+// 获取学院球颜色（使用行星颜色，随机带状纹理）
 const getPlanetColor = (index: number) => {
-  return PLANET_COLORS[index % PLANET_COLORS.length];
+  const planet = PLANET_COLORS[index % PLANET_COLORS.length];
+  const bandData = generateBandData(index, planet.baseBandColor || planet.color);
+  return {
+    ...planet,
+    ...bandData
+  };
 };
 
 // 特殊年份颜色配置（提取到组件外部，避免重复创建）
@@ -132,7 +172,7 @@ interface DepartmentNode {
   color: string;
   majors: Major[];
   college: string; // 归属学院
-  planetData?: { name: string; bands: boolean; bandColors?: string[] }; // 行星数据
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number }; // 行星数据
 }
 
 interface PathPoint {
@@ -160,7 +200,7 @@ interface RenderObject {
   majorData?: Major;
   collegeName?: string;
   angle?: number;
-  planetData?: { name: string; bands: boolean; bandColors?: string[] }; // 行星数据（带状纹理）
+  planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number }; // 行星数据（带状纹理，随机角度）
 }
 
 export default function ProfessionalSpiralTower() {
@@ -858,7 +898,7 @@ export default function ProfessionalSpiralTower() {
     };
 
     // 绘制球体
-    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[] }, rotation?: number) => {
+    const drawSphere = (x: number, y: number, radius: number, color: string, opacity: number, glow?: boolean, enable3D: boolean = true, planetData?: { name: string; bands: boolean; bandColors?: string[]; bandAngle?: number }, rotation?: number) => {
       // 防止无效值
       if (!isFinite(x) || !isFinite(y) || !isFinite(radius) || radius <= 0) {
         return;
@@ -900,36 +940,60 @@ export default function ProfessionalSpiralTower() {
       ctx.clip();
 
       if (planetData?.bands && planetData.bandColors) {
-        // 绘制带状纹理（Google Earth 风格）
+        // 绘制带状纹理（Google Earth 风格，支持随机角度）
         const bandColors = planetData.bandColors;
         const bandCount = bandColors.length;
-        const bandHeight = (radius * 2) / bandCount;
+        const bandAngle = (planetData.bandAngle || 0) * Math.PI / 180; // 转换为弧度
 
-        // 绘制每条带（考虑旋转动画）
+        // 先绘制基础颜色
+        const baseGradient = ctx.createRadialGradient(
+          x - radius * 0.3, y - radius * 0.3, 0,
+          x, y, radius
+        );
+        baseGradient.addColorStop(0, color);
+        baseGradient.addColorStop(1, adjustBrightness(color, -20));
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = baseGradient;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+
+        // 绘制每条条纹（带角度旋转）
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(bandAngle);
+        
+        // 条纹Y偏移（考虑旋转后的偏移）
+        const totalHeight = radius * 2;
+        const bandHeight = totalHeight / bandCount;
+        
         bandColors.forEach((bandColor, i) => {
           const normalizedY = (i / bandCount) * 2 - 1; // -1 到 1
+          const bandY = normalizedY * radius;
           
-          // 添加轻微的波浪效果（模拟真实行星带）
-          const waveOffset = Math.sin(normalizedY * 4 + rot) * 0.02;
-          const bandY = y + normalizedY * radius + waveOffset * radius;
+          // 添加轻微波浪效果
+          const waveOffset = Math.sin(normalizedY * 4 + rot) * radius * 0.03;
           
           ctx.beginPath();
-          ctx.ellipse(x, bandY, radius * 1.2, bandHeight * 0.6, 0, 0, Math.PI * 2);
+          // 绘制椭圆形条纹带
+          ctx.ellipse(waveOffset, bandY, radius * 1.3, bandHeight * 0.7, 0, 0, Math.PI * 2);
           ctx.fillStyle = bandColor;
-          ctx.globalAlpha = opacity * 0.85;
+          ctx.globalAlpha = opacity * 0.9;
           ctx.fill();
         });
+        
+        ctx.restore();
 
-        // 添加 Google Earth 风格的阴影覆盖
+        // 添加 Google Earth 风格的3D阴影覆盖
         const shadowGradient = ctx.createRadialGradient(
           x - radius * 0.4, y - radius * 0.4, 0,
           x, y, radius * 1.2
         );
-        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-        shadowGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.05)');
+        shadowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        shadowGradient.addColorStop(0.25, 'rgba(255, 255, 255, 0.08)');
         shadowGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
-        shadowGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.25)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+        shadowGradient.addColorStop(0.75, 'rgba(0, 0, 0, 0.2)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
         
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
