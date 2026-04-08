@@ -1102,7 +1102,7 @@ export default function ProfessionalSpiralTower() {
         // 绘制用户发送的光球
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
           // 更新进度（从0到1表示从firstAppearYear到endYear，1到1.5表示飞出）
-          ball.progress += lightSpeed * 0.3; // 用户光球速度与自动光球一致
+          ball.progress += lightSpeed * 0.6; // 用户光球速度快两倍
 
           // 如果进度超过1.5，移除该光球
           if (ball.progress >= 1.5) {
@@ -2164,10 +2164,10 @@ export default function ProfessionalSpiralTower() {
               }}
               onFocus={() => setPopoverOpen(true)}
               placeholder={currentView === 'solar' && selectedYear !== null ? `${selectedYear}年专业...` : '输入专业名称...'}
-              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
+              className="w-full h-9 bg-black/60 backdrop-blur-sm border border-blue-400/50 text-white text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/70 focus:bg-black/70 focus:outline-none focus:border-blue-400/80 transition-colors placeholder-white/40 shadow-lg shadow-blue-500/20"
             />
             {popoverOpen && (
-              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
+              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-black/90 backdrop-blur-sm border border-blue-400/60 rounded-lg shadow-xl shadow-blue-500/30 overflow-hidden z-50">
                 <div className="max-h-64 overflow-y-auto p-1">
                   {selectableMajors
                     .filter(major =>
@@ -2189,7 +2189,7 @@ export default function ProfessionalSpiralTower() {
                             setUserSelectedMajor(major);
                             setPopoverOpen(false);
                           }}
-                          className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex items-center"
+                          className="text-[11px] md:text-[12px] text-white hover:bg-blue-500/30 cursor-pointer px-3 py-2 rounded-md flex items-center"
                         >
                           {major}
                         </div>
@@ -2202,7 +2202,7 @@ export default function ProfessionalSpiralTower() {
           <button
             onClick={sendLightBall}
             disabled={!userSelectedMajor}
-            className="w-9 h-9 rounded-full bg-blue-500/80 hover:bg-blue-500 text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95 shadow-lg"
+            className="w-9 h-9 rounded-full bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-110 active:scale-95 shadow-lg shadow-blue-500/50"
             title="发送光球"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
