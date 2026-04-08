@@ -982,7 +982,7 @@ export default function ProfessionalSpiralTower() {
         // 绘制自然行星纹理（增强版）
         const bandColors = planetData.bandColors;
         const bandCount = bandColors.length;
-        const bandAngle = (planetData.bandAngle || 0) * Math.PI / 180;
+        const bandAngle = ((planetData.bandAngle || 0) * Math.PI / 180) + rot;
         const cloudColor = planetData.cloudColor || color;
         const turbulence = planetData.turbulence || 0.1;
         const swirl = planetData.swirlStrength || 0.15;
@@ -1063,13 +1063,13 @@ export default function ProfessionalSpiralTower() {
           ctx.fill();
         }
         
-        // 云带（简化）
+        // 云带（简化，随自转变化）
         for (let i = 0; i < 3; i++) {
           const [cloudYRatio, cloudAlpha] = cloudRandoms[i] || [0, 0.2];
-          const cloudY = cloudYRatio * radius;
+          const cloudY = cloudYRatio * radius + rot * radius * 0.2;
           
           ctx.beginPath();
-          ctx.ellipse(0, cloudY, radius * 0.8, radius * 0.03, 0, 0, Math.PI * 2);
+          ctx.ellipse(rot * radius * 0.1, cloudY, radius * 0.8, radius * 0.03, 0, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(255, 255, 255, ${cloudAlpha})`;
           ctx.globalAlpha = opacity;
           ctx.fill();
