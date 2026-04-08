@@ -1223,13 +1223,20 @@ export default function ProfessionalSpiralTower() {
             ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
             ctx.fillText(keyEvent.desc, node.x + size + 4, node.y + 6);
           } else if (node.year % 10 === 0 || hoveredYear === node.year || !node.hasData) {
-            // 每10年、鼠标悬停时、或无数据年份显示年份
-            ctx.font = `${9 * node.scale}px sans-serif`;
-            ctx.fillStyle = node.hasData 
-              ? `rgba(255, 255, 255, ${opacity * 0.85})` 
-              : `rgba(150, 150, 150, ${opacity * 0.5})`; // 无数据年份用灰色
-            ctx.textAlign = 'center';
-            ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
+            // 只显示整十年份、有大事的年份、鼠标悬停时、无数据年份
+            // 整十年份：1960, 1970, 1980, 1990, 2000, 2010, 2020
+            // 有大事年份：1956(建校), 1958(更名), 1965(迁入), 1993(更名), 2001(合并), 2017(双一流), 2025(现今)
+            const isKeyYear = [1956, 1958, 1965, 1993, 2001, 2017, 2025].includes(node.year);
+            const isDecadeYear = node.year % 10 === 0;
+            
+            if (isKeyYear || isDecadeYear || hoveredYear === node.year || !node.hasData) {
+              ctx.font = `${9 * node.scale}px sans-serif`;
+              ctx.fillStyle = node.hasData 
+                ? `rgba(255, 255, 255, ${opacity * 0.85})` 
+                : `rgba(150, 150, 150, ${opacity * 0.5})`; // 无数据年份用灰色
+              ctx.textAlign = 'center';
+              ctx.fillText(node.year.toString(), node.x, node.y - size - 5);
+            }
           }
         });
       } else {
