@@ -1371,7 +1371,7 @@ export default function ProfessionalSpiralTower() {
         userLightBallsRef.current = userLightBallsRef.current.filter(ball => {
           ball.progress += lightSpeed * 4;
 
-          if (ball.progress >= 1.5) {
+          if (ball.progress >= 2) {
             return false;
           }
           const projection = spiralProjectionRef.current;
@@ -1397,34 +1397,44 @@ export default function ProfessionalSpiralTower() {
             z = proj.z;
             scale = proj.scale;
           } else {
-            if (!ball.flyOutStart) {
-              const endAngle = 1 * projection.rings * Math.PI * 2;
-              ball.flyOutStart = {
-                x: Math.cos(endAngle) * projection.baseRadius,
-                y: (1 - 1) * projection.spiralHeight - projection.spiralHeight / 2,
-                z: Math.sin(endAngle) * projection.baseRadius,
-                scale: 1,
-                dirX: flyOutDirX,
-                dirY: flyOutDirY,
-                opacity: 1
-              };
-            }
-
-            const flyOutProgress = ball.progress - 1;
-            const flyOutDistance = flyOutProgress * 400;
-
-            const startX = ball.flyOutStart.x;
-            const startY = ball.flyOutStart.y;
-            const startZ = ball.flyOutStart.z;
-
-            x = startX + ball.flyOutStart.dirX * flyOutDistance;
-            y = startY + ball.flyOutStart.dirY * flyOutDistance - flyOutDistance * 0.4;
-            z = startZ + flyOutDistance * 0.6;
-
-            const proj = projection.project3D(x, y, z, 0, rotationRef.current, centerX, centerY);
+            // 沿着螺旋轨道线继续向外飞出
+            const flyOutProgress = ball.progress - 1; // 0-0.5 表示沿轨道飞出的程度
+            const extraAngle = flyOutProgress * Math.PI * 2; // 继续转一圈
+            const flyOutActualProgress = 1 + flyOutProgress * 0.5; // 沿轨道向外延伸
+            
+            const actualProgress = flyOutActualProgress;
+            const angle = actualProgress * projection.rings * Math.PI * 2 + extraAngle;
+            const lx = Math.cos(angle) * projection.baseRadius;
+            const ly = (1 - actualProgress) * projection.spiralHeight - projection.spiralHeight / 2;
+            const lz = Math.sin(angle) * projection.baseRadius;
+            const proj = projection.project3D(lx, ly, lz, 0, rotationRef.current, centerX, centerY);
+            
             x = proj.x;
             y = proj.y;
-            scale = ball.flyOutStart.scale * (1 - flyOutProgress * 0.4);
+            scale = proj.scale * (1 - flyOutProgress * 0.3);
+            
+            // 绘制拖尾效果（沿轨道线）
+            const trailCount = 8;
+            for (let t = 1; t <= trailCount; t++) {
+              const trailProgress = t / trailCount;
+              const trailAngle = angle - trailProgress * 0.5;
+              const trailProgress2 = actualProgress - trailProgress * 0.05;
+              const tlx = Math.cos(trailAngle) * projection.baseRadius;
+              const tly = (1 - trailProgress2) * projection.spiralHeight - projection.spiralHeight / 2;
+              const tlz = Math.sin(trailAngle) * projection.baseRadius;
+              const trailProj = projection.project3D(tlx, tly, tlz, 0, rotationRef.current, centerX, centerY);
+              
+              const trailOpacity = opacity * (1 - trailProgress * 0.8);
+              const trailRadius = coreRadius * (1 - trailProgress * 0.7);
+              
+              const trailGradient = ctx.createRadialGradient(trailProj.x, trailProj.y, 0, trailProj.x, trailProj.y, trailRadius);
+              trailGradient.addColorStop(0, `rgba(${colorRGB}, ${trailOpacity})`);
+              trailGradient.addColorStop(1, `rgba(${colorRGB}, 0)`);
+              ctx.beginPath();
+              ctx.arc(trailProj.x, trailProj.y, trailRadius, 0, Math.PI * 2);
+              ctx.fillStyle = trailGradient;
+              ctx.fill();
+            }
           }
 
           const glowRadius = isFlyingOut ? 12 * scale : 18 * scale;
