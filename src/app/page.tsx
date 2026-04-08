@@ -1565,15 +1565,28 @@ export default function ProfessionalSpiralTower() {
             >
               {selectedMajor.name}
             </div>
-            <button
-              onClick={() => {
-                setSelectedMajor(null);
-                setShowCollegeHistory(false);
-              }}
-              className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center ml-1.5 md:ml-2.5 transition-colors"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-1.5 md:gap-2 ml-2">
+              <button
+                onClick={() => setShowCollegeHistory(!showCollegeHistory)}
+                className={`px-2 py-0.5 rounded text-[10px] md:text-[11px] font-medium transition-colors ${
+                  showCollegeHistory
+                    ? 'bg-blue-500/50 text-white'
+                    : 'bg-white/10 text-white/80 hover:bg-white/20'
+                }`}
+                title="点击查看专业沿革"
+              >
+                沿革
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedMajor(null);
+                  setShowCollegeHistory(false);
+                }}
+                className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-white/20 hover:bg-white/30 text-white text-base cursor-pointer flex items-center justify-center transition-colors"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           {!showCollegeHistory ? (
