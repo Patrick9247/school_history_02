@@ -2686,6 +2686,19 @@ export default function ProfessionalSpiralTower() {
             background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0f0f1a 50%, #050510 100%)'
           }}
         />
+        {/* 远处的淡淡星云 */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `
+              radial-gradient(ellipse 200px 100px at 15% 25%, rgba(80, 60, 120, 0.08) 0%, transparent 70%),
+              radial-gradient(ellipse 150px 80px at 85% 35%, rgba(60, 80, 140, 0.06) 0%, transparent 70%),
+              radial-gradient(ellipse 180px 90px at 75% 75%, rgba(100, 50, 100, 0.07) 0%, transparent 70%),
+              radial-gradient(ellipse 120px 60px at 25% 80%, rgba(50, 70, 120, 0.06) 0%, transparent 70%),
+              radial-gradient(ellipse 160px 70px at 50% 15%, rgba(70, 60, 100, 0.05) 0%, transparent 70%)
+            `
+          }}
+        />
         {/* 闪烁的星星层 */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {Array.from({ length: 100 }).map((_, i) => (
