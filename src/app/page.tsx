@@ -1801,12 +1801,30 @@ export default function ProfessionalSpiralTower() {
 
             // 在太阳球上绘制年份（只显示数字，响应式字体）
             if (selectedYear) {
-              const sunFontSize = isMobileSolar ? 14 : (isTabletSolar ? 15 : 16);
-              ctx.font = `bold ${sunFontSize * (obj.scale || 1)}px sans-serif`;
-              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+              const sunFontSize = isMobileSolar ? 18 : (isTabletSolar ? 20 : 22);
+              const scale = obj.scale || 1;
+              const yearText = selectedYear.toString();
+              
+              // 绘制文字阴影（让年份更清晰）
+              ctx.font = `bold ${sunFontSize * scale}px "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillText(selectedYear.toString(), x, y);
+              
+              // 文字阴影层
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+              ctx.fillText(yearText, x + 1, y + 1);
+              ctx.fillText(yearText, x - 1, y - 1);
+              ctx.fillText(yearText, x + 1, y - 1);
+              ctx.fillText(yearText, x - 1, y + 1);
+              
+              // 文字描边层（更清晰）
+              ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+              ctx.lineWidth = 2;
+              ctx.strokeText(yearText, x, y);
+              
+              // 主文字（白色，更清晰）
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillText(yearText, x, y);
             }
           } else if (obj.type === 'college' || obj.type === 'department') {
             // 检查该学院是否包含高亮的专业
