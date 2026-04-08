@@ -2091,55 +2091,6 @@ export default function ProfessionalSpiralTower() {
       {/* 缩放控制（只在太阳系视图中显示） */}
       {currentView === 'solar' && (
         <div className="absolute right-3 md:right-4 bottom-28 md:bottom-32 z-20 flex flex-col gap-2">
-          {/* 太阳系视图搜索框 */}
-          <div className="relative w-36 md:w-40 search-container">
-            <input
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onFocus={() => setSearchOpen(true)}
-              placeholder="搜索专业..."
-              className="w-full h-9 bg-black/40 backdrop-blur-sm border-white/10 text-white/90 text-[11px] md:text-[12px] rounded-md px-3 py-2 text-left hover:bg-black/50 focus:bg-black/50 focus:outline-none transition-colors placeholder-white/30"
-            />
-            {searchOpen && searchKeyword && (
-              <div className="absolute top-full right-0 mt-1 w-[calc(100vw-32px)] md:w-72 bg-[rgba(8,12,25,0.98)] border border-blue-400/40 rounded-md shadow-xl overflow-hidden z-50">
-                <div className="max-h-64 overflow-y-auto p-1">
-                  {currentDepartments
-                    .flatMap(dept => dept.majors)
-                    .filter(major =>
-                      major.name.toLowerCase().includes(searchKeyword.toLowerCase())
-                    )
-                    .length === 0 ? (
-                    <div className="text-[11px] text-white/50 py-6 text-center">
-                      未找到匹配的专业
-                    </div>
-                  ) : (
-                    currentDepartments
-                      .flatMap(dept => dept.majors)
-                      .filter(major =>
-                        major.name.toLowerCase().includes(searchKeyword.toLowerCase())
-                      )
-                      .map((major, index) => (
-                        <div
-                          key={`${major.name}-${index}`}
-                          className="text-[11px] md:text-[12px] text-white/90 hover:bg-blue-400/20 cursor-pointer px-3 py-2 rounded-sm flex flex-col"
-                          onClick={() => {
-                            setHighlightedMajor(major.name);
-                            setSearchOpen(false);
-                            setSearchKeyword('');
-                          }}
-                        >
-                          <span className="font-medium">{major.name}</span>
-                          <span className="text-[10px] text-white/60 mt-1">
-                            {major.degree} {major.year ? `· ${major.year}年` : ''}
-                          </span>
-                        </div>
-                      ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
           {/* 缩放按钮 */}
           <div className="flex flex-col gap-2">
             <button
