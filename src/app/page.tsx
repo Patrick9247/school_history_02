@@ -2678,7 +2678,7 @@ export default function ProfessionalSpiralTower() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarStyles }} />
-      <div className="relative w-full h-screen overflow-hidden bg-[#0a0f1a]">
+      <div className="relative w-full h-screen overflow-hidden" style={{ backgroundImage: 'url(https://coze-coding-project.tos.coze.site/coze_storage_7625930770414141459/image/generate_image_7568fd8f-13f6-4a15-9f70-87994bed93b4.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         {/* 遮罩层 */}
         <div className="absolute inset-0 bg-black/40"></div>
         {/* 校徽背景层 - 填充整个屏幕 */}
