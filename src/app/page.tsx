@@ -2853,16 +2853,16 @@ export default function ProfessionalSpiralTower() {
           ))}
         </div>
         {/* 遮罩层 */}
-        <div className="absolute inset-0 bg-black/30"></div>
-        {/* 校徽背景层 - 填充整个屏幕 */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        {/* 校徽背景层 - 填充整个屏幕，更大尺寸 */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: 0.4 }}
+          style={{ opacity: 0.5 }}
         >
           <img 
             src="/college-logo.png" 
             alt="校徽" 
-            className="w-full h-full object-contain"
+            className="w-[120%] h-[120%] object-contain"
           />
         </div>
       <canvas
