@@ -2857,7 +2857,7 @@ export default function ProfessionalSpiralTower() {
         {/* 校徽背景层 - 填充整个屏幕，更大尺寸 */}
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: 0.5 }}
+          style={{ opacity: 0.3 }}
         >
           <img 
             src="/college-logo.png" 
