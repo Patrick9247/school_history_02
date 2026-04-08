@@ -2129,6 +2129,37 @@ export default function ProfessionalSpiralTower() {
               ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
               ctx.fillStyle = `rgba(255, 255, 255, ${0.9 + glowIntensity * 0.1})`;
               ctx.fillText(obj.majorData?.name || '', textX, textY);
+            } else if (searchMatch) {
+              // 搜索匹配时：添加光晕并显示专业名和年份
+              drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, true, false);
+              
+              const majorFontSize = isMobileSolar ? 8 : 9;
+              const textX = obj.x || 0;
+              const textY = (obj.y || 0) + scaledRadius + 14;
+              const yearText = obj.majorData?.year ? `${obj.majorData.year}年` : '';
+              const nameText = obj.majorData?.name || '';
+              
+              // 绘制背景
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              const fullText = yearText ? `${yearText} ${nameText}` : nameText;
+              const textMetrics = ctx.measureText(fullText);
+              const textWidth = textMetrics.width;
+              const textHeight = majorFontSize * (obj.scale || 1);
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+              ctx.fillRect(textX - textWidth / 2 - 4, textY - textHeight / 2 - 2, textWidth + 8, textHeight + 4);
+              
+              // 绘制年份（青色高亮）
+              if (yearText) {
+                ctx.fillStyle = '#00CED1';
+                ctx.fillText(yearText, textX - ctx.measureText(nameText).width / 2 - 2, textY);
+              }
+              
+              // 绘制专业名
+              ctx.font = `bold ${majorFontSize * (obj.scale || 1)}px sans-serif`;
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+              ctx.fillText(nameText, textX + (yearText ? ctx.measureText(yearText).width / 2 + 2 : 0), textY);
             } else {
               drawSphere(obj.x || 0, obj.y || 0, scaledRadius, obj.color, opacity, false, false);
             }
