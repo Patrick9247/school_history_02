@@ -455,6 +455,7 @@ export default function ProfessionalSpiralTower() {
         college: item.category || '',
         original_college: item.category || '',
         original_dept: item.department || '',
+        year: item.year, // 保存年份信息
       });
     });
 
