@@ -2633,13 +2633,13 @@ export default function ProfessionalSpiralTower() {
           setSelectedMajor(clickedObject.majorData);
         }
       } else {
-        // 双击空白区域，清除选中状态并返回螺旋塔视图
+        // 双击空白区域，清除选中状态，但不返回螺旋视图
         setSelectedCollege(null);
         setSelectedMajor(null);
         selectedYearRef.current = null;
         setSelectedYear(null);
         setYearStats(null);
-        setCurrentView('spiral');
+        // 不再自动返回螺旋视图
       }
     }
   };
@@ -3105,8 +3105,8 @@ export default function ProfessionalSpiralTower() {
                 : '拖拽旋转 · 单击显示年份 · 双击进入院系';
             } else {
               return isMobile
-                ? '单指拖拽旋转 · 双指缩放 · 双击院系查看专业 · 双击空白返回'
-                : '左键拖拽旋转学院 · 右键拖拽旋转视角 · 滚轮缩放 · 双击院系查看专业 · 双击空白返回';
+                ? '单指拖拽旋转 · 双指缩放 · 双击院系查看专业 · 双击空白清除选中'
+                : '左键拖拽旋转学院 · 右键拖拽旋转视角 · 滚轮缩放 · 双击院系查看专业 · 双击空白清除选中';
             }
           })()}
         </div>
