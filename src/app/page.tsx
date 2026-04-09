@@ -2116,60 +2116,84 @@ export default function ProfessionalSpiralTower() {
               const x = obj.x || 0;
               const y = obj.y || 0;
               const r = scaledRadius;
+              const pulseIntensity = 0.7 + Math.sin(animationTimeRef.current * 10) * 0.3; // 快速闪烁
               
-              // 放射性光芒效果
-              const rayCount = 8;
-              const rayLength = r * (3 + glowIntensity * 2);
-              const rayWidth = 2 + glowIntensity;
+              // 超大范围外层光晕（先画，在最底层）
+              const superGlowRadius = r * 6 * pulseIntensity;
+              const superGlow = ctx.createRadialGradient(x, y, r, x, y, superGlowRadius);
+              superGlow.addColorStop(0, `rgba(255, 255, 255, ${0.6 * pulseIntensity})`);
+              superGlow.addColorStop(0.2, `rgba(255, 255, 200, ${0.4 * pulseIntensity})`);
+              superGlow.addColorStop(0.5, `rgba(255, 220, 100, ${0.2 * pulseIntensity})`);
+              superGlow.addColorStop(1, 'rgba(255, 200, 50, 0)');
+              ctx.beginPath();
+              ctx.arc(x, y, superGlowRadius, 0, Math.PI * 2);
+              ctx.fillStyle = superGlow;
+              ctx.fill();
+              
+              // 放射性光芒效果 - 12条光芒，更长更亮
+              const rayCount = 12;
+              const rayLength = r * (5 + pulseIntensity * 3);
               ctx.save();
               ctx.translate(x, y);
+              ctx.rotate(animationTimeRef.current * 0.3); // 光芒缓慢旋转
               for (let i = 0; i < rayCount; i++) {
-                const angle = (i / rayCount) * Math.PI * 2 + animationTimeRef.current * 0.5;
+                const angle = (i / rayCount) * Math.PI * 2;
                 ctx.save();
                 ctx.rotate(angle);
+                // 光芒渐变
                 const rayGrad = ctx.createLinearGradient(0, 0, rayLength, 0);
-                rayGrad.addColorStop(0, `rgba(255, 255, 255, ${0.8 * glowIntensity})`);
-                rayGrad.addColorStop(0.3, `rgba(255, 220, 100, ${0.5 * glowIntensity})`);
-                rayGrad.addColorStop(1, 'rgba(255, 220, 100, 0)');
+                rayGrad.addColorStop(0, `rgba(255, 255, 255, ${0.9 * pulseIntensity})`);
+                rayGrad.addColorStop(0.2, `rgba(255, 255, 200, ${0.7 * pulseIntensity})`);
+                rayGrad.addColorStop(0.5, `rgba(255, 220, 100, ${0.4 * pulseIntensity})`);
+                rayGrad.addColorStop(1, 'rgba(255, 200, 50, 0)');
+                // 三角形光芒
                 ctx.beginPath();
-                ctx.moveTo(r * 0.8, 0);
-                ctx.lineTo(rayLength, -rayWidth / 2);
-                ctx.lineTo(rayLength, rayWidth / 2);
+                ctx.moveTo(r * 0.9, 0);
+                ctx.lineTo(rayLength, -3 * pulseIntensity);
+                ctx.lineTo(rayLength, 3 * pulseIntensity);
                 ctx.closePath();
                 ctx.fillStyle = rayGrad;
                 ctx.fill();
                 ctx.restore();
               }
+              // 添加十字光芒（更长）
+              for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+                ctx.save();
+                ctx.rotate(angle);
+                const crossGrad = ctx.createLinearGradient(0, 0, rayLength * 1.5, 0);
+                crossGrad.addColorStop(0, `rgba(255, 255, 255, ${0.8 * pulseIntensity})`);
+                crossGrad.addColorStop(0.3, `rgba(255, 255, 200, ${0.5 * pulseIntensity})`);
+                crossGrad.addColorStop(1, 'rgba(255, 255, 150, 0)');
+                ctx.beginPath();
+                ctx.moveTo(r * 0.9, 0);
+                ctx.lineTo(rayLength * 1.5, -1.5 * pulseIntensity);
+                ctx.lineTo(rayLength * 1.5, 1.5 * pulseIntensity);
+                ctx.closePath();
+                ctx.fillStyle = crossGrad;
+                ctx.fill();
+                ctx.restore();
+              }
               ctx.restore();
               
-              // 更强的外层光晕
-              const outerGlowRadius = r * (3 + glowIntensity * 2);
-              const outerGlow = ctx.createRadialGradient(x, y, r, x, y, outerGlowRadius);
-              outerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.5 * glowIntensity})`);
-              outerGlow.addColorStop(0.3, `rgba(255, 220, 100, ${0.3 * glowIntensity})`);
-              outerGlow.addColorStop(1, 'rgba(255, 220, 100, 0)');
+              // 内层光晕
+              const innerGlowRadius = r * 2.5 * pulseIntensity;
+              const innerGlow = ctx.createRadialGradient(x, y, r * 0.5, x, y, innerGlowRadius);
+              innerGlow.addColorStop(0, `rgba(255, 255, 255, ${0.9 * pulseIntensity})`);
+              innerGlow.addColorStop(0.3, `rgba(255, 255, 200, ${0.6 * pulseIntensity})`);
+              innerGlow.addColorStop(0.6, `rgba(255, 220, 100, ${0.3 * pulseIntensity})`);
+              innerGlow.addColorStop(1, 'rgba(255, 200, 50, 0)');
               ctx.beginPath();
-              ctx.arc(x, y, outerGlowRadius, 0, Math.PI * 2);
-              ctx.fillStyle = outerGlow;
+              ctx.arc(x, y, innerGlowRadius, 0, Math.PI * 2);
+              ctx.fillStyle = innerGlow;
               ctx.fill();
               
-              // 中层光晕
-              const midGlowRadius = r * (1.8 + glowIntensity * 0.8);
-              const midGlow = ctx.createRadialGradient(x, y, r * 0.5, x, y, midGlowRadius);
-              midGlow.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-              midGlow.addColorStop(0.5, `rgba(255, 200, 80, ${opacity * 0.8})`);
-              midGlow.addColorStop(1, `rgba(255, 150, 50, ${opacity * 0.4})`);
-              ctx.beginPath();
-              ctx.arc(x, y, midGlowRadius, 0, Math.PI * 2);
-              ctx.fillStyle = midGlow;
-              ctx.fill();
-              
-              // 核心3D球体
-              const coreGrad = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, 0, x, y, r);
-              coreGrad.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-              coreGrad.addColorStop(0.4, obj.color);
-              coreGrad.addColorStop(0.8, adjustBrightness(obj.color, -10));
-              coreGrad.addColorStop(1, adjustBrightness(obj.color, -30));
+              // 核心3D球体 - 更亮
+              const coreGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+              coreGrad.addColorStop(0, `rgba(255, 255, 255, 1)`);
+              coreGrad.addColorStop(0.3, `rgba(255, 255, 230, 1)`);
+              coreGrad.addColorStop(0.6, '#ffffff');
+              coreGrad.addColorStop(1, obj.color);
               ctx.beginPath();
               ctx.arc(x, y, r, 0, Math.PI * 2);
               ctx.fillStyle = coreGrad;
