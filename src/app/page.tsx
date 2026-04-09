@@ -2633,14 +2633,8 @@ export default function ProfessionalSpiralTower() {
           setSelectedMajor(clickedObject.majorData);
         }
       } else {
-        // 双击空白区域，清除选中状态，恢复默认状态
-        setSelectedCollege(null);
-        setSelectedMajor(null);
+        // 双击空白区域，只清除专业球高亮，不返回螺旋视图
         setHighlightedMajor(null); // 清除高亮，专业球不再闪烁
-        selectedYearRef.current = null;
-        setSelectedYear(null);
-        setYearStats(null);
-        // 不再自动返回螺旋视图
       }
     }
   };
