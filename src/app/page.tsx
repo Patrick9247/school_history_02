@@ -2672,7 +2672,8 @@ export default function ProfessionalSpiralTower() {
     
     const userMessage = chatInput.trim();
     setChatInput('');
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const tempAssistantMsg = { role: 'assistant' as const, content: '' };
+    setChatMessages(prev => [...prev, tempAssistantMsg]);
     setChatLoading(true);
     
     try {
@@ -2683,32 +2684,67 @@ export default function ProfessionalSpiralTower() {
           'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjdlOTQ2MGFjLWM5NjYtNGE5Ny1iYTk1LTU2YjVmMzVhYTc4NSJ9.eyJpc3MiOiJodHRwczovL2FwaS5jb3plLmNuIiwiYXVkIjpbIlJYRnM3anoxakRnWGU1ckQ0U0xOWXIzSXFhaDZjSHBvIl0sImV4cCI6ODIxMDI2Njg3Njc5OSwiaWF0IjoxNzc1NzkwNjkzLCJzdWIiOiJzcGlmZmU6Ly9hcGkuY296ZS5jbi93b3JrbG9hZF9pZGVudGl0eS9pZDo3NTk5ODcyOTQ3NjYyMDk0MzYzIiwic3JjIjoiaW5ib3VuZF9hdXRoX2FjY2Vzc190b2tlbl9pZDo3NjI2OTYyOTUzNzY5NTgyNjI4In0.QCQ5y3BYT_PcdjjXQjtGWTIJpuw-3MLwspj1PMD85ON_E9jSIQdWGvvXgPdfLFDBr4QmtoCrlv1X0Usv8Mjdn_oLMCijxTfIZhJR8IZO9oLHeRt4VIbzqrcphSoxpT6VgCmRoarBSDzUXRyMlh57RWnr8rMBKNmGHI2erZtg-nxlu27p8clN9JSjKkhm3A6IlxM7WRr5fCrt0nX8GDnAR52Iv5Nqyv9ATBmJhbOgDf9wIrPPFzxc2diPlrRPZ4pOh7g-ixlTEuxaaL5KIDlYjPTg-cC-b4pQnA_F3wNVVZjUx3d5VsHtPESfcAvfwIpQHZo1icDMzprI-Ex9wumFVQ'
         },
         body: JSON.stringify({
+          conversation_id: 'conv_' + Date.now(),
           bot_id: '7625930670103068735',
-          user_id: 'web_user_' + Date.now(),
+          user_id: 'web_user',
           query: userMessage,
           stream: false
         })
       });
       
-      const data = await response.json();
-      let aiResponse = '';
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = '';
       
-      // 根据不同的返回格式解析
-      if (data.messages && Array.isArray(data.messages)) {
-        const lastMsg = data.messages[data.messages.length - 1];
-        aiResponse = lastMsg.content || lastMsg.text || JSON.stringify(data);
-      } else if (data.content) {
-        aiResponse = data.content;
-      } else if (data.text) {
-        aiResponse = data.text;
-      } else {
-        aiResponse = JSON.stringify(data);
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          // 解析SSE格式: event: message\ndata: {...}\n\n
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                if (data.content?.answer) {
+                  fullResponse += data.content.answer;
+                  // 更新消息显示
+                  setChatMessages(prev => {
+                    const updated = [...prev];
+                    if (updated[updated.length - 1]?.role === 'assistant') {
+                      updated[updated.length - 1].content = fullResponse;
+                    }
+                    return updated;
+                  });
+                }
+              } catch (e) {
+                // 忽略解析错误
+              }
+            }
+          }
+        }
       }
       
-      setChatMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-    } catch (error) {
+      if (!fullResponse) {
+        setChatMessages(prev => {
+          const updated = [...prev];
+          if (updated[updated.length - 1]?.role === 'assistant') {
+            updated[updated.length - 1].content = '抱歉，未收到有效回复';
+          }
+          return updated;
+        });
+      }
+    } catch (error: any) {
       console.error('AI API Error:', error);
-      setChatMessages(prev => [...prev, { role: 'assistant', content: '抱歉，连接失败，请稍后重试。' }]);
+      setChatMessages(prev => {
+        const updated = [...prev];
+        if (updated[updated.length - 1]?.role === 'assistant') {
+          updated[updated.length - 1].content = '抱歉，连接失败：' + (error?.message || '网络错误');
+        }
+        return updated;
+      });
     } finally {
       setChatLoading(false);
     }
