@@ -265,6 +265,10 @@ export default function ProfessionalSpiralTower() {
   const [showYearMenu, setShowYearMenu] = useState(false); // 是否显示年份点击菜单
   const [yearMenuPosition, setYearMenuPosition] = useState({ x: 0, y: 0 }); // 菜单位置
   const [milestoneModal, setMilestoneModal] = useState<{ visible: boolean; year: number; content: string }>({ visible: false, year: 0, content: '' }); // 大事记弹窗
+  const [showAIChat, setShowAIChat] = useState(false); // 是否显示AI助手
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]); // 对话消息
+  const [chatInput, setChatInput] = useState(''); // 聊天输入
+  const [chatLoading, setChatLoading] = useState(false); // 是否正在加载回复
 
   // 固定星星数据 - 只生成一次，不随渲染变化
   const fixedStars = useMemo(() => {
@@ -2662,6 +2666,54 @@ export default function ProfessionalSpiralTower() {
     }
   };
 
+  // 发送消息给AI助手
+  const sendToAI = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatLoading(true);
+    
+    try {
+      const response = await fetch('https://6w8mtcbd5j.coze.site/stream_run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjdlOTQ2MGFjLWM5NjYtNGE5Ny1iYTk1LTU2YjVmMzVhYTc4NSJ9.eyJpc3MiOiJodHRwczovL2FwaS5jb3plLmNuIiwiYXVkIjpbIlJYRnM3anoxakRnWGU1ckQ0U0xOWXIzSXFhaDZjSHBvIl0sImV4cCI6ODIxMDI2Njg3Njc5OSwiaWF0IjoxNzc1NzkwNjkzLCJzdWIiOiJzcGlmZmU6Ly9hcGkuY296ZS5jbi93b3JrbG9hZF9pZGVudGl0eS9pZDo3NTk5ODcyOTQ3NjYyMDk0MzYzIiwic3JjIjoiaW5ib3VuZF9hdXRoX2FjY2Vzc190b2tlbl9pZDo3NjI2OTYyOTUzNzY5NTgyNjI4In0.QCQ5y3BYT_PcdjjXQjtGWTIJpuw-3MLwspj1PMD85ON_E9jSIQdWGvvXgPdfLFDBr4QmtoCrlv1X0Usv8Mjdn_oLMCijxTfIZhJR8IZO9oLHeRt4VIbzqrcphSoxpT6VgCmRoarBSDzUXRyMlh57RWnr8rMBKNmGHI2erZtg-nxlu27p8clN9JSjKkhm3A6IlxM7WRr5fCrt0nX8GDnAR52Iv5Nqyv9ATBmJhbOgDf9wIrPPFzxc2diPlrRPZ4pOh7g-ixlTEuxaaL5KIDlYjPTg-cC-b4pQnA_F3wNVVZjUx3d5VsHtPESfcAvfwIpQHZo1icDMzprI-Ex9wumFVQ'
+        },
+        body: JSON.stringify({
+          bot_id: '7625930670103068735',
+          user_id: 'web_user_' + Date.now(),
+          query: userMessage,
+          stream: false
+        })
+      });
+      
+      const data = await response.json();
+      let aiResponse = '';
+      
+      // 根据不同的返回格式解析
+      if (data.messages && Array.isArray(data.messages)) {
+        const lastMsg = data.messages[data.messages.length - 1];
+        aiResponse = lastMsg.content || lastMsg.text || JSON.stringify(data);
+      } else if (data.content) {
+        aiResponse = data.content;
+      } else if (data.text) {
+        aiResponse = data.text;
+      } else {
+        aiResponse = JSON.stringify(data);
+      }
+      
+      setChatMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+    } catch (error) {
+      console.error('AI API Error:', error);
+      setChatMessages(prev => [...prev, { role: 'assistant', content: '抱歉，连接失败，请稍后重试。' }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   // 触摸事件处理（用于双指缩放和单指拖拽旋转，只在太阳系视图中生效）
   const initialTouchDistanceRef = useRef<number | null>(null);
   const initialZoomRef = useRef<number>(1);
@@ -3530,6 +3582,108 @@ export default function ProfessionalSpiralTower() {
                     <span className="text-white/90">{line.trim()}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {/* AI助手聊天按钮 */}
+      <button
+        onClick={() => setShowAIChat(!showAIChat)}
+        className="fixed right-3 md:right-4 bottom-16 md:bottom-20 z-30 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/50 hover:scale-110 active:scale-95 transition-all"
+        title="AI助手"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 8V4H8"/>
+          <rect width="16" height="12" x="4" y="8" rx="2"/>
+          <path d="M2 14h2"/>
+          <path d="M20 14h2"/>
+          <path d="M15 13v2"/>
+          <path d="M9 13v2"/>
+        </svg>
+      </button>
+
+      {/* AI助手聊天面板 */}
+      {showAIChat && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAIChat(false)} />
+          <div className="fixed right-3 md:right-4 bottom-28 md:bottom-32 z-50 w-[90%] max-w-sm md:max-w-md bg-black/95 border border-blue-400/60 rounded-2xl shadow-2xl shadow-blue-500/40 overflow-hidden">
+            {/* 标题栏 */}
+            <div className="flex items-center justify-between p-3 md:p-4 border-b border-blue-400/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M12 8V4H8"/>
+                    <rect width="16" height="12" x="4" y="8" rx="2"/>
+                    <path d="M2 14h2"/>
+                    <path d="M20 14h2"/>
+                    <path d="M15 13v2"/>
+                    <path d="M9 13v2"/>
+                  </svg>
+                </div>
+                <span className="text-[13px] md:text-[14px] text-white font-medium">AI助手</span>
+              </div>
+              <button
+                onClick={() => setShowAIChat(false)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* 消息列表 */}
+            <div className="h-[50vh] md:h-[60vh] overflow-y-auto p-3 md:p-4 space-y-3">
+              {chatMessages.length === 0 && (
+                <div className="text-center text-[12px] text-white/50 py-8">
+                  <div className="text-[24px] mb-2">🤖</div>
+                  <p>你好！我是AI助手，可以回答关于成都理工大学专业沿革的问题。</p>
+                </div>
+              )}
+              {chatMessages.map((msg, index) => (
+                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-3 md:px-4 py-2 md:py-2.5 text-[12px] md:text-[13px] ${
+                    msg.role === 'user' 
+                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md' 
+                      : 'bg-white/10 text-white/90 rounded-bl-md'
+                  }`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/10 rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* 输入框 */}
+            <div className="p-3 md:p-4 border-t border-blue-400/30">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendToAI()}
+                  placeholder="输入问题..."
+                  className="flex-1 bg-white/10 border border-blue-400/30 rounded-full px-4 py-2.5 text-[12px] md:text-[13px] text-white placeholder-white/40 focus:outline-none focus:border-blue-400/60"
+                />
+                <button
+                  onClick={sendToAI}
+                  disabled={!chatInput.trim() || chatLoading}
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M12 19V5"/>
+                    <path d="M5 12l7-7 7 7"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
