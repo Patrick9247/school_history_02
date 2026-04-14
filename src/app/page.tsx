@@ -242,6 +242,7 @@ interface RenderObject {
 export default function ProfessionalSpiralTower() {
   const [data, setData] = useState<YearData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [backendYears, setBackendYears] = useState<Array<{ id: number; year: number; event?: string; dept_count: number; major_count: number }>>([]); // 后端年份数据
   const [currentView, setCurrentView] = useState<'spiral' | 'solar'>('spiral');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const selectedYearRef = useRef<number | null>(null); // 用于 canvas 实时读取
@@ -416,17 +417,28 @@ export default function ProfessionalSpiralTower() {
 
   // 优化：缓存最大年份，避免重复计算
   const maxYear = useMemo(() => {
+    // 优先使用后端返回的年份数据，否则使用专业数据中的最大年份
+    if (backendYears.length > 0) {
+      return Math.max(...backendYears.map((y: { year: number }) => y.year));
+    }
     return data.length > 0 ? Math.max(...data.map(d => d.year)) : 2025;
-  }, [data]);
+  }, [data, backendYears]);
 
-  // 生成所有年份数组（1956-2025，包括无数据的年份）
+  // 生成所有年份数组（基于后端年份数据）
   const allYears = useMemo(() => {
+    // 如果有后端年份数据，使用后端数据
+    if (backendYears.length > 0) {
+      return backendYears
+        .map((y: { year: number }) => y.year)
+        .sort((a: number, b: number) => a - b);
+    }
+    // 否则生成1956到maxYear的数组
     const years: number[] = [];
     for (let y = 1956; y <= maxYear; y++) {
       years.push(y);
     }
     return years;
-  }, [maxYear]);
+  }, [maxYear, backendYears]);
 
   // 关键事件
   const keyEvents: KeyEvent[] = useMemo(() => [
@@ -439,25 +451,55 @@ export default function ProfessionalSpiralTower() {
     { year: 2025, label: "现今", desc: "72个本科专业" }
   ], []);
 
-  // 获取数据
-  const fetchData = useCallback(async () => {
+  // 获取年份数据（从后端实时获取）
+  const fetchYears = useCallback(async () => {
     try {
-      const response = await fetch('/api/professional-history');
+      const response = await fetch('/api/years');
       const result = await response.json();
 
       if (result.success && result.data) {
+        setBackendYears(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching years:', error);
+    }
+  }, []);
+
+  // 获取数据
+  const fetchData = useCallback(async () => {
+    try {
+      // 同时获取年份数据和专业数据
+      const [yearsRes, majorsRes] = await Promise.all([
+        fetch('/api/years'),
+        fetch('/api/professional-history')
+      ]);
+
+      const yearsResult = await yearsRes.json();
+      const majorsResult = await majorsRes.json();
+
+      // 处理年份数据
+      if (yearsResult.success && yearsResult.data) {
+        setBackendYears(yearsResult.data);
+      }
+
+      // 处理专业数据
+      if (majorsResult.success && majorsResult.data) {
         // 保存原始 API 数据
-        setRawApiData(result.data);
+        setRawApiData(majorsResult.data);
 
         // 清空按年份缓存的院系数据，确保数据更新后显示正确的当年专业
         setDepartmentsByYear(new Map());
 
-        const transformedData = transformData(result.data);
-        setData(transformedData);
+        const transformedData = transformData(majorsResult.data);
+        
+        // 合并后端年份表数据：补充年份表中有但专业表中没有的年份
+        const yearsFromBackend = yearsResult.success ? yearsResult.data : [];
+        const mergedData = mergeWithBackendYears(transformedData, yearsFromBackend);
+        setData(mergedData);
 
         // 按学院分组专业（所有年份）
         const collegeMap = new Map<string, Major[]>();
-        result.data.forEach((item: ApiDataItem) => {
+        majorsResult.data.forEach((item: ApiDataItem) => {
           const collegeName = item.category || '其他学院';
           if (!collegeMap.has(collegeName)) {
             collegeMap.set(collegeName, []);
@@ -735,9 +777,49 @@ export default function ProfessionalSpiralTower() {
     return result.sort((a, b) => a.year - b.year);
   };
 
+  // 合并后端年份表数据到转换后的数据中
+  const mergeWithBackendYears = (
+    data: YearData[],
+    backendYears: Array<{ id: number; year: number; event?: string; dept_count: number; major_count: number }>
+  ): YearData[] => {
+    // 创建现有数据的 Map
+    const existingYearsMap = new Map(data.map(d => [d.year, d]));
+    
+    // 遍历后端年份数据，补充缺失的年份
+    const result: YearData[] = [];
+    for (const by of backendYears) {
+      const existing = existingYearsMap.get(by.year);
+      if (existing) {
+        // 使用后端年份表中的专业数量（更准确）
+        result.push({
+          ...existing,
+          majorCount: by.major_count || existing.majorCount,
+          departmentCount: by.dept_count || existing.departmentCount,
+        });
+      } else {
+        // 添加后端年份表中有但专业表中没有的年份
+        result.push({
+          year: by.year,
+          departmentCount: by.dept_count || 0,
+          majorCount: by.major_count || 0,
+          departments: [],
+        });
+      }
+    }
+    
+    return result.sort((a, b) => a.year - b.year);
+  };
+
   useEffect(() => {
     fetchData();
     fetchMilestones();
+    
+    // 每10秒自动刷新数据，确保实时显示最新数据
+    const refreshInterval = setInterval(() => {
+      fetchData();
+    }, 10000);
+    
+    return () => clearInterval(refreshInterval);
   }, [fetchData, fetchMilestones]);
 
   // 用户发送的光球状态

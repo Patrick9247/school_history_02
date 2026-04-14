@@ -1,43 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
 
-const DATA_DIR = join(process.cwd(), 'data');
-const DATA_FILE = join(DATA_DIR, 'professional-history.json');
-
-// 确保数据目录存在
-if (!existsSync(DATA_DIR)) {
-  mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// 读取数据
-function readData(): Array<{
-  id: number;
-  year: number;
-  major: string;
-  category?: string;
-  description?: string;
-  level?: string;
-  department?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}> {
-  if (!existsSync(DATA_FILE)) {
-    return [];
-  }
-  try {
-    const content = readFileSync(DATA_FILE, 'utf-8');
-    return JSON.parse(content);
-  } catch (error) {
-    console.error('Error reading data file:', error);
-    return [];
-  }
-}
-
-// 写入数据
-function writeData(data: unknown[]) {
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-}
+// FastAPI 后端地址
+const FASTAPI_BASE_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,23 +9,69 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year');
     const category = searchParams.get('category');
 
-    let data = readData();
+    // 构建查询参数 - 使用较小的limit避免超时
+    const queryParams = new URLSearchParams();
+    queryParams.set('limit', '1000'); // 默认获取1000条
+    if (year) queryParams.set('year', year);
+
+    const url = `/api/majors?${queryParams.toString()}`;
+
+    // 从 FastAPI 后端获取数据
+    const response = await fetch(`${FASTAPI_BASE_URL}${url}`, {
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(30000), // 30秒超时
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend API error: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch data from backend');
+    }
+
+    // 处理分页响应格式
+    let data = result.data?.items || result.data || [];
 
     // 按年份排序
-    data.sort((a, b) => b.year - a.year);
+    data.sort((a: { year?: number }, b: { year?: number }) => (b.year || 0) - (a.year || 0));
 
     // 过滤
     if (year) {
-      data = data.filter((item) => item.year === parseInt(year));
+      data = data.filter((item: { year?: number }) => item.year === parseInt(year));
     }
 
     if (category) {
-      data = data.filter((item) => item.category === category);
+      data = data.filter((item: { category?: string; college_name?: string }) => 
+        item.category === category || item.college_name === category
+      );
     }
+
+    // 转换数据格式以兼容前端
+    const transformedData = data.map((item: { 
+      id: number; 
+      name: string; 
+      year?: number; 
+      category?: string;
+      college_name?: string;
+      description?: string; 
+      level?: string; 
+      department?: string;
+    }) => ({
+      id: item.id,
+      major: item.name,
+      year: item.year,
+      category: item.category || item.college_name,
+      description: item.description,
+      level: item.level,
+      department: item.department,
+    }));
 
     return NextResponse.json({
       success: true,
-      data,
+      data: transformedData,
     });
   } catch (error: unknown) {
     console.error('Error fetching professional history:', error);
@@ -69,39 +79,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch data',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    const data = readData();
-    const newId = data.length > 0 ? Math.max(...data.map((item) => item.id)) + 1 : 1;
-
-    const newItem = {
-      id: newId,
-      ...body,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    data.push(newItem);
-    writeData(data);
-
-    return NextResponse.json({
-      success: true,
-      data: newItem,
-    });
-  } catch (error: unknown) {
-    console.error('Error creating professional history:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to create data',
       },
       { status: 500 }
     );
