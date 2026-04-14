@@ -13,7 +13,7 @@ async def get_majors(
     year: Optional[int] = Query(None, description="按年份筛选"),
     college_id: Optional[int] = Query(None, description="按学院ID筛选"),
     search: Optional[str] = Query(None, description="搜索专业名称"),
-    limit: Optional[int] = Query(500, description="返回数量限制"),
+    limit: Optional[int] = Query(7000, description="返回数量限制"),
     offset: Optional[int] = Query(0, description="偏移量")
 ):
     """获取所有专业，支持筛选、分页"""
@@ -67,7 +67,7 @@ async def get_majors(
         query += " AND m.name LIKE ?"
         params.append(f"%{search}%")
     
-    query += " ORDER BY y.year DESC, m.name LIMIT ? OFFSET ?"
+    query += " LIMIT ? OFFSET ?"
     params.extend([limit, offset])
     
     cursor.execute(query, params)

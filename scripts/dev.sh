@@ -32,4 +32,9 @@ echo "Clearing port ${PORT} before start."
 kill_port_if_listening
 echo "Starting HTTP service on port ${PORT} for dev..."
 
-PORT=$PORT pnpm tsx watch src/server.ts
+# 切换到项目目录并启动 Next.js
+cd "${PROJECT_DIR}"
+echo "Working directory: $(pwd)"
+
+# 使用 pnpm 运行 next dev
+PORT=$PORT pnpm next dev

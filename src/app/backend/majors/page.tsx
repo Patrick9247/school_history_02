@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,6 +22,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '@/components/ui/pagination';
 
 interface College {
   id: number;
@@ -68,6 +76,17 @@ export default function MajorsPage() {
     department: '',
   });
 
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  // 计算分页数据
+  const totalPages = Math.ceil(majors.length / pageSize);
+  const paginatedMajors = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return majors.slice(start, start + pageSize);
+  }, [majors, currentPage, pageSize]);
+
   // 获取专业列表
   const fetchMajors = useCallback(async () => {
     try {
@@ -82,6 +101,7 @@ export default function MajorsPage() {
       const data = await res.json();
       if (data.success) {
         setMajors(data.data || []);
+        setCurrentPage(1); // 重置到第一页
       }
     } catch (error) {
       toast.error('获取专业数据失败');
@@ -354,7 +374,7 @@ export default function MajorsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                majors.slice(0, 100).map((major) => (
+                paginatedMajors.map((major) => (
                   <TableRow key={major.id}>
                     <TableCell>
                       <Badge variant="secondary">{major.year || '-'}</Badge>
@@ -394,9 +414,42 @@ export default function MajorsPage() {
             </TableBody>
           </Table>
         </div>
-        {majors.length > 100 && (
-          <div className="px-4 py-3 border-t text-sm text-gray-500 text-center">
-            显示前 100 条，共 {majors.length} 条
+
+        {/* 分页 */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                共 {majors.length} 条，第 {currentPage}/{totalPages} 页
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         )}
       </div>

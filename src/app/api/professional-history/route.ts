@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get('year');
     const category = searchParams.get('category');
 
-    // 构建查询参数 - 使用较小的limit避免超时
+    // 构建查询参数 - 获取更多数据以展示完整星系
     const queryParams = new URLSearchParams();
-    queryParams.set('limit', '1000'); // 默认获取1000条
+    queryParams.set('limit', '7000'); // 获取全部数据
     if (year) queryParams.set('year', year);
 
     const url = `/api/majors?${queryParams.toString()}`;

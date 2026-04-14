@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,6 +21,14 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from '@/components/ui/pagination';
 
 interface College {
   id: number;
@@ -53,6 +61,17 @@ export default function CollegesPage() {
     description: '',
   });
 
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // 计算分页数据
+  const totalPages = Math.ceil(colleges.length / pageSize);
+  const paginatedColleges = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return colleges.slice(start, start + pageSize);
+  }, [colleges, currentPage, pageSize]);
+
   // 获取学院列表
   const fetchColleges = useCallback(async () => {
     try {
@@ -60,6 +79,7 @@ export default function CollegesPage() {
       const data = await res.json();
       if (data.success) {
         setColleges(data.data || []);
+        setCurrentPage(1); // 重置到第一页
       }
     } catch (error) {
       toast.error('获取学院数据失败');
@@ -216,7 +236,7 @@ export default function CollegesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              colleges.map((college) => (
+              paginatedColleges.map((college) => (
                 <TableRow key={college.id}>
                   <TableCell>
                     <div
@@ -255,6 +275,44 @@ export default function CollegesPage() {
             )}
           </TableBody>
         </Table>
+
+        {/* 分页 */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
+                共 {colleges.length} 条，第 {currentPage}/{totalPages} 页
+              </div>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 创建/编辑对话框 */}
